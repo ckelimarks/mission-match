@@ -98,7 +98,7 @@ export default function ProfileView({ profile }: ProfileViewProps) {
           <div className="flex flex-col items-center">
             <div className="bg-white p-6 rounded-lg mb-4">
               <QRCode
-                value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/handshake/${profile.id}`}
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/handshake/${profile.id}`}
                 size={200}
                 level="M"
               />
