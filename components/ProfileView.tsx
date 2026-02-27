@@ -174,7 +174,7 @@ Be specific. Include outcomes, timelines, and what energizes you.`}
             <div className="pl-6 border-l-3 border-accent-cyan relative">
               <span className="absolute -left-2.5 text-accent-cyan font-bold">&gt;</span>
               <div className="text-accent-orange font-bold uppercase text-xs tracking-wider mb-1">Role</div>
-              <div className="text-text-primary text-lg">{profile.role || &apos;Not specified&apos;}</div>
+              <div className="text-text-primary text-lg">{profile.role || 'Not specified'}</div>
             </div>
 
             <div className="pl-6 border-l-3 border-accent-cyan relative">
