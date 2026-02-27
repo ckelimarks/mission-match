@@ -2,6 +2,7 @@
 
 import type { Profile, AspectScore } from '@/types';
 import { useState } from 'react';
+import QRCode from 'react-qr-code';
 
 interface ProfileViewProps {
   profile: Profile;
@@ -86,6 +87,33 @@ export default function ProfileView({ profile }: ProfileViewProps) {
             ID: {profile.id.slice(0, 8)}...
           </p>
         </header>
+
+        {/* QR Code Section */}
+        <div className="section mb-8" data-section="QR_CODE">
+          <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
+            <span className="text-accent-cyan text-xl">//</span>
+            Your QR Code
+          </h2>
+
+          <div className="flex flex-col items-center">
+            <div className="bg-white p-6 rounded-lg mb-4">
+              <QRCode
+                value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/handshake/${profile.id}`}
+                size={200}
+                level="M"
+              />
+            </div>
+
+            <div className="text-center max-w-md">
+              <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
+                Share Your Profile
+              </p>
+              <p className="text-text-secondary text-sm">
+                Others can scan this code to initiate a collaboration handshake and see your overlap areas.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Profile Strength */}
         <div className="section mb-8" data-section="PROFILE_STRENGTH">
