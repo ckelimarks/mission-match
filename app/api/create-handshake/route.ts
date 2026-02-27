@@ -76,9 +76,12 @@ export async function POST(request: NextRequest) {
       // Don't fail the handshake creation, just log the error
     }
 
-    // Trigger Stage 1 analysis in background (we'll implement this next)
-    // For now, just return the handshake ID
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/analyze-stage1`, {
+    // Trigger Stage 1 analysis in background
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
+    fetch(`${baseUrl}/api/analyze-stage1`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ handshakeId: handshake.id }),
