@@ -139,13 +139,10 @@ export default function HandshakeResultPage() {
               </p>
             </header>
 
-            {/* Radar Chart */}
+            {/* Radar Chart - HERO ELEMENT */}
             {profiles.personA && profiles.personB && (
-              <div className="section mb-12" data-section="VISUAL">
-                <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 text-center">
-                  Working Style Comparison
-                </h2>
-                <div className="flex justify-center">
+              <div className="mb-16" data-section="VISUAL">
+                <div className="flex justify-center bg-forge-black/50 p-8 border-2 border-accent-cyan shadow-glow-cyan">
                   <RadarChart
                     personA={{
                       Creative: profiles.personA.role_aspects?.creative_vs_executor?.score || 50,
@@ -163,7 +160,7 @@ export default function HandshakeResultPage() {
                       Structure: profiles.personB.communication_aspects?.structure_vs_chaos?.score || 50,
                       Direct: profiles.personB.communication_aspects?.directness?.score || 50,
                     }}
-                    size={400}
+                    size={500}
                   />
                 </div>
               </div>
