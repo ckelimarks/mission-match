@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
     const { initiatorId, recipientId } = await request.json();
-    const deviceId = request.headers.get('x-device-id');
-
-    if (!deviceId) {
-      return NextResponse.json(
-        { error: 'Device ID is required' },
-        { status: 401 }
-      );
-    }
 
     if (!initiatorId || !recipientId) {
       return NextResponse.json(
@@ -27,8 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use authenticated Supabase client
-    const supabase = createSupabaseClient(deviceId);
+    // Use service role to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if handshake already exists
     const { data: existingHandshake } = await supabase
