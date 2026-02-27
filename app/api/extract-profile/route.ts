@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractProfile } from '@/lib/anthropic';
 import { supabase } from '@/lib/supabase';
-import { getOrCreateDeviceId } from '@/lib/deviceId';
 
 export async function POST(request: NextRequest) {
   try {
