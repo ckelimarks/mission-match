@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
     const { initiatorId, recipientId } = await request.json();
+    const deviceId = request.headers.get('x-device-id');
+
+    if (!deviceId) {
+      return NextResponse.json(
+        { error: 'Device ID is required' },
+        { status: 401 }
+      );
+    }
 
     if (!initiatorId || !recipientId) {
       return NextResponse.json(
@@ -18,6 +26,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Use authenticated Supabase client
+    const supabase = createSupabaseClient(deviceId);
 
     // Check if handshake already exists
     const { data: existingHandshake } = await supabase

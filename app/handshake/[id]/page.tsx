@@ -20,8 +20,9 @@ export default function HandshakePage() {
     try {
       // Check if user has a profile
       const myProfileId = localStorage.getItem('mission_match_profile_id');
+      const deviceId = localStorage.getItem('mission_match_device_id');
 
-      if (!myProfileId) {
+      if (!myProfileId || !deviceId) {
         // User doesn't have a profile yet
         setStatus('no-profile');
         return;
@@ -34,6 +35,7 @@ export default function HandshakePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-device-id': deviceId,
         },
         body: JSON.stringify({
           initiatorId: myProfileId,

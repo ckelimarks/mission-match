@@ -102,8 +102,9 @@ export default function CreateProfile() {
 
       const data = await response.json();
 
-      // Save profile ID to localStorage
+      // Save profile ID and device ID to localStorage
       localStorage.setItem('mission_match_profile_id', data.profileId);
+      localStorage.setItem('mission_match_device_id', data.deviceId);
 
       // Check if there's a pending handshake
       const pendingHandshake = localStorage.getItem('pending_handshake');
