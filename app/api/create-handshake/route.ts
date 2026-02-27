@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
     // Use service role to bypass RLS
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('Using service key:', supabaseServiceKey ? 'YES (length: ' + supabaseServiceKey.length + ')' : 'NO');
+
     // Check if handshake already exists
     const { data: existingHandshake } = await supabase
       .from('handshakes')
