@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function ClaimPage() {
+function ClaimPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -381,5 +381,28 @@ export default function ClaimPage() {
         )}
       </div>
     </>
+  );
+}
+
+export default function ClaimPage() {
+  return (
+    <Suspense fallback={
+      <div className="gradient-background">
+        <div className="gradient-sphere sphere-1"></div>
+        <div className="gradient-sphere sphere-2"></div>
+        <div className="gradient-sphere sphere-3"></div>
+        <div className="glow"></div>
+        <div className="grid-overlay"></div>
+        <div className="noise-overlay"></div>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-accent-cyan text-6xl mb-6 animate-spin">⟳</div>
+            <h2 className="font-display text-3xl font-bold uppercase mb-4">Loading...</h2>
+          </div>
+        </div>
+      </div>
+    }>
+      <ClaimPageContent />
+    </Suspense>
   );
 }
