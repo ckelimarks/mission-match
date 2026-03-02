@@ -79,15 +79,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Update handshake
+    console.log('📝 Updating handshake with:', updateData);
     const { error: updateError } = await supabase
       .from('handshakes')
       .update(updateData)
       .eq('id', handshakeId);
 
     if (updateError) {
-      console.error('Failed to update handshake consent:', updateError);
+      console.error('❌ Failed to update handshake consent:', updateError);
       throw new Error(`Database update failed: ${updateError.message}`);
     }
+
+    console.log('✅ Handshake updated successfully');
 
     // If mutual consent achieved, trigger Stage 2 analysis
     if (mutualConsent) {
@@ -103,6 +106,8 @@ export async function POST(request: NextRequest) {
       // TODO: Trigger Stage 2 analysis in background
       // For now, we'll leave it pending and implement later
     }
+
+    console.log('🎉 Consent granted successfully. Mutual consent:', mutualConsent);
 
     return NextResponse.json({
       success: true,
