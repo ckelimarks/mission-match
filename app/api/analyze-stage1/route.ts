@@ -6,8 +6,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest) {
+  let handshakeId: string | undefined;
+
   try {
-    const { handshakeId } = await request.json();
+    const body = await request.json();
+    handshakeId = body.handshakeId;
 
     if (!handshakeId) {
       return NextResponse.json(
@@ -103,6 +106,7 @@ Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY v
 
     if (updateError) {
       console.error('Failed to update analysis:', updateError);
+      throw new Error(`Database update failed: ${updateError.message}`);
     }
 
     // Update handshake status
@@ -119,8 +123,8 @@ Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY v
     console.error('Stage 1 analysis error:', error);
 
     // Mark analysis as failed
-    const { handshakeId } = await request.json();
     if (handshakeId) {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
       await supabase
         .from('analyses')
         .update({
