@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Handshake, Analysis, OverlapItem } from '@/types';
+import ConsentModal from '@/components/ConsentModal';
 
 export default function HandshakeResultPage() {
   const params = useParams();
@@ -14,6 +15,8 @@ export default function HandshakeResultPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [granting, setGranting] = useState(false);
 
   useEffect(() => {
     const profileId = localStorage.getItem('mission_match_profile_id');
@@ -53,6 +56,45 @@ export default function HandshakeResultPage() {
 
   const isInitiator = handshake?.initiator_id === myProfileId;
   const otherPersonRole = isInitiator ? 'Recipient' : 'Initiator';
+  const hasConsented = isInitiator ? handshake?.initiator_consented : handshake?.recipient_consented;
+  const mutualConsent = handshake?.status === 'approved';
+
+  const handleGrantConsent = async () => {
+    if (!myProfileId) return;
+
+    try {
+      setGranting(true);
+      const response = await fetch('/api/grant-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          handshakeId,
+          profileId: myProfileId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to grant consent');
+      }
+
+      setShowConsentModal(false);
+
+      // Refresh handshake data
+      await fetchHandshake();
+
+      // Show success notification if mutual consent
+      if (data.mutualConsent) {
+        alert('🎉 Mutual consent granted! Full profiles unlocked.');
+      }
+    } catch (err) {
+      console.error('Consent error:', err);
+      alert(err instanceof Error ? err.message : 'Failed to grant consent');
+    } finally {
+      setGranting(false);
+    }
+  };
 
   return (
     <>
@@ -210,21 +252,42 @@ export default function HandshakeResultPage() {
                       </div>
                     )}
 
-                    {/* Consent for Stage 2 (placeholder for future) */}
-                    <div className="mt-8 bg-forge-black border-2 border-accent-orange p-6">
-                      <div className="text-accent-orange font-bold uppercase text-sm mb-3">
-                        Want Deeper Insights?
+                    {/* Consent for Stage 2 */}
+                    {!mutualConsent && (
+                      <div className="mt-8 bg-forge-black border-2 border-accent-orange p-6">
+                        <div className="text-accent-orange font-bold uppercase text-sm mb-3">
+                          Want Deeper Insights?
+                        </div>
+                        <p className="text-text-primary mb-4">
+                          Stage 2 analysis includes complementarity scores, aspect mismatches, and collaboration risks. Both parties must consent to unlock this.
+                        </p>
+                        {hasConsented ? (
+                          <div className="text-accent-cyan font-bold uppercase text-sm">
+                            ✓ You have consented. Waiting for other party...
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setShowConsentModal(true)}
+                            disabled={granting}
+                            className="w-full py-4 bg-accent-orange text-white font-display font-bold uppercase tracking-widest hover:shadow-glow-orange transition-all disabled:opacity-50"
+                          >
+                            {granting ? 'Granting Consent...' : 'Grant Consent (Stage 2)'}
+                          </button>
+                        )}
                       </div>
-                      <p className="text-text-primary mb-4">
-                        Stage 2 analysis includes complementarity scores, aspect mismatches, and collaboration risks. Both parties must consent to unlock this.
-                      </p>
-                      <button
-                        disabled
-                        className="w-full py-4 bg-grid-line text-text-dim font-display font-bold uppercase tracking-widest cursor-not-allowed"
-                      >
-                        Consent to Stage 2 (Coming Soon)
-                      </button>
-                    </div>
+                    )}
+
+                    {/* Stage 2 Results */}
+                    {mutualConsent && (
+                      <div className="mt-8 bg-forge-black border-2 border-accent-cyan p-6 shadow-glow-cyan">
+                        <div className="text-accent-cyan font-bold uppercase text-sm mb-3 flex items-center gap-2">
+                          <span>✓</span> Full Profile Access Enabled
+                        </div>
+                        <p className="text-text-primary">
+                          Both parties have granted consent. Stage 2 analysis with full profiles will be available soon!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -263,6 +326,14 @@ export default function HandshakeResultPage() {
           </>
         )}
       </div>
+
+      {/* Consent Modal */}
+      <ConsentModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onConsent={handleGrantConsent}
+        otherPersonName="Collaborator"
+      />
     </>
   );
 }

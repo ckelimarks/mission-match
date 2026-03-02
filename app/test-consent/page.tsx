@@ -9,6 +9,7 @@ export default function TestConsentPage() {
   const [profileB, setProfileB] = useState('9201be4d-3631-4753-9ec5-d5f436d190b0');
   const [handshakeData, setHandshakeData] = useState<any>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -56,7 +57,8 @@ export default function TestConsentPage() {
 
   const triggerAnalysis = async () => {
     try {
-      addLog('Triggering Stage 1 analysis...');
+      setLoading(true);
+      addLog('Triggering Stage 1 analysis... (this may take 10-20 seconds)');
       const res = await fetch('/api/analyze-stage1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,10 +68,14 @@ export default function TestConsentPage() {
       addLog(`Response: ${JSON.stringify(data, null, 2)}`);
       if (data.success) {
         addLog('✅ Analysis completed!');
-        checkStatus();
+        await checkStatus();
+      } else if (data.error) {
+        addLog(`❌ Analysis failed: ${data.error}`);
       }
     } catch (err: any) {
       addLog(`❌ Error: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,11 +84,12 @@ export default function TestConsentPage() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'monospace', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#fff' }}>
-      <h1 style={{ marginBottom: '20px' }}>Consent Flow Debug Page</h1>
+    <div style={{ padding: '20px', fontFamily: 'monospace', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#fff', color: '#000' }}>
+      <h1 style={{ marginBottom: '20px', color: '#000' }}>Consent Flow Debug Page</h1>
+      {loading && <div style={{ padding: '10px', backgroundColor: '#ff0', color: '#000', fontWeight: 'bold', marginBottom: '10px' }}>⏳ Loading...</div>}
 
       <div style={{ marginBottom: '20px', padding: '15px', border: '2px solid #000' }}>
-        <h2>Step 1: Create Handshake</h2>
+        <h2 style={{ color: '#000' }}>Step 1: Create Handshake</h2>
         <div style={{ marginTop: '10px' }}>
           <div style={{ marginBottom: '10px' }}>
             <label>Profile A ID: </label>
@@ -109,7 +116,7 @@ export default function TestConsentPage() {
       </div>
 
       <div style={{ marginBottom: '20px', padding: '15px', border: '2px solid #000' }}>
-        <h2>Step 2: Check Status & Trigger Analysis</h2>
+        <h2 style={{ color: '#000' }}>Step 2: Check Status & Trigger Analysis</h2>
         <div style={{ marginTop: '10px' }}>
           <div style={{ marginBottom: '10px' }}>
             <label>Handshake ID: </label>
@@ -123,14 +130,18 @@ export default function TestConsentPage() {
           <button onClick={checkStatus} style={{ padding: '8px 20px', border: '2px solid #000', marginRight: '10px', cursor: 'pointer' }}>
             CHECK STATUS
           </button>
-          <button onClick={triggerAnalysis} style={{ padding: '8px 20px', border: '2px solid #000', cursor: 'pointer' }}>
-            TRIGGER ANALYSIS
+          <button
+            onClick={triggerAnalysis}
+            disabled={loading}
+            style={{ padding: '8px 20px', border: '2px solid #000', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.5 : 1 }}
+          >
+            {loading ? 'ANALYZING...' : 'TRIGGER ANALYSIS'}
           </button>
         </div>
       </div>
 
       <div style={{ marginBottom: '20px', padding: '15px', border: '2px solid #000' }}>
-        <h2>Step 3: Grant Consent (Stage 2)</h2>
+        <h2 style={{ color: '#000' }}>Step 3: Grant Consent (Stage 2)</h2>
         <button onClick={() => grantConsent(true)} style={{ padding: '8px 20px', border: '2px solid #000', marginRight: '10px', cursor: 'pointer' }}>
           GRANT CONSENT (Initiator)
         </button>
@@ -140,10 +151,10 @@ export default function TestConsentPage() {
       </div>
 
       <div style={{ marginBottom: '20px', padding: '15px', border: '2px solid #000', backgroundColor: '#f5f5f5' }}>
-        <h2>Current State</h2>
+        <h2 style={{ color: '#000' }}>Current State</h2>
         {handshakeData && (
           <div style={{ marginBottom: '15px' }}>
-            <h3>Handshake:</h3>
+            <h3 style={{ color: '#000' }}>Handshake:</h3>
             <pre style={{ fontSize: '11px', overflow: 'auto', padding: '10px', backgroundColor: '#fff', border: '1px solid #ccc' }}>
               {JSON.stringify(handshakeData, null, 2)}
             </pre>
@@ -151,7 +162,7 @@ export default function TestConsentPage() {
         )}
         {analysisData && (
           <div>
-            <h3>Analysis:</h3>
+            <h3 style={{ color: '#000' }}>Analysis:</h3>
             <pre style={{ fontSize: '11px', overflow: 'auto', padding: '10px', backgroundColor: '#fff', border: '1px solid #ccc' }}>
               {JSON.stringify(analysisData, null, 2)}
             </pre>
