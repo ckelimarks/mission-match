@@ -41,7 +41,19 @@ export async function POST(request: NextRequest) {
     const isInitiator = handshake.initiator_id === profileId;
     const isRecipient = handshake.recipient_id === profileId;
 
+    console.log('🔍 Grant Consent API Debug:', {
+      profileId,
+      handshake_initiator_id: handshake.initiator_id,
+      handshake_recipient_id: handshake.recipient_id,
+      isInitiator,
+      isRecipient,
+      profileId_type: typeof profileId,
+      initiator_type: typeof handshake.initiator_id,
+      recipient_type: typeof handshake.recipient_id,
+    });
+
     if (!isInitiator && !isRecipient) {
+      console.error('❌ Profile ID does not match either party');
       return NextResponse.json(
         { error: 'You are not part of this handshake' },
         { status: 403 }

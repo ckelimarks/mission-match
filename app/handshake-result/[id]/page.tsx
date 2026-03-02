@@ -60,7 +60,19 @@ export default function HandshakeResultPage() {
   const mutualConsent = handshake?.status === 'approved';
 
   const handleGrantConsent = async () => {
-    if (!myProfileId) return;
+    if (!myProfileId) {
+      console.error('No profileId in localStorage');
+      alert('No profile ID found. Please create a profile first.');
+      return;
+    }
+
+    console.log('🔍 Grant Consent Debug:', {
+      myProfileId,
+      handshakeId,
+      initiator_id: handshake?.initiator_id,
+      recipient_id: handshake?.recipient_id,
+      isInitiator,
+    });
 
     try {
       setGranting(true);
