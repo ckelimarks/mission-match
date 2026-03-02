@@ -1,103 +1,47 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import RadarChart from '@/components/RadarChart';
-
-type OverlapItem = {
-  category: string;
-  items: string[];
-  why_matters: string;
-};
-
-type Analysis = {
-  overlap: OverlapItem[];
-  conversation_starters: string[];
-};
-
-type Profile = {
-  id: string;
-  role_aspects: any;
-  shipping_aspects: any;
-  communication_aspects: any;
-  decision_aspects: any;
-  energy_aspects: any;
-};
+import { useParams, useRouter } from 'next/navigation';
+import type { Handshake, Analysis, OverlapItem } from '@/types';
 
 export default function HandshakeResultPage() {
   const params = useParams();
+  const router = useRouter();
   const handshakeId = params.id as string;
 
-  const [status, setStatus] = useState<'loading' | 'analyzing' | 'ready' | 'error'>('loading');
+  const [handshake, setHandshake] = useState<Handshake | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [profiles, setProfiles] = useState<{ personA: Profile | null; personB: Profile | null }>({
-    personA: null,
-    personB: null,
-  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    checkAnalysisStatus();
-    const interval = setInterval(checkAnalysisStatus, 2000); // Poll every 2 seconds
-    return () => clearInterval(interval);
+    const profileId = localStorage.getItem('mission_match_profile_id');
+    setMyProfileId(profileId);
+    fetchHandshake();
   }, []);
 
-  const fetchProfiles = async (handshakeIdFromAnalysis: string) => {
+  const fetchHandshake = async () => {
     try {
-      // Get handshake to find profile IDs
-      const handshakeRes = await fetch(`/api/get-handshake?handshakeId=${handshakeIdFromAnalysis}`);
-      if (!handshakeRes.ok) return;
-
-      const handshakeData = await handshakeRes.json();
-
-      // Fetch both profiles
-      const [profileARes, profileBRes] = await Promise.all([
-        fetch(`/api/get-profile?profileId=${handshakeData.initiator_id}`),
-        fetch(`/api/get-profile?profileId=${handshakeData.recipient_id}`),
-      ]);
-
-      if (profileARes.ok && profileBRes.ok) {
-        const profileA = await profileARes.json();
-        const profileB = await profileBRes.json();
-        setProfiles({ personA: profileA, personB: profileB });
-      }
-    } catch (err) {
-      console.error('Failed to fetch profiles:', err);
-    }
-  };
-
-  const checkAnalysisStatus = async () => {
-    try {
-      const response = await fetch(`/api/get-analysis?handshakeId=${handshakeId}&stage=1`);
+      const response = await fetch(`/api/get-handshake?id=${handshakeId}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch analysis');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch handshake');
       }
 
       const data = await response.json();
-
-      if (data.analysis_status === 'completed') {
-        setAnalysis({
-          overlap: data.overlap,
-          conversation_starters: data.conversation_starters,
-        });
-
-        // Fetch both profiles for aspect visualization
-        fetchProfiles(data.handshake_id);
-
-        setStatus('ready');
-      } else if (data.analysis_status === 'failed') {
-        setError(data.error_message || 'Analysis failed');
-        setStatus('error');
-      } else {
-        setStatus('analyzing');
-      }
+      setHandshake(data.handshake);
+      setAnalysis(data.analysis);
+      setLoading(false);
     } catch (err) {
-      console.error('Error checking analysis:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-      setStatus('error');
+      setLoading(false);
     }
   };
+
+  const isInitiator = handshake?.initiator_id === myProfileId;
+  const otherPersonRole = isInitiator ? 'Recipient' : 'Initiator';
 
   return (
     <>
@@ -113,136 +57,199 @@ export default function HandshakeResultPage() {
 
       {/* Main content */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
-        {(status === 'loading' || status === 'analyzing') && (
-          <div className="section" data-section="ANALYZING">
-            <div className="text-center">
+        {/* Header */}
+        <header className="relative mb-16 py-10 border-t-2 border-b-2 border-accent-cyan text-center">
+          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-forge-black px-3 text-xs font-bold tracking-widest text-accent-cyan">
+            HANDSHAKE_ANALYSIS
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight mb-3">
+            Collaboration Match
+          </h1>
+          <p className="text-text-secondary uppercase tracking-[0.3em] text-sm font-medium">
+            ID: {handshakeId.slice(0, 8)}...
+          </p>
+        </header>
+
+        {loading && (
+          <div className="section" data-section="LOADING">
+            <div className="text-center py-16">
               <div className="text-accent-cyan text-6xl mb-6 animate-spin">⟳</div>
-              <h2 className="font-display text-4xl font-bold uppercase mb-4">
-                {status === 'loading' ? 'Loading...' : 'Analyzing Profiles'}
+              <h2 className="font-display text-3xl font-bold uppercase mb-4">
+                Loading Handshake
               </h2>
-              <p className="text-text-secondary text-lg">
-                Claude is finding your collaboration overlap...
+              <p className="text-text-secondary">
+                Retrieving collaboration analysis...
               </p>
             </div>
           </div>
         )}
 
-        {status === 'ready' && analysis && (
-          <>
-            {/* Header */}
-            <header className="relative mb-12 py-8 border-t-2 border-b-2 border-accent-cyan text-center">
-              <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight mb-2">
-                Collaboration Match
-              </h1>
-              <p className="text-text-secondary text-sm">
-                Quick visual overview of where you align and differ
-              </p>
-            </header>
-
-            {/* Radar Chart - HERO ELEMENT */}
-            {profiles.personA && profiles.personB && (
-              <div className="mb-16" data-section="VISUAL">
-                <div className="flex justify-center bg-forge-black/50 p-8 border-2 border-accent-cyan shadow-glow-cyan">
-                  <RadarChart
-                    personA={{
-                      Creative: profiles.personA.role_aspects?.creative_vs_executor?.score || 50,
-                      Specialist: profiles.personA.role_aspects?.generalist_vs_specialist?.score || 50,
-                      Ideas: profiles.personA.shipping_aspects?.idea_generation?.score || 50,
-                      Speed: profiles.personA.shipping_aspects?.iteration_speed?.score || 50,
-                      Structure: profiles.personA.communication_aspects?.structure_vs_chaos?.score || 50,
-                      Direct: profiles.personA.communication_aspects?.directness?.score || 50,
-                    }}
-                    personB={{
-                      Creative: profiles.personB.role_aspects?.creative_vs_executor?.score || 50,
-                      Specialist: profiles.personB.role_aspects?.generalist_vs_specialist?.score || 50,
-                      Ideas: profiles.personB.shipping_aspects?.idea_generation?.score || 50,
-                      Speed: profiles.personB.shipping_aspects?.iteration_speed?.score || 50,
-                      Structure: profiles.personB.communication_aspects?.structure_vs_chaos?.score || 50,
-                      Direct: profiles.personB.communication_aspects?.directness?.score || 50,
-                    }}
-                    size={500}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Simplified Overlap - Top 3 only */}
-            <div className="section mb-8" data-section="OVERLAP">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-4 flex items-center gap-3">
-                <span className="text-accent-cyan text-xl">//</span>
-                What You Have in Common
-              </h2>
-
-              <div className="space-y-4">
-                {analysis.overlap.slice(0, 3).map((item, i) => (
-                  <div key={i} className="bg-forge-black border-l-4 border-accent-cyan p-5">
-                    <div className="text-accent-cyan font-bold text-sm mb-2">
-                      {item.category}
-                    </div>
-                    <div className="text-text-secondary text-sm">
-                      {item.why_matters}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top 3 Conversation Starters */}
-            <div className="section mb-8" data-section="CONVERSATION">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-4 flex items-center gap-3">
-                <span className="text-accent-orange text-xl">//</span>
-                Start Here
-              </h2>
-
-              <div className="space-y-3">
-                {analysis.conversation_starters.slice(0, 3).map((starter, i) => (
-                  <div key={i} className="bg-forge-black p-4 border-l-4 border-accent-orange">
-                    <div className="text-text-primary">
-                      {starter}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="section" data-section="NEXT_STEPS">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-                <span className="text-accent-cyan text-xl">//</span>
-                Privacy First
-              </h2>
-
-              <div className="bg-forge-black p-6 border border-grid-line mb-6">
-                <p className="text-text-primary mb-4">
-                  This is your <strong>Stage 1</strong> analysis - showing overlap areas only.
-                  Full profiles with aspect scores are still private.
-                </p>
-                <p className="text-text-secondary text-sm">
-                  Want to see detailed aspect analysis and pairing risks? Both people need to consent to Stage 2.
-                </p>
-              </div>
-
-              <button
-                className="w-full py-6 bg-gradient-to-r from-accent-cyan to-blue-600 text-white font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-cyan hover:translate-y-[-2px]"
-                onClick={() => alert('Stage 2 consent coming soon!')}
-              >
-                Request Full Analysis (Stage 2)
-              </button>
-            </div>
-          </>
-        )}
-
-        {status === 'error' && (
+        {error && (
           <div className="section" data-section="ERROR">
-            <h2 className="font-display text-3xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-              <span className="text-red-500 text-2xl">//</span>
-              Analysis Failed
-            </h2>
-
             <div className="bg-forge-black border-l-4 border-red-500 p-6">
+              <div className="text-red-400 font-bold uppercase text-sm mb-2">Error</div>
               <p className="text-text-primary">{error}</p>
             </div>
+            <button
+              onClick={() => router.push('/')}
+              className="mt-6 w-full py-4 bg-grid-line text-text-primary font-display font-bold uppercase tracking-widest hover:bg-accent-cyan hover:text-black transition-colors"
+            >
+              Go Home
+            </button>
           </div>
+        )}
+
+        {!loading && !error && handshake && (
+          <>
+            {/* Handshake Status */}
+            <div className="section mb-8" data-section="STATUS">
+              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
+                <span className="text-accent-cyan text-xl">//</span>
+                Status
+              </h2>
+              <div className="bg-forge-black border-l-4 border-accent-cyan p-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-accent-cyan font-bold uppercase text-sm mb-2">
+                      Handshake Status
+                    </div>
+                    <div className="text-text-primary text-2xl font-bold uppercase">
+                      {handshake.status}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-text-secondary text-xs uppercase mb-1">
+                      You are the {isInitiator ? 'Initiator' : 'Recipient'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Analysis Status */}
+            {analysis && (
+              <>
+                {analysis.analysis_status === 'pending' && (
+                  <div className="section mb-8" data-section="ANALYSIS_PENDING">
+                    <div className="text-center py-12">
+                      <div className="text-accent-orange text-6xl mb-6 animate-spin">⟳</div>
+                      <h2 className="font-display text-2xl font-bold uppercase mb-4">
+                        Analyzing Collaboration Potential
+                      </h2>
+                      <p className="text-text-secondary">
+                        Claude is analyzing your overlap areas and complementarity...
+                      </p>
+                      <button
+                        onClick={fetchHandshake}
+                        className="mt-6 px-8 py-3 bg-grid-line text-text-primary font-bold uppercase tracking-wider hover:bg-accent-cyan hover:text-black transition-colors"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {analysis.analysis_status === 'completed' && analysis.stage === 1 && (
+                  <div className="section mb-8" data-section="OVERLAP_ANALYSIS">
+                    <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
+                      <span className="text-accent-cyan text-xl">//</span>
+                      Overlap Analysis
+                    </h2>
+
+                    {analysis.overlap && (analysis.overlap as OverlapItem[]).length > 0 ? (
+                      <div className="space-y-6">
+                        {(analysis.overlap as OverlapItem[]).map((item, i) => (
+                          <div key={i} className="bg-forge-black border-l-4 border-accent-orange p-6">
+                            <div className="text-accent-orange font-bold uppercase text-sm mb-3">
+                              {item.category}
+                            </div>
+                            <ul className="space-y-2 mb-4">
+                              {item.items.map((overlap, j) => (
+                                <li key={j} className="text-text-primary pl-4 border-l-2 border-accent-cyan">
+                                  {overlap}
+                                </li>
+                              ))}
+                            </ul>
+                            <div className="text-text-secondary text-sm italic">
+                              Why this matters: {item.why_matters}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-forge-black border-l-4 border-grid-line p-6">
+                        <p className="text-text-secondary">No overlap analysis available yet.</p>
+                      </div>
+                    )}
+
+                    {/* Conversation Starters */}
+                    {analysis.conversation_starters && (analysis.conversation_starters as string[]).length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-3">
+                          <span className="text-accent-cyan">//</span>
+                          Conversation Starters
+                        </h3>
+                        <div className="space-y-3">
+                          {(analysis.conversation_starters as string[]).map((starter, i) => (
+                            <div key={i} className="bg-forge-black p-4 border-l-2 border-accent-cyan">
+                              <p className="text-text-primary">{starter}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Consent for Stage 2 (placeholder for future) */}
+                    <div className="mt-8 bg-forge-black border-2 border-accent-orange p-6">
+                      <div className="text-accent-orange font-bold uppercase text-sm mb-3">
+                        Want Deeper Insights?
+                      </div>
+                      <p className="text-text-primary mb-4">
+                        Stage 2 analysis includes complementarity scores, aspect mismatches, and collaboration risks. Both parties must consent to unlock this.
+                      </p>
+                      <button
+                        disabled
+                        className="w-full py-4 bg-grid-line text-text-dim font-display font-bold uppercase tracking-widest cursor-not-allowed"
+                      >
+                        Consent to Stage 2 (Coming Soon)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {analysis.analysis_status === 'failed' && (
+                  <div className="section mb-8" data-section="ANALYSIS_FAILED">
+                    <div className="bg-forge-black border-l-4 border-red-500 p-6">
+                      <div className="text-red-400 font-bold uppercase text-sm mb-2">
+                        Analysis Failed
+                      </div>
+                      <p className="text-text-primary">
+                        {analysis.error_message || 'Failed to analyze collaboration potential.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Actions */}
+            <div className="section mt-8" data-section="ACTIONS">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => router.push(`/profile/${myProfileId}`)}
+                  className="flex-1 py-4 bg-grid-line text-text-primary font-display font-bold uppercase tracking-widest hover:bg-accent-cyan hover:text-black transition-colors"
+                >
+                  My Profile
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 py-4 bg-accent-cyan text-black font-display font-bold uppercase tracking-widest hover:shadow-glow-cyan transition-all"
+                >
+                  Home
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>

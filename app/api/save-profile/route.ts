@@ -20,14 +20,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate device ID (in production, this would come from client)
+    // Generate device ID and claim token
     const deviceId = crypto.randomUUID();
+    const claimToken = crypto.randomUUID();
 
     // Insert profile into Supabase
     const { data: profile, error: insertError } = await supabase
       .from('profiles')
       .insert({
         device_id: deviceId,
+        claim_token: claimToken,
         display_name: null, // User can set this later
         role: profileData.role,
         mission: profileData.mission,
@@ -55,6 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       profileId: profile.id,
       deviceId, // Return device ID so client can store it
+      claimToken, // Return claim token for reclaim QR
       profile,
       message: 'Profile created successfully',
     });

@@ -1,0 +1,3454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Match - Human Collaboration Protocol</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+      color: #e8e8e8;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Decorative grid overlay */
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Floating orbs */
+    .floating-orb-cyan {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(78,205,196,0.1) 0%, transparent 70%);
+      top: -100px;
+      right: -100px;
+      pointer-events: none;
+      animation: pulse 8s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    .floating-orb-red {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,107,107,0.08) 0%, transparent 70%);
+      bottom: 100px;
+      left: -50px;
+      pointer-events: none;
+      animation: pulse 10s ease-in-out infinite reverse;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #ffffff 0%, #4ecdc4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+    }
+
+    .nav-links a {
+      color: #aaa;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #4ecdc4;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 60px 0;
+      margin-bottom: 60px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(78, 205, 196, 0.15);
+      border: 1px solid #4ecdc4;
+      color: #4ecdc4;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #4ecdc4, #8338ec);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero .tagline {
+      font-size: 18px;
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+
+    .hero .description {
+      font-size: 16px;
+      color: #bbb;
+      line-height: 1.7;
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+
+    /* Results Header - Travis Bonnet style with two people */
+    .results-header {
+      position: relative;
+      margin-bottom: 4rem;
+      padding: 3rem 0;
+      border-top: 3px solid #4ecdc4;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .results-header-label {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #4ecdc4;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      margin-bottom: 2rem;
+    }
+
+    .results-header-people {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .person-header {
+      position: relative;
+    }
+
+    .person-header.left {
+      text-align: right;
+      padding-right: 2rem;
+      border-right: 3px solid #4ecdc4;
+    }
+
+    .person-header.right {
+      text-align: left;
+      padding-left: 2rem;
+      border-left: 3px solid #ff6b6b;
+    }
+
+    .person-name {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+    }
+
+    .person-header.left .person-name {
+      color: #4ecdc4;
+    }
+
+    .person-header.right .person-name {
+      color: #ff6b6b;
+    }
+
+    .person-role {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .vs-divider {
+      font-size: 1.5rem;
+      color: #666;
+      font-weight: 300;
+    }
+
+    .results-description {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      border-left: 3px solid rgba(78, 205, 196, 0.5);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .results-description p {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #aaa;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: none;
+      letter-spacing: 0;
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
+      color: #4ecdc4;
+      transform: translateX(4px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
+      color: #4ecdc4;
+      transform: translateX(4px);
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 60px;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    .section-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .section-header .icon {
+      color: #4ecdc4;
+      margin-right: 10px;
+      opacity: 0.8;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      border-color: rgba(78, 205, 196, 0.3);
+    }
+
+    .card h3 {
+      color: #4ecdc4;
+      font-size: 20px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .card p {
+      color: #ccc;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    /* Domain colors */
+    .domain-human-connection {
+      background: rgba(255, 107, 107, 0.15);
+      border-left: 4px solid #ff6b6b;
+      border-radius: 16px;
+    }
+
+    .domain-technology {
+      background: rgba(78, 205, 196, 0.15);
+      border-left: 4px solid #4ecdc4;
+      border-radius: 16px;
+    }
+
+    .domain-creativity {
+      background: rgba(255, 190, 11, 0.15);
+      border-left: 4px solid #ffbe0b;
+      border-radius: 16px;
+    }
+
+    .domain-education {
+      background: rgba(131, 56, 236, 0.15);
+      border-left: 4px solid #8338ec;
+      border-radius: 16px;
+    }
+
+    /* Powerful Question Box */
+    .powerful-question {
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.12) 0%, rgba(131, 56, 236, 0.08) 50%, rgba(255, 107, 107, 0.06) 100%);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 20px;
+      margin: 40px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .powerful-question::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(78,205,196,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .powerful-question .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: #4ecdc4;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .powerful-question .question-text {
+      font-size: 22px;
+      color: #fff;
+      line-height: 1.6;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .powerful-question .explanation {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.8;
+      padding: 20px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(78, 205, 196, 0.2);
+      border-radius: 8px;
+      position: relative;
+    }
+
+    /* Complementarity Map */
+    .complementarity-map {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 30px;
+      align-items: center;
+      padding: 30px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(78, 205, 196, 0.2);
+      border-radius: 16px;
+      margin: 30px 0;
+    }
+
+    .person-brings {
+      text-align: right;
+    }
+
+    .person-brings.right {
+      text-align: left;
+    }
+
+    .person-brings h4 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: #4ecdc4;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .person-brings .traits {
+      font-size: 15px;
+      color: rgba(255,255,255,0.8);
+      line-height: 2;
+    }
+
+    .plus-operator {
+      font-size: 36px;
+      color: #4ecdc4;
+      font-weight: 700;
+    }
+
+    .result-box {
+      text-align: center;
+      padding: 25px;
+      background: rgba(78, 205, 196, 0.15);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 12px;
+      margin: 25px 0;
+    }
+
+    .result-box h3 {
+      font-size: 20px;
+      color: #4ecdc4;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .info-box {
+      padding: 20px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(78, 205, 196, 0.2);
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .info-box h4 {
+      color: #4ecdc4;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .info-box ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .info-box li {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      line-height: 1.8;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .info-box li:before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #4ecdc4;
+    }
+
+    .warning-box {
+      border-left-color: #ff6b6b;
+    }
+
+    .warning-box h4 {
+      color: #ff6b6b;
+    }
+
+    .warning-box li:before {
+      color: #ff6b6b;
+    }
+
+    /* Radar Chart */
+    .radar-container {
+      display: flex;
+      justify-content: center;
+      margin: 40px 0;
+      padding: 40px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .radar-svg {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+    }
+
+    .radar-bg-circle {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 1;
+    }
+
+    .radar-axis-line {
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 1;
+    }
+
+    .radar-polygon-left {
+      fill: rgba(78, 205, 196, 0.15);
+      stroke: #4ecdc4;
+      stroke-width: 2;
+    }
+
+    .radar-polygon-right {
+      fill: rgba(255, 107, 107, 0.15);
+      stroke: #ff6b6b;
+      stroke-width: 2;
+    }
+
+    .radar-label {
+      fill: #aaa;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .radar-score {
+      fill: #666;
+      font-size: 10px;
+    }
+
+    /* Two-sided layout */
+    .two-sided-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .side-left {
+      padding-right: 20px;
+      border-right: 1px solid rgba(78, 205, 196, 0.2);
+    }
+
+    .side-right {
+      padding-left: 20px;
+      border-left: 1px solid rgba(255, 107, 107, 0.2);
+    }
+
+    .side-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .side-left .side-label {
+      color: #4ecdc4;
+    }
+
+    .side-right .side-label {
+      color: #ff6b6b;
+    }
+
+    .aspect-bar {
+      margin-bottom: 20px;
+    }
+
+    .aspect-bar-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .aspect-bar-label .name {
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
+    }
+
+    .aspect-bar-label .value {
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    .aspect-bar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .aspect-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, rgba(78,205,196,1) 0%, rgba(78,205,196,0.8) 100%);
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .side-right .aspect-bar-fill {
+      background: linear-gradient(90deg, rgba(255,107,107,1) 0%, rgba(255,107,107,0.8) 100%);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 13px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: 80px;
+    }
+
+    /* Stage 2 Consent Modal - Slack Style */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .consent-modal {
+      background: #fff;
+      border-radius: 8px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-header {
+      padding: 48px 40px 32px;
+      text-align: center;
+    }
+
+    .modal-app-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, #4ecdc4, #3ba89f);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .modal-header h2 {
+      font-size: 28px;
+      color: #1d1c1d;
+      margin-bottom: 8px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .modal-header p {
+      font-size: 15px;
+      color: #616061;
+      line-height: 1.5;
+    }
+
+    .modal-body {
+      padding: 0 40px 32px;
+    }
+
+    .permissions-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1d1c1d;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .permission-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+
+    .permission-item-header {
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .permission-item-header:hover {
+      background: #f8f8f8;
+    }
+
+    .permission-item-title {
+      font-size: 15px;
+      color: #1d1c1d;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .permission-item-arrow {
+      color: #616061;
+      font-size: 10px;
+      transition: transform 0.2s;
+      font-weight: 700;
+    }
+
+    .permission-item.expanded .permission-item-arrow {
+      transform: rotate(180deg);
+    }
+
+    .permission-item-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+
+    .permission-item.expanded .permission-item-content {
+      max-height: 400px;
+    }
+
+    .permission-item-content-inner {
+      padding: 0 16px 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .permission-item-content ul {
+      list-style: none;
+      padding: 12px 0 0;
+      margin: 0;
+    }
+
+    .permission-item-content li {
+      padding: 4px 0;
+      font-size: 14px;
+      color: #616061;
+      line-height: 1.5;
+    }
+
+    .privacy-footer {
+      padding: 20px 40px;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      font-size: 13px;
+      color: #616061;
+      line-height: 1.6;
+    }
+
+    .privacy-footer a {
+      color: #1264a3;
+      text-decoration: none;
+    }
+
+    .privacy-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .modal-footer {
+      padding: 24px 40px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      background: #fff;
+    }
+
+    .modal-footer .btn {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: none;
+      color: rgba(29, 28, 29, 0.6);
+    }
+
+    .btn-cancel:hover {
+      background: rgba(0,0,0,0.05);
+      color: #1d1c1d;
+      transform: translateX(4px);
+    }
+
+    .btn-allow {
+      background: linear-gradient(135deg, rgba(0,122,90,0.15) 0%, rgba(0,122,90,0.1) 100%);
+      border: none;
+      color: #007a5a;
+      font-weight: 600;
+    }
+
+    .btn-allow:hover {
+      background: linear-gradient(135deg, rgba(0,122,90,0.2) 0%, rgba(0,122,90,0.15) 100%);
+      color: #006644;
+      transform: translateX(4px);
+    }
+
+    /* Contact Cards */
+    .contact-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .contact-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .contact-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .contact-card.left {
+      border-left: 4px solid #4ecdc4;
+    }
+
+    .contact-card.left:hover {
+      border-color: #4ecdc4;
+      background: rgba(78, 205, 196, 0.03);
+    }
+
+    .contact-card.right {
+      border-left: 4px solid #ff6b6b;
+    }
+
+    .contact-card.right:hover {
+      border-color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.03);
+    }
+
+    .contact-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .contact-card.left h3 {
+      color: #4ecdc4;
+    }
+
+    .contact-card.right h3 {
+      color: #ff6b6b;
+    }
+
+    .contact-card .role {
+      font-size: 13px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .contact-info {
+      margin-bottom: 20px;
+    }
+
+    .contact-info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .contact-info-item .icon {
+      width: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .contact-info-item a {
+      color: #4ecdc4;
+      text-decoration: none;
+    }
+
+    .contact-info-item a:hover {
+      text-decoration: underline;
+    }
+
+    .contact-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn-small {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.85rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    .btn-primary-small {
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .btn-primary-small:hover {
+      background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
+      color: #4ecdc4;
+      transform: translateX(4px);
+    }
+
+    .btn-outline-small {
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .btn-outline-small:hover {
+      background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
+      color: #4ecdc4;
+      transform: translateX(4px);
+    }
+
+    /* Evidence Box */
+    .evidence-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(78, 205, 196, 0.2);
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: 8px;
+    }
+
+    .evidence-box .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: #4ecdc4;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .evidence-box .quote {
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+      font-style: italic;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .evidence-box .source {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Detailed Aspects */
+    .aspect-detailed {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .aspect-detailed:hover {
+      transform: translateY(-2px);
+      border-color: rgba(78, 205, 196, 0.2);
+    }
+
+    .aspect-detailed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .aspect-detailed-header h4 {
+      font-size: 16px;
+      color: #fff;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .aspect-score-badge {
+      padding: 0.5rem 1rem;
+      background: rgba(78, 205, 196, 0.15);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4ecdc4;
+    }
+
+    .aspect-description {
+      font-size: 14px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    /* Next Steps */
+    .next-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .next-step-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .next-step-card:hover {
+      border-color: rgba(78, 205, 196, 0.3);
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.08) 0%, rgba(255, 107, 107, 0.05) 100%);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .next-step-card .step-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .next-step-card h4 {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .next-step-card p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Point Allocation System */
+    .allocation-question {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .allocation-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .allocation-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .allocation-row:hover {
+      background: rgba(78, 205, 196, 0.05);
+      border-color: rgba(78, 205, 196, 0.2);
+    }
+
+    .option-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      flex: 1;
+    }
+
+    .option-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .point-btn {
+      background: rgba(78, 205, 196, 0.1);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      color: #4ecdc4;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .point-btn:hover:not(:disabled) {
+      background: rgba(78, 205, 196, 0.2);
+      border-color: #4ecdc4;
+      transform: scale(1.05);
+    }
+
+    .point-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .point-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #4ecdc4;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .overlap-section {
+      margin-bottom: 20px;
+    }
+
+    .overlap-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4ecdc4;
+      margin-bottom: 12px;
+    }
+
+    .overlap-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .overlap-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .overlap-scores {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: #4ecdc4;
+      font-weight: 600;
+    }
+
+    /* Tabbed Prioritization */
+    .prioritization-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 0;
+    }
+
+    .priority-tab {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .priority-tab:hover {
+      color: #4ecdc4;
+    }
+
+    .priority-tab.active {
+      color: #4ecdc4;
+      border-bottom-color: #4ecdc4;
+    }
+
+    .priority-method {
+      display: none;
+    }
+
+    .priority-method.active {
+      display: block;
+    }
+
+    /* Forced Choice UI */
+    .choice-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .choice-card {
+      width: 100%;
+      max-width: 500px;
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+      border: 2px solid rgba(78, 205, 196, 0.3);
+      border-radius: 12px;
+      padding: 30px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .choice-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: #4ecdc4;
+      box-shadow: 0 20px 40px rgba(78, 205, 196, 0.2);
+    }
+
+    .choice-card:hover::before {
+      left: 100%;
+    }
+
+    .choice-card:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    .choice-label {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .choice-tap-hint {
+      font-size: 11px;
+      color: #4ecdc4;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 2px;
+      opacity: 0.7;
+    }
+
+    .choice-vs {
+      font-size: 16px;
+      font-weight: 700;
+      color: #888;
+      font-family: 'Space Mono', monospace;
+      padding: 8px 0;
+    }
+
+    /* Priority Rankings */
+    .priority-rank {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .rank-number {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: #4ecdc4;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .rank-content {
+      flex: 1;
+    }
+
+    .rank-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .rank-score {
+      font-size: 12px;
+      color: #888;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 8px;
+    }
+
+    .rank-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* Quick Pick UI */
+    .quick-question {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .quick-question-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .quick-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .quick-option {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quick-option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.1), transparent);
+      transition: left 0.4s;
+    }
+
+    .quick-option:hover {
+      border-color: rgba(78, 205, 196, 0.4);
+      background: rgba(78, 205, 196, 0.05);
+      transform: translateX(4px);
+    }
+
+    .quick-option:hover::before {
+      left: 100%;
+    }
+
+    .quick-option.selected {
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(78, 205, 196, 0.05) 100%);
+      border-color: #4ecdc4;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.2);
+    }
+
+    .quick-option-label {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .quick-option.selected .quick-option-label {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .quick-option-check {
+      font-size: 20px;
+      color: #4ecdc4;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .quick-option.selected .quick-option-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .quick-result-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+    }
+
+    .quick-result-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .quick-result-value {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .choice-card {
+        padding: 24px;
+      }
+
+      .choice-label {
+        font-size: 16px;
+      }
+
+      .prioritization-tabs {
+        flex-wrap: wrap;
+      }
+
+      .priority-tab {
+        flex: 1 1 auto;
+        min-width: 140px;
+        text-align: center;
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .quick-question-header {
+        font-size: 16px;
+      }
+
+      .quick-option {
+        padding: 16px 18px;
+      }
+
+      .quick-option-label {
+        font-size: 14px;
+      }
+    }
+
+    .consent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.5rem 1rem;
+      background: rgba(78, 205, 196, 0.15);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4ecdc4;
+      margin-bottom: 20px;
+    }
+
+    .consent-badge .checkmark {
+      font-size: 14px;
+    }
+
+    /* Profile Header with QR */
+    .profile-header-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    @media (min-width: 768px) {
+      .profile-header-container {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 60px;
+      }
+    }
+
+    .profile-qr-card {
+      flex-shrink: 0;
+    }
+
+    .profile-header-content {
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .profile-header-content {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+  <div class="floating-orb-cyan"></div>
+  <div class="floating-orb-red"></div>
+
+  <div class="container">
+    <nav>
+      <div class="logo">MISSION MATCH</div>
+      <div class="nav-links">
+        <a href="#" class="active" onclick="showScreen('home')">Home</a>
+        <a href="#" onclick="showScreen('create-profile')">Create Profile</a>
+        <a href="#" onclick="showScreen('my-profile')">My Profile</a>
+        <a href="#" onclick="showScreen('results')">Match (Public)</a>
+        <a href="#" onclick="showScreen('stage2-results')">Match (Full)</a>
+      </div>
+    </nav>
+
+    <!-- HOME SCREEN -->
+    <div id="home" class="screen active">
+      <div class="hero">
+        <div class="hero-badge">Human Collaboration Protocol</div>
+        <h1>MISSION MATCH</h1>
+        <div class="tagline">Find your people. Own your data.</div>
+        <p class="description">
+          Your AI already knows your work patterns, goals, and collaboration style.
+          What if you could extract that knowledge, make it portable, and use it to find the right collaborators instantly?
+        </p>
+        <button class="btn" onclick="showScreen('create-profile')">Create Your Profile →</button>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header"><span class="icon">◈</span> The Problem</h2>
+        <div class="grid">
+          <div class="card domain-human-connection">
+            <h3>Vendor Lock-In</h3>
+            <p>Switch from ChatGPT to Claude? You lose years of conversation history. Your AI knows you, but that knowledge is trapped.</p>
+          </div>
+          <div class="card domain-technology">
+            <h3>Random Networking</h3>
+            <p>Events are chaotic. Standing around hoping to find the right collaborators. No structure. No protocol.</p>
+          </div>
+          <div class="card domain-creativity">
+            <h3>Trial and Error</h3>
+            <p>Months to figure out if you work well together. Most collaborations fail because of misaligned expectations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header"><span class="icon">◉</span> The Solution</h2>
+        <div class="card domain-technology">
+          <h3>Extract Your Collaboration Profile</h3>
+          <p style="margin-bottom: 15px;">
+            Your AI (ChatGPT, Claude, local models) extracts your work patterns, communication style, and goals from your conversation history.
+          </p>
+          <p style="margin-bottom: 15px;">
+            You get a <strong>portable JSON profile</strong> you own. Switch AI providers? Your profile comes with you.
+          </p>
+          <p>
+            <strong>Not a personality test.</strong> Evidence-based aspects with confidence scores and proof quotes.
+          </p>
+        </div>
+
+        <div class="card domain-human-connection">
+          <h3>Find Collaborators Instantly</h3>
+          <p style="margin-bottom: 15px;">
+            At events, scan QR codes. See complementarity in 3 seconds. Know exactly what to talk about.
+          </p>
+          <p>
+            <strong>Two-stage consent</strong> (like Slack bot permissions): Public profile first, full access after mutual consent.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE PROFILE SCREEN -->
+    <div id="create-profile" class="screen">
+      <div class="hero" style="padding: 80px 0;">
+        <div class="hero-badge">Step 1: Extract Your Collaboration DNA</div>
+        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); margin-bottom: 30px;">Build Your Profile</h1>
+        <p class="description" style="max-width: 800px; margin: 0 auto 50px;">
+          Your AI assistant has been working with you for months. It knows your work patterns, communication style, strengths, and blindspots. Let's extract that knowledge into a portable collaboration profile.
+        </p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header">
+          <i data-lucide="settings" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i>
+          Choose Your Method
+        </h2>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; max-width: 900px; margin: 0 auto;">
+          <div class="card domain-technology" style="padding: 40px; cursor: pointer;" onclick="showScreen('my-profile')">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <i data-lucide="brain" style="width: 48px; height: 48px; color: #4ecdc4;"></i>
+            </div>
+            <h3 style="text-align: center; margin-bottom: 15px; color: #4ecdc4;">AI Extraction</h3>
+            <p style="text-align: center; margin-bottom: 25px; font-size: 14px; line-height: 1.7;">
+              Let AI analyze your conversation history with ChatGPT, Claude, or local models to extract your collaboration profile automatically.
+            </p>
+            <div style="text-align: center;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(78,205,196,0.7); text-transform: uppercase; letter-spacing: 1px;">Recommended • 5 min</span>
+            </div>
+          </div>
+
+          <div class="card domain-creativity" style="padding: 40px; opacity: 0.6;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <i data-lucide="edit" style="width: 48px; height: 48px; color: #ffbe0b;"></i>
+            </div>
+            <h3 style="text-align: center; margin-bottom: 15px; color: #ffbe0b;">Manual Input</h3>
+            <p style="text-align: center; margin-bottom: 25px; font-size: 14px; line-height: 1.7;">
+              Answer questions about your work style, communication preferences, and collaboration patterns yourself.
+            </p>
+            <div style="text-align: center;">
+              <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(255,190,11,0.5); text-transform: uppercase; letter-spacing: 1px;">Coming Soon • 20 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="max-width: 800px; margin: 60px auto;">
+        <h2 class="section-header">
+          <i data-lucide="shield-check" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i>
+          What Gets Analyzed
+        </h2>
+
+        <div class="card" style="padding: 30px;">
+          <div style="display: grid; gap: 20px;">
+            <div style="display: flex; gap: 15px; align-items: start;">
+              <i data-lucide="check-circle" style="width: 20px; height: 20px; color: #4ecdc4; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 15px; font-weight: 600;">Work Patterns</h4>
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;">How you approach problems, execute projects, and manage complexity</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: start;">
+              <i data-lucide="check-circle" style="width: 20px; height: 20px; color: #4ecdc4; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 15px; font-weight: 600;">Communication Style</h4>
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;">Preferred channels, response times, meeting vs async, conflict resolution</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: start;">
+              <i data-lucide="check-circle" style="width: 20px; height: 20px; color: #4ecdc4; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 15px; font-weight: 600;">Strengths & Gaps</h4>
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;">What you're exceptional at and where you need support from collaborators</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: start;">
+              <i data-lucide="check-circle" style="width: 20px; height: 20px; color: #4ecdc4; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 15px; font-weight: 600;">Evidence & Proof</h4>
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;">Specific examples from shipped projects, not personality test generalizations</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: start;">
+              <i data-lucide="x-circle" style="width: 20px; height: 20px; color: #ff6b6b; flex-shrink: 0; margin-top: 2px;"></i>
+              <div>
+                <h4 style="margin: 0 0 8px 0; color: #ff6b6b; font-size: 15px; font-weight: 600;">No PII (Yet)</h4>
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6;">Name, email, phone only shared after mutual consent with matches</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin: 60px 0;">
+        <button class="btn" style="font-size: 1rem; padding: 1rem 2.5rem;" onclick="showScreen('my-profile')">
+          <i data-lucide="sparkles" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i>
+          Generate My Profile
+        </button>
+        <p style="margin-top: 15px; font-size: 13px; color: rgba(255,255,255,0.4);">Takes ~5 minutes • Profile is portable and editable</p>
+      </div>
+    </div>
+
+    <!-- MY PROFILE SCREEN -->
+    <div id="my-profile" class="screen">
+      <div class="results-header">
+        <div class="results-header-label">
+          Your Collaboration Profile · Generated
+        </div>
+
+        <div class="profile-header-container">
+          <!-- QR Code Card -->
+          <div class="profile-qr-card">
+            <div style="width: 180px; height: 180px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+                <!-- QR Code pattern - simplified representation -->
+                <rect width="100" height="100" fill="white"/>
+
+                <!-- Corner markers -->
+                <g fill="black">
+                  <!-- Top-left -->
+                  <rect x="5" y="5" width="25" height="25" rx="2"/>
+                  <rect x="9" y="9" width="17" height="17" fill="white"/>
+                  <rect x="13" y="13" width="9" height="9"/>
+
+                  <!-- Top-right -->
+                  <rect x="70" y="5" width="25" height="25" rx="2"/>
+                  <rect x="74" y="9" width="17" height="17" fill="white"/>
+                  <rect x="78" y="13" width="9" height="9"/>
+
+                  <!-- Bottom-left -->
+                  <rect x="5" y="70" width="25" height="25" rx="2"/>
+                  <rect x="9" y="74" width="17" height="17" fill="white"/>
+                  <rect x="13" y="78" width="9" height="9"/>
+                </g>
+
+                <!-- Data pattern -->
+                <g fill="black">
+                  <rect x="35" y="10" width="4" height="4"/>
+                  <rect x="40" y="10" width="4" height="4"/>
+                  <rect x="50" y="10" width="4" height="4"/>
+                  <rect x="60" y="10" width="4" height="4"/>
+
+                  <rect x="35" y="15" width="4" height="4"/>
+                  <rect x="45" y="15" width="4" height="4"/>
+                  <rect x="55" y="15" width="4" height="4"/>
+
+                  <rect x="10" y="35" width="4" height="4"/>
+                  <rect x="15" y="35" width="4" height="4"/>
+                  <rect x="20" y="35" width="4" height="4"/>
+
+                  <rect x="35" y="35" width="4" height="4"/>
+                  <rect x="40" y="35" width="4" height="4"/>
+                  <rect x="45" y="35" width="4" height="4"/>
+                  <rect x="50" y="35" width="4" height="4"/>
+                  <rect x="55" y="35" width="4" height="4"/>
+                  <rect x="60" y="35" width="4" height="4"/>
+                  <rect x="70" y="35" width="4" height="4"/>
+                  <rect x="80" y="35" width="4" height="4"/>
+                  <rect x="90" y="35" width="4" height="4"/>
+
+                  <rect x="10" y="40" width="4" height="4"/>
+                  <rect x="20" y="40" width="4" height="4"/>
+                  <rect x="35" y="40" width="4" height="4"/>
+                  <rect x="50" y="40" width="4" height="4"/>
+                  <rect x="70" y="40" width="4" height="4"/>
+                  <rect x="85" y="40" width="4" height="4"/>
+
+                  <rect x="15" y="45" width="4" height="4"/>
+                  <rect x="40" y="45" width="4" height="4"/>
+                  <rect x="55" y="45" width="4" height="4"/>
+                  <rect x="75" y="45" width="4" height="4"/>
+                  <rect x="90" y="45" width="4" height="4"/>
+
+                  <rect x="10" y="50" width="4" height="4"/>
+                  <rect x="35" y="50" width="4" height="4"/>
+                  <rect x="45" y="50" width="4" height="4"/>
+                  <rect x="60" y="50" width="4" height="4"/>
+                  <rect x="70" y="50" width="4" height="4"/>
+                  <rect x="85" y="50" width="4" height="4"/>
+
+                  <rect x="20" y="55" width="4" height="4"/>
+                  <rect x="40" y="55" width="4" height="4"/>
+                  <rect x="50" y="55" width="4" height="4"/>
+                  <rect x="75" y="55" width="4" height="4"/>
+                  <rect x="90" y="55" width="4" height="4"/>
+
+                  <rect x="15" y="60" width="4" height="4"/>
+                  <rect x="35" y="60" width="4" height="4"/>
+                  <rect x="55" y="60" width="4" height="4"/>
+                  <rect x="70" y="60" width="4" height="4"/>
+                  <rect x="80" y="60" width="4" height="4"/>
+
+                  <rect x="35" y="75" width="4" height="4"/>
+                  <rect x="45" y="75" width="4" height="4"/>
+                  <rect x="50" y="75" width="4" height="4"/>
+                  <rect x="60" y="75" width="4" height="4"/>
+                  <rect x="70" y="75" width="4" height="4"/>
+                  <rect x="85" y="75" width="4" height="4"/>
+
+                  <rect x="40" y="80" width="4" height="4"/>
+                  <rect x="55" y="80" width="4" height="4"/>
+                  <rect x="75" y="80" width="4" height="4"/>
+                  <rect x="90" y="80" width="4" height="4"/>
+
+                  <rect x="35" y="85" width="4" height="4"/>
+                  <rect x="50" y="85" width="4" height="4"/>
+                  <rect x="65" y="85" width="4" height="4"/>
+                  <rect x="80" y="85" width="4" height="4"/>
+                </g>
+              </svg>
+            </div>
+            <div style="text-align: center; margin-top: 12px;">
+              <div style="display: inline-block; padding: 6px 12px; background: rgba(0,0,0,0.3); border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: #4ecdc4;">
+                mission-match.app/u/jordan-lee
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Header Content -->
+          <div class="profile-header-content">
+            <h1 style="font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; margin: 0 0 10px 0; color: #fff;">JORDAN LEE</h1>
+            <p style="font-size: 1rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 20px 0;">Senior Product Manager @ TechCorp</p>
+            <p style="font-size: 0.9rem; color: rgba(255,255,255,0.5); line-height: 1.6; max-width: 500px;">
+              Profile extracted from 18 months of AI conversation history. Evidence-based, not personality tests.
+            </p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+              <button class="btn-small btn-primary-small" onclick="alert('Downloading QR code as PNG...')">
+                <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                Download QR
+              </button>
+              <button class="btn-small btn-outline-small" onclick="alert('Copying link to clipboard...')">
+                <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your Aspects -->
+      <div class="section">
+        <h2 class="section-header">
+          <i data-lucide="layers" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i>
+          Your Collaboration Aspects
+        </h2>
+
+        <div style="display: grid; gap: 20px; max-width: 800px; margin: 0 auto;">
+          <div class="aspect-detailed">
+            <div class="aspect-detailed-header">
+              <h4>Process & Systems Thinking</h4>
+              <div class="aspect-score-badge">85/100</div>
+            </div>
+            <div class="aspect-description">
+              You consistently build and document repeatable workflows. Strong evidence of systematic thinking.
+            </div>
+            <div class="evidence-box">
+              <div class="label">Evidence from Work History</div>
+              <div class="quote">"Built the entire product roadmap process from scratch. Created templates for PRDs, sprint planning, and retrospectives that the whole team still uses 2 years later."</div>
+              <div class="source">— Q4 2024 Performance Review</div>
+            </div>
+          </div>
+
+          <div class="aspect-detailed">
+            <div class="aspect-detailed-header">
+              <h4>Empathy & User Understanding</h4>
+              <div class="aspect-score-badge">90/100</div>
+            </div>
+            <div class="aspect-description">
+              Deep commitment to understanding user needs. You conduct thorough research before building.
+            </div>
+            <div class="evidence-box">
+              <div class="label">Evidence from Projects</div>
+              <div class="quote">"Interviewed 43 users before writing a single line of spec. Discovered the feature we planned to build would solve the wrong problem. Pivoted based on research."</div>
+              <div class="source">— Case Study: HealthTech Redesign 2024</div>
+            </div>
+          </div>
+
+          <div class="aspect-detailed">
+            <div class="aspect-detailed-header">
+              <h4>Organization & Follow-Through</h4>
+              <div class="aspect-score-badge">88/100</div>
+            </div>
+            <div class="aspect-description">
+              You excel at tracking complex projects and ensuring nothing falls through the cracks.
+            </div>
+            <div class="evidence-box">
+              <div class="label">Evidence from Teammates</div>
+              <div class="quote">"Jordan is the person you want running point on cross-functional initiatives. Never drops a ball. Always knows status without having to ask."</div>
+              <div class="source">— Peer Review, Engineering Lead</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What You Need -->
+      <div class="section" style="max-width: 800px; margin: 60px auto;">
+        <h2 class="section-header">
+          <i data-lucide="users" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i>
+          What You Need in a Collaborator
+        </h2>
+
+        <div class="info-box">
+          <h4>You'd Thrive With Someone Who:</h4>
+          <ul>
+            <li>Brings bold vision and strategic thinking (your score: 45/100)</li>
+            <li>Makes fast decisions based on intuition (your score: 38/100)</li>
+            <li>Comfortable with ambiguity and rapid iteration (your score: 52/100)</li>
+            <li>Can help you say "no" and protect your calendar</li>
+          </ul>
+        </div>
+
+        <div class="info-box warning-box">
+          <h4 style="color: #ff6b6b;">
+            <i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i>
+            Watch Points for Collaborators
+          </h4>
+          <ul>
+            <li>You need clarity before moving (vs gut-instinct deciders)</li>
+            <li>You value financial stability ($115k steady income)</li>
+            <li>You struggle to say no (35+ hours meetings/week)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Next Steps -->
+      <div style="text-align: center; margin: 80px 0 60px;">
+        <h2 style="font-size: 1.75rem; font-weight: 600; color: #fff; margin-bottom: 15px;">Ready to Find Your Match?</h2>
+        <p style="font-size: 1rem; color: rgba(255,255,255,0.6); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+          Your profile is complete and portable. Now let's find collaborators who complement your strengths.
+        </p>
+        <button class="btn" style="font-size: 1rem; padding: 1rem 2.5rem;" onclick="showScreen('results')">
+          <i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i>
+          Find Collaborators
+        </button>
+        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; align-items: center;">
+          <button class="btn-small btn-outline-small" onclick="alert('Downloading profile as JSON...')">
+            <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+            Export Profile
+          </button>
+          <button class="btn-small btn-outline-small" onclick="alert('Opening edit mode...')">
+            <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
+            Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="results" class="screen">
+      <div class="results-header">
+        <div class="results-header-label">
+          Collaboration Protocol · Analysis Complete
+        </div>
+
+        <div class="results-header-people">
+          <div class="person-header left">
+            <div class="person-name">JORDAN LEE</div>
+            <div class="person-role">Senior Product Manager</div>
+          </div>
+
+          <div class="vs-divider">×</div>
+
+          <div class="person-header right">
+            <div class="person-name">DARIUS WEBB</div>
+            <div class="person-role">Founder & CEO</div>
+          </div>
+        </div>
+
+        <div class="results-description">
+          <p>Two profiles analyzed for collaboration fit. This is Stage 1 — public data only, no PII shared.</p>
+        </div>
+      </div>
+
+      <!-- RADAR CHART -->
+      <div class="section">
+        <h2 class="section-header"><span class="icon">◈</span> Visual Comparison</h2>
+        <p style="color: #aaa; margin-bottom: 20px; text-align: center; font-size: 14px;">
+          Behavioral patterns across 6 key dimensions
+        </p>
+
+        <div class="radar-container">
+          <svg class="radar-svg" viewBox="0 0 500 500">
+            <!-- Background circles -->
+            <circle cx="250" cy="250" r="200" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="150" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="100" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="50" class="radar-bg-circle"/>
+
+            <!-- Axis lines (6 axes) -->
+            <line x1="250" y1="250" x2="250" y2="50" class="radar-axis-line"/>
+            <line x1="250" y1="250" x2="423.2" y2="150" class="radar-axis-line"/>
+            <line x1="250" y1="250" x2="423.2" y2="350" class="radar-axis-line"/>
+            <line x1="250" y1="250" x2="250" y2="450" class="radar-axis-line"/>
+            <line x1="250" y1="250" x2="76.8" y2="350" class="radar-axis-line"/>
+            <line x1="250" y1="250" x2="76.8" y2="150" class="radar-axis-line"/>
+
+            <!-- Darius polygon (right/red) - behind -->
+            <polygon points="250,200 340,174 426,338 434,434 178,287 94,106" class="radar-polygon-right"/>
+
+            <!-- Jordan polygon (left/cyan) - front -->
+            <polygon points="250,80 276,188 269,346 250,420 84,281 157,198" class="radar-polygon-left"/>
+
+            <!-- Axis labels -->
+            <text x="250" y="35" text-anchor="middle" class="radar-label">Process</text>
+            <text x="250" y="45" text-anchor="middle" class="radar-score">J: 85 | D: 25</text>
+
+            <text x="440" y="145" text-anchor="start" class="radar-label">Empathy</text>
+            <text x="440" y="155" text-anchor="start" class="radar-score">J: 60 | D: 90</text>
+
+            <text x="440" y="365" text-anchor="start" class="radar-label">Org</text>
+            <text x="440" y="375" text-anchor="start" class="radar-score">J: 88 | D: 18</text>
+
+            <text x="250" y="485" text-anchor="middle" class="radar-label">Speed</text>
+            <text x="250" y="475" text-anchor="middle" class="radar-score">J: 92 | D: 15</text>
+
+            <text x="60" y="365" text-anchor="end" class="radar-label">Vision</text>
+            <text x="60" y="375" text-anchor="end" class="radar-score">J: 45 | D: 92</text>
+
+            <text x="60" y="145" text-anchor="end" class="radar-label">Bold</text>
+            <text x="60" y="155" text-anchor="end" class="radar-score">J: 78 | D: 88</text>
+
+            <circle cx="250" cy="250" r="3" fill="#666"/>
+          </svg>
+        </div>
+
+        <p style="text-align: center; color: #aaa; font-size: 14px; margin-top: 20px;">
+          <span style="color: #4ecdc4;">█</span> JORDAN LEE &nbsp;&nbsp;&nbsp;
+          <span style="color: #ff6b6b;">█</span> DARIUS WEBB
+        </p>
+      </div>
+
+      <!-- TWO-SIDED ASPECTS -->
+      <div class="section">
+        <h2 class="section-header"><span class="icon">⬡</span> Aspect Breakdown</h2>
+
+        <div class="two-sided-section">
+          <div class="side-left">
+            <div class="side-label">Jordan's Strengths</div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Process & Systems</span>
+                <span class="value">85/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 85%"></div>
+              </div>
+            </div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Empathy</span>
+                <span class="value">90/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 90%"></div>
+              </div>
+            </div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Organization</span>
+                <span class="value">88/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 88%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-right">
+            <div class="side-label">Darius's Strengths</div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Vision & Strategy</span>
+                <span class="value">92/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 92%"></div>
+              </div>
+            </div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Bold Moves</span>
+                <span class="value">88/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 88%"></div>
+              </div>
+            </div>
+
+            <div class="aspect-bar">
+              <div class="aspect-bar-label">
+                <span class="name">Creative Strategy</span>
+                <span class="value">90/100</span>
+              </div>
+              <div class="aspect-bar-track">
+                <div class="aspect-bar-fill" style="width: 90%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE ONE QUESTION -->
+      <div class="powerful-question">
+        <div class="label"><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Start Your Conversation Here</div>
+        <div class="question-text">
+          "If you had someone to turn your best ideas into systematic processes—what would you finally build?
+          <br><br>
+          And if you had someone to inject bold vision into your organized systems—what would you let yourself try?"
+        </div>
+        <div class="explanation">
+          <strong style="color: #4ecdc4;">Why start here:</strong><br>
+          • <strong>Darius:</strong> You have visionary ideas but execution is inconsistent → Jordan's systems could unlock them<br>
+          • <strong>Jordan:</strong> You have process mastery but drowning in meetings → Darius's boldness could free you<br>
+          • This question helps you DISCOVER what you'd do with each other's strengths<br>
+          • Your answers will reveal whether you should actually work together
+        </div>
+      </div>
+
+      <!-- COMPLEMENTARITY MAP -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="target" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> What You Could Build Together</h2>
+        <p style="color: #bbb; margin-bottom: 30px;">Based on complementary strengths (not just overlap):</p>
+
+        <div class="complementarity-map">
+          <div class="person-brings">
+            <h4 style="color: #4ecdc4;">Jordan Brings</h4>
+            <div class="traits">
+              <i data-lucide="bar-chart" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Process (85/100)<br>
+              <i data-lucide="users" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Empathy (90/100)<br>
+              <i data-lucide="layout-grid" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Organization (88/100)
+            </div>
+          </div>
+
+          <div class="plus-operator">+</div>
+
+          <div class="person-brings right">
+            <h4 style="color: #ff6b6b;">Darius Brings</h4>
+            <div class="traits">
+              <i data-lucide="eye" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Vision (92/100)<br>
+              <i data-lucide="rocket" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Bold Moves (88/100)<br>
+              <i data-lucide="lightbulb" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Creative Strategy (90/100)
+            </div>
+          </div>
+        </div>
+
+        <div class="result-box">
+          <h3>= Visionary Strategy + Execution Discipline</h3>
+        </div>
+
+        <div class="info-box">
+          <h4><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> What Energizes Both of You:</h4>
+          <ul>
+            <li>Building things that didn't exist before</li>
+            <li>Helping people/teams reach their potential</li>
+            <li>Growth through intentional reflection and iteration</li>
+          </ul>
+        </div>
+
+        <div class="two-sided-section" style="margin-top: 30px;">
+          <div class="side-left">
+            <div class="info-box warning-box">
+              <h4 style="color: #4ecdc4;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Jordan's Watch Points:</h4>
+              <ul>
+                <li>Needs clarity before moving (vs Darius's gut instinct)</li>
+                <li>Values financial stability ($115k steady)</li>
+                <li>Struggles to say no (overcommitted calendar)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="side-right">
+            <div class="info-box warning-box">
+              <h4 style="color: #ff6b6b;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Darius's Watch Points:</h4>
+              <ul>
+                <li>Trusts gut over process (vs Jordan's need for clarity)</li>
+                <li>Rides variable income ($160k fluctuating)</li>
+                <li>Needs space to process emotions</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIVACY / NEXT STEPS -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="lock" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Privacy First</h2>
+        <div class="card domain-technology">
+          <h3>Stage 1: Public Profile Access</h3>
+          <p style="margin-bottom: 15px;">
+            This analysis uses <strong>public profile data only</strong> — like a Slack bot that can see channels but can't post until invited.
+          </p>
+          <p style="margin-bottom: 15px; font-family: monospace; font-size: 13px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 4px;">
+            GET /cpx/human/{id}/public → 200 OK<br>
+            ✓ Aspects, mission, work style visible<br><br>
+            GET /cpx/human/{id}/full → 403 Forbidden<br>
+            ✗ Name, contact, LinkedIn require consent
+          </p>
+          <p style="color: #aaa; font-size: 14px;">
+            <strong>is_consent_granted: false</strong> — No PII shared yet
+          </p>
+        </div>
+
+        <button class="btn" style="margin-top: 20px; width: 100%;" onclick="showConsentModal()">
+          Grant Consent (Stage 2)
+        </button>
+
+        <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px; font-style: italic;">
+          <i data-lucide="lightbulb" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Humans aren't APIs — we're stateful and context-sensitive
+        </p>
+      </div>
+    </div>
+
+    <!-- STAGE 2 RESULTS SCREEN (After Consent) -->
+    <div id="stage2-results" class="screen">
+      <div class="results-header">
+        <div class="results-header-label">
+          Collaboration Protocol · Stage 2 Access Granted
+        </div>
+
+        <div style="text-align: center;">
+          <div class="consent-badge">
+            <span class="checkmark">✓</span>
+            Full Profile Access Enabled
+          </div>
+        </div>
+
+        <div class="results-header-people">
+          <div class="person-header left">
+            <div class="person-name">JORDAN LEE</div>
+            <div class="person-role">Senior Product Manager</div>
+          </div>
+
+          <div class="vs-divider">×</div>
+
+          <div class="person-header right">
+            <div class="person-name">DARIUS WEBB</div>
+            <div class="person-role">Founder & CEO</div>
+          </div>
+        </div>
+
+        <div class="results-description">
+          <p>Both parties have granted consent. Full profiles with contact information and detailed evidence are now visible.</p>
+        </div>
+      </div>
+
+      <!-- CONTACT CARDS -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="user" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Contact Information</h2>
+        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Now that consent is granted, you can connect directly.</p>
+
+        <div class="contact-cards">
+          <div class="contact-card left">
+            <h3>JORDAN LEE</h3>
+            <div class="role">Senior Product Manager @ TechCorp</div>
+
+            <div class="contact-info">
+              <div class="contact-info-item">
+                <i data-lucide="mail" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="mailto:jordan.lee@example.com">jordan.lee@example.com</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="phone" class="icon" style="width: 16px; height: 16px;"></i>
+                <span>+1 (555) 123-4567</span>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="linkedin" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="https://linkedin.com/in/jordanlee" target="_blank">linkedin.com/in/jordanlee</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="github" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="https://github.com/jordanlee" target="_blank">github.com/jordanlee</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="globe" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="https://jordanlee.com" target="_blank">jordanlee.com</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="clock" class="icon" style="width: 16px; height: 16px;"></i>
+                <span>PST (UTC-8) • 9am-6pm preferred</span>
+              </div>
+            </div>
+
+            <div class="contact-actions">
+              <button class="btn-small btn-primary-small" onclick="alert('Opening calendar integration...')">
+                <i data-lucide="calendar" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+                Schedule Meeting
+              </button>
+              <button class="btn-small btn-outline-small" onclick="window.location.href='mailto:jordan.lee@example.com'">
+                <i data-lucide="mail" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+                Email
+              </button>
+            </div>
+          </div>
+
+          <div class="contact-card right">
+            <h3>DARIUS WEBB</h3>
+            <div class="role">Founder & CEO @ VisionLabs</div>
+
+            <div class="contact-info">
+              <div class="contact-info-item">
+                <i data-lucide="mail" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="mailto:darius@visionlabs.io">darius@visionlabs.io</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="phone" class="icon" style="width: 16px; height: 16px;"></i>
+                <span>+1 (555) 987-6543</span>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="linkedin" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="https://linkedin.com/in/dariuswebb" target="_blank">linkedin.com/in/dariuswebb</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="globe" class="icon" style="width: 16px; height: 16px;"></i>
+                <a href="https://visionlabs.io" target="_blank">visionlabs.io</a>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="bar-chart-2" class="icon" style="width: 16px; height: 16px;"></i>
+                <span>Revenue: $160k variable • Seed funded</span>
+              </div>
+              <div class="contact-info-item">
+                <i data-lucide="clock" class="icon" style="width: 16px; height: 16px;"></i>
+                <span>EST (UTC-5) • Flexible hours</span>
+              </div>
+            </div>
+
+            <div class="contact-actions">
+              <button class="btn-small btn-primary-small" onclick="alert('Opening calendar integration...')">
+                <i data-lucide="calendar" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+                Schedule Meeting
+              </button>
+              <button class="btn-small btn-outline-small" onclick="window.location.href='mailto:darius@visionlabs.io'">
+                <i data-lucide="mail" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+                Email
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAILED ASPECTS WITH EVIDENCE -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="search" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Deep Dive: Evidence-Based Aspects</h2>
+        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Not personality tests — concrete evidence from work history and shipped projects.</p>
+
+        <div class="two-sided-section">
+          <div class="side-left">
+            <div class="side-label">Jordan's Profile</div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Process & Systems Thinking</h4>
+                <div class="aspect-score-badge">85/100</div>
+              </div>
+              <div class="aspect-description">
+                Consistently builds and documents repeatable workflows. Strong evidence of systematic thinking.
+              </div>
+              <div class="evidence-box">
+                <div class="label">Evidence from Work History</div>
+                <div class="quote">"Built the entire product roadmap process from scratch. Created templates for PRDs, sprint planning, and retrospectives that the whole team still uses 2 years later."</div>
+                <div class="source">— Q4 2024 Performance Review</div>
+              </div>
+              <div class="evidence-box">
+                <div class="label">Shipped Example</div>
+                <div class="quote">"Notion workspace with 47 interconnected templates for product workflows. Used by 12 teams across 3 companies."</div>
+                <div class="source">— Portfolio: notion-product-os.com</div>
+              </div>
+            </div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Empathy & User Understanding</h4>
+                <div class="aspect-score-badge">90/100</div>
+              </div>
+              <div class="aspect-description">
+                Deep commitment to understanding user needs. Conducts thorough research before building.
+              </div>
+              <div class="evidence-box">
+                <div class="label">Evidence from Projects</div>
+                <div class="quote">"Interviewed 43 users before writing a single line of spec. Discovered the feature we planned to build would solve the wrong problem. Pivoted based on research."</div>
+                <div class="source">— Case Study: HealthTech Redesign 2024</div>
+              </div>
+            </div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Watch Point: Overcommitment</h4>
+                <div class="aspect-score-badge" style="border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.15);"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Risk</div>
+              </div>
+              <div class="aspect-description">
+                Calendar shows 35+ hours of meetings per week. Struggles to say no to requests.
+              </div>
+              <div class="evidence-box" style="border-left-color: #ff6b6b;">
+                <div class="label" style="color: #ff6b6b;">Warning Signal</div>
+                <div class="quote">"I'm in back-to-back meetings from 9am-5pm most days. I do my actual work between 6-9pm. I know it's not sustainable but I don't know what to drop."</div>
+                <div class="source">— Recent 1:1 with Manager</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-right">
+            <div class="side-label">Darius's Profile</div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Vision & Strategic Thinking</h4>
+                <div class="aspect-score-badge" style="border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.15);">92/100</div>
+              </div>
+              <div class="aspect-description">
+                Exceptional at seeing future opportunities and connecting disparate ideas into coherent strategies.
+              </div>
+              <div class="evidence-box" style="border-left-color: #ff6b6b;">
+                <div class="label" style="color: #ff6b6b;">Evidence from Founding Story</div>
+                <div class="quote">"Saw the AI infrastructure wave 18 months before competitors. Built VisionLabs around the thesis that prompts would become the new APIs. Now have 3 enterprise clients and growing."</div>
+                <div class="source">— Founder Interview, TechCrunch 2025</div>
+              </div>
+            </div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Bold Moves & Risk Tolerance</h4>
+                <div class="aspect-score-badge" style="border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.15);">88/100</div>
+              </div>
+              <div class="aspect-description">
+                Willing to make big bets based on conviction. History shows calculated risk-taking.
+              </div>
+              <div class="evidence-box" style="border-left-color: #ff6b6b;">
+                <div class="label" style="color: #ff6b6b;">Evidence from Decisions</div>
+                <div class="quote">"Left $180k senior role to start VisionLabs with $15k in savings and no customers. Grew to $160k revenue in 14 months by trusting my gut on market timing."</div>
+                <div class="source">— LinkedIn Post, Feb 2025</div>
+              </div>
+            </div>
+
+            <div class="aspect-detailed">
+              <div class="aspect-detailed-header">
+                <h4>Watch Point: Execution Inconsistency</h4>
+                <div class="aspect-score-badge" style="border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.15);"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Risk</div>
+              </div>
+              <div class="aspect-description">
+                Strong vision but follow-through varies. Multiple projects started, fewer finished.
+              </div>
+              <div class="evidence-box" style="border-left-color: #ff6b6b;">
+                <div class="label" style="color: #ff6b6b;">Warning Signal</div>
+                <div class="quote">"I have 7 side projects in various states. Some are 80% done but I keep getting new ideas and pivoting. My co-founder says I need to finish more and start less."</div>
+                <div class="source">— Recent Reflection, Personal Blog</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE POWERFUL QUESTION (REPEATED) -->
+      <div class="powerful-question">
+        <div class="label"><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> Your First Conversation Question</div>
+        <div class="question-text">
+          "If you had someone to turn your best ideas into systematic processes—what would you finally build?
+          <br><br>
+          And if you had someone to inject bold vision into your organized systems—what would you let yourself try?"
+        </div>
+        <div class="explanation">
+          <strong style="color: #4ecdc4;">Now that you can contact each other:</strong><br>
+          • Schedule a 30-minute call to discuss your answers to this question<br>
+          • Share specific examples (Jordan: your unfinished ideas, Darius: your systematic gaps)<br>
+          • See if the answers reveal a concrete project you could collaborate on<br>
+          • If yes → move to a working session. If no → still a valuable connection.
+        </div>
+      </div>
+
+      <!-- PRIORITIZATION METHODS (TABBED) -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="target" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Prioritize Your Collaboration</h2>
+        <p style="color: #bbb; margin-bottom: 20px;">Choose how you want to reveal your priorities:</p>
+
+        <!-- Tab Switcher -->
+        <div class="prioritization-tabs">
+          <button class="priority-tab active" onclick="switchPriorityTab('quick-pick')">
+            <i data-lucide="check-circle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+            Quick Pick (4 clicks)
+          </button>
+          <button class="priority-tab" onclick="switchPriorityTab('forced-choice')">
+            <i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+            Forced Choice (21 pairs)
+          </button>
+          <button class="priority-tab" onclick="switchPriorityTab('point-allocation')">
+            <i data-lucide="sliders" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+            Point Allocation (RPG)
+          </button>
+        </div>
+
+        <!-- QUICK PICK METHOD -->
+        <div id="quick-pick-method" class="priority-method active">
+          <div style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 8px; padding: 30px; margin-top: 20px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <div style="font-size: 15px; color: #4ecdc4; font-weight: 600; margin-bottom: 8px;">
+                TAP ONE ANSWER PER QUESTION
+              </div>
+              <div style="font-size: 13px; color: #888;">
+                <span id="quick-progress">Question 1 of 4</span>
+              </div>
+              <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 12px; overflow: hidden;">
+                <div id="quick-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%); transition: width 0.3s;"></div>
+              </div>
+            </div>
+
+            <div id="quick-pick-container">
+              <!-- Question 1 -->
+              <div class="quick-question" data-question="0">
+                <div class="quick-question-header">What kind of collaboration are you most interested in?</div>
+                <div class="quick-options">
+                  <div class="quick-option" onclick="selectQuickOption(0, 'Building a product together')">
+                    <div class="quick-option-label">Building a product together</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(0, 'Running experiments & learning')">
+                    <div class="quick-option-label">Running experiments & learning</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(0, 'Strategic advising / mentorship')">
+                    <div class="quick-option-label">Strategic advising / mentorship</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question 2 -->
+              <div class="quick-question" data-question="1" style="display: none;">
+                <div class="quick-question-header">What's your preferred working style?</div>
+                <div class="quick-options">
+                  <div class="quick-option" onclick="selectQuickOption(1, 'Technical co-founder (build together)')">
+                    <div class="quick-option-label">Technical co-founder (build together)</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(1, 'Design & strategy partner')">
+                    <div class="quick-option-label">Design & strategy partner</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(1, 'Async collaboration (flexible)')">
+                    <div class="quick-option-label">Async collaboration (flexible)</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question 3 -->
+              <div class="quick-question" data-question="2" style="display: none;">
+                <div class="quick-question-header">How much time can you commit?</div>
+                <div class="quick-options">
+                  <div class="quick-option" onclick="selectQuickOption(2, 'Nights & weekends sprint (10-20 hrs/wk)')">
+                    <div class="quick-option-label">Nights & weekends sprint (10-20 hrs/wk)</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(2, 'Slow burn side project (2-5 hrs/wk)')">
+                    <div class="quick-option-label">Slow burn side project (2-5 hrs/wk)</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(2, 'Occasional / ad-hoc (1-2 hrs/wk)')">
+                    <div class="quick-option-label">Occasional / ad-hoc (1-2 hrs/wk)</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question 4 -->
+              <div class="quick-question" data-question="3" style="display: none;">
+                <div class="quick-question-header">What's your primary goal?</div>
+                <div class="quick-options">
+                  <div class="quick-option" onclick="selectQuickOption(3, 'Ship a real product to users')">
+                    <div class="quick-option-label">Ship a real product to users</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(3, 'Learn new skills & explore')">
+                    <div class="quick-option-label">Learn new skills & explore</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                  <div class="quick-option" onclick="selectQuickOption(3, 'Build portfolio / credibility')">
+                    <div class="quick-option-label">Build portfolio / credibility</div>
+                    <div class="quick-option-check">✓</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Pick Results -->
+          <div id="quick-pick-results" style="display: none; margin-top: 30px;">
+            <div style="background: rgba(78, 205, 196, 0.08); border: 2px solid #4ecdc4; border-radius: 8px; padding: 30px;">
+              <h3 style="color: #4ecdc4; margin-bottom: 25px; text-align: center;">
+                <i data-lucide="target" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i>
+                Your Collaboration Profile
+              </h3>
+
+              <div class="two-sided-section" style="margin-bottom: 30px;">
+                <div class="side-left">
+                  <div class="side-label" style="margin-bottom: 20px; color: #4ecdc4; font-weight: 600;">Your Choices</div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Collaboration</div>
+                    <div class="quick-result-value">Building a product together</div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Work Style</div>
+                    <div class="quick-result-value">Technical co-founder</div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Time</div>
+                    <div class="quick-result-value">Nights & weekends sprint</div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Goal</div>
+                    <div class="quick-result-value">Ship a real product</div>
+                  </div>
+                </div>
+
+                <div class="side-right">
+                  <div class="side-label" style="margin-bottom: 20px; color: #ff6b6b; font-weight: 600;">Their Choices</div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Collaboration</div>
+                    <div class="quick-result-value">Building a product together <span style="color: #4ecdc4;">✓</span></div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Work Style</div>
+                    <div class="quick-result-value">Design & strategy partner</div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Time</div>
+                    <div class="quick-result-value">Nights & weekends sprint <span style="color: #4ecdc4;">✓</span></div>
+                  </div>
+                  <div class="quick-result-item">
+                    <div class="quick-result-label">Goal</div>
+                    <div class="quick-result-value">Learn new skills</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 25px;">
+                <div style="font-weight: 600; color: #4ecdc4; margin-bottom: 12px; font-size: 16px;">
+                  🎯 Alignment Summary
+                </div>
+                <div style="font-size: 15px; line-height: 1.7; margin-bottom: 15px;">
+                  <strong style="color: #4ecdc4;">✓ Matched on 2/4:</strong> You both want to build a product together with high time commitment (nights & weekends).
+                </div>
+                <div style="font-size: 14px; color: #ff6b6b; margin-bottom: 15px;">
+                  <strong>⚠️ Divergence on 2/4:</strong> You're technical + shipping focused, they're design-oriented + learning focused.
+                </div>
+                <div style="font-size: 14px; color: #fff; background: rgba(78, 205, 196, 0.1); padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #4ecdc4;">
+                  <strong>→ First conversation topic:</strong> "I want to ship fast, you want to learn deeply. Can we do both? What would that look like?"
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FORCED CHOICE METHOD -->
+        <div id="forced-choice-method" class="priority-method">
+          <div style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 8px; padding: 30px; margin-top: 20px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <div style="font-size: 15px; color: #4ecdc4; font-weight: 600; margin-bottom: 8px;">
+                TAP WHAT MATTERS MORE TO YOU
+              </div>
+              <div style="font-size: 13px; color: #888;">
+                <span id="choice-progress">1 of 21</span> comparisons
+              </div>
+              <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 12px; overflow: hidden;">
+                <div id="choice-progress-bar" style="width: 4.76%; height: 100%; background: linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%); transition: width 0.3s;"></div>
+              </div>
+            </div>
+
+            <div id="choice-container">
+              <!-- Choice cards will be dynamically generated -->
+              <div class="choice-pair">
+                <div class="choice-card" onclick="makeChoice(0, 'Building a product together')">
+                  <div class="choice-label">Building a product together</div>
+                  <div class="choice-tap-hint">TAP</div>
+                </div>
+
+                <div class="choice-vs">VS</div>
+
+                <div class="choice-card" onclick="makeChoice(0, 'Running experiments & learning')">
+                  <div class="choice-label">Running experiments & learning</div>
+                  <div class="choice-tap-hint">TAP</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forced Choice Results -->
+          <div id="forced-choice-results" style="display: none; margin-top: 30px;">
+            <div style="background: rgba(78, 205, 196, 0.08); border: 2px solid #4ecdc4; border-radius: 8px; padding: 30px;">
+              <h3 style="color: #4ecdc4; margin-bottom: 25px; text-align: center;">
+                <i data-lucide="zap" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i>
+                Your Revealed Priorities
+              </h3>
+
+              <div class="two-sided-section" style="margin-bottom: 30px;">
+                <div class="side-left">
+                  <div class="priority-rank">
+                    <div class="rank-number">1</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Ship a real product</div>
+                      <div class="rank-score">Chose 15/15 times</div>
+                      <div class="rank-bar" style="width: 100%;"></div>
+                    </div>
+                  </div>
+                  <div class="priority-rank">
+                    <div class="rank-number">2</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Nights & weekends sprint</div>
+                      <div class="rank-score">Chose 12/15 times</div>
+                      <div class="rank-bar" style="width: 80%;"></div>
+                    </div>
+                  </div>
+                  <div class="priority-rank">
+                    <div class="rank-number">3</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Building a product together</div>
+                      <div class="rank-score">Chose 11/15 times</div>
+                      <div class="rank-bar" style="width: 73%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="side-right">
+                  <div class="priority-rank">
+                    <div class="rank-number">1</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Ship a real product</div>
+                      <div class="rank-score">Chose 14/15 times</div>
+                      <div class="rank-bar" style="width: 93%;"></div>
+                    </div>
+                  </div>
+                  <div class="priority-rank">
+                    <div class="rank-number">2</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Nights & weekends sprint</div>
+                      <div class="rank-score">Chose 13/15 times</div>
+                      <div class="rank-bar" style="width: 87%;"></div>
+                    </div>
+                  </div>
+                  <div class="priority-rank">
+                    <div class="rank-number">3</div>
+                    <div class="rank-content">
+                      <div class="rank-label">Learn new skills</div>
+                      <div class="rank-score">Chose 10/15 times</div>
+                      <div class="rank-bar" style="width: 67%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 25px;">
+                <div style="font-weight: 600; color: #4ecdc4; margin-bottom: 12px; font-size: 16px;">
+                  💥 Alignment Insight
+                </div>
+                <div style="font-size: 15px; line-height: 1.7; margin-bottom: 15px;">
+                  You <strong style="color: #fff;">BOTH</strong> prioritized <strong style="color: #fff;">"shipping a product"</strong> above ALL other options when forced to choose. You're both high-intensity sprinters (10-20 hrs/week).
+                </div>
+                <div style="font-size: 14px; color: #ff6b6b; margin-bottom: 15px;">
+                  <strong>⚠️ WATCH:</strong> They value "learning" (10 choices), you don't (2 choices). Negotiate upfront: Is this a learning project or a shipping project?
+                </div>
+                <div style="font-size: 14px; color: #4ecdc4; background: rgba(78, 205, 196, 0.1); padding: 12px; border-radius: 6px; margin-top: 15px;">
+                  <strong>→ Suggested first question:</strong> "Are we optimizing for learning or launching?"
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- POINT ALLOCATION METHOD -->
+        <div id="point-allocation-method" class="priority-method">
+          <p style="color: #bbb; margin-bottom: 20px; margin-top: 20px;">You each have <strong style="color: #4ecdc4;">10 points</strong> to allocate. Distribute them across the questions below to signal what matters most to you. The system will compare your allocations and suggest your best first move.</p>
+
+        <div style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="font-size: 14px; color: #4ecdc4; font-weight: 600;">
+              <i data-lucide="user" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+              YOUR ALLOCATION
+            </div>
+            <div style="font-size: 20px; font-weight: 700; font-family: 'Space Mono', monospace;">
+              <span id="points-remaining" style="color: #4ecdc4;">10</span>
+              <span style="color: #888; font-size: 14px; margin-left: 6px;">POINTS LEFT</span>
+            </div>
+          </div>
+
+          <!-- Question 1: Collaboration Type -->
+          <div class="allocation-question">
+            <div class="question-header">What kind of collaboration are you most interested in?</div>
+            <div class="allocation-options">
+              <div class="allocation-row">
+                <div class="option-label">Building a product together</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('collab-product', -1)">◀</button>
+                  <div class="point-value" id="collab-product">0</div>
+                  <button class="point-btn" onclick="adjustPoints('collab-product', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Running experiments & learning</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('collab-experiment', -1)">◀</button>
+                  <div class="point-value" id="collab-experiment">0</div>
+                  <button class="point-btn" onclick="adjustPoints('collab-experiment', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Strategic advising / mentorship</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('collab-advising', -1)">◀</button>
+                  <div class="point-value" id="collab-advising">0</div>
+                  <button class="point-btn" onclick="adjustPoints('collab-advising', 1)">▶</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 2: Work Style -->
+          <div class="allocation-question">
+            <div class="question-header">What's your preferred working style?</div>
+            <div class="allocation-options">
+              <div class="allocation-row">
+                <div class="option-label">Technical co-founder (build together)</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('style-technical', -1)">◀</button>
+                  <div class="point-value" id="style-technical">0</div>
+                  <button class="point-btn" onclick="adjustPoints('style-technical', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Design & strategy partner</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('style-design', -1)">◀</button>
+                  <div class="point-value" id="style-design">0</div>
+                  <button class="point-btn" onclick="adjustPoints('style-design', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Async collaboration (flexible)</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('style-async', -1)">◀</button>
+                  <div class="point-value" id="style-async">0</div>
+                  <button class="point-btn" onclick="adjustPoints('style-async', 1)">▶</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 3: Time Commitment -->
+          <div class="allocation-question">
+            <div class="question-header">How much time can you commit?</div>
+            <div class="allocation-options">
+              <div class="allocation-row">
+                <div class="option-label">Nights & weekends sprint (10-20 hrs/wk)</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('time-sprint', -1)">◀</button>
+                  <div class="point-value" id="time-sprint">0</div>
+                  <button class="point-btn" onclick="adjustPoints('time-sprint', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Slow burn side project (2-5 hrs/wk)</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('time-slow', -1)">◀</button>
+                  <div class="point-value" id="time-slow">0</div>
+                  <button class="point-btn" onclick="adjustPoints('time-slow', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Occasional / ad-hoc (1-2 hrs/wk)</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('time-occasional', -1)">◀</button>
+                  <div class="point-value" id="time-occasional">0</div>
+                  <button class="point-btn" onclick="adjustPoints('time-occasional', 1)">▶</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 4: Goal -->
+          <div class="allocation-question">
+            <div class="question-header">What's your primary goal?</div>
+            <div class="allocation-options">
+              <div class="allocation-row">
+                <div class="option-label">Ship a real product to users</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('goal-ship', -1)">◀</button>
+                  <div class="point-value" id="goal-ship">0</div>
+                  <button class="point-btn" onclick="adjustPoints('goal-ship', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Learn new skills & explore</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('goal-learn', -1)">◀</button>
+                  <div class="point-value" id="goal-learn">0</div>
+                  <button class="point-btn" onclick="adjustPoints('goal-learn', 1)">▶</button>
+                </div>
+              </div>
+              <div class="allocation-row">
+                <div class="option-label">Build portfolio / credibility</div>
+                <div class="option-controls">
+                  <button class="point-btn" onclick="adjustPoints('goal-portfolio', -1)">◀</button>
+                  <div class="point-value" id="goal-portfolio">0</div>
+                  <button class="point-btn" onclick="adjustPoints('goal-portfolio', 1)">▶</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <button class="btn" onclick="submitAllocation()" id="submit-allocation-btn" disabled>
+              Submit Your Allocation
+            </button>
+            <div style="color: #ff6b6b; font-size: 13px; margin-top: 10px; display: none;" id="points-error">
+              You must allocate all 10 points before submitting.
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Results (hidden until both submit) -->
+        <div id="allocation-results" style="display: none;">
+          <div style="background: rgba(78, 205, 196, 0.08); border: 2px solid #4ecdc4; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
+            <h3 style="color: #4ecdc4; margin-bottom: 20px; text-align: center;">
+              <i data-lucide="zap" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i>
+              Prioritization Results
+            </h3>
+
+            <div class="overlap-section">
+              <div class="overlap-header">🔥 Strong Mutual Interest (both 5+ points)</div>
+              <div class="overlap-item">
+                <div class="overlap-label">Building a product together</div>
+                <div class="overlap-scores">You [7] × Them [6]</div>
+              </div>
+            </div>
+
+            <div class="overlap-section">
+              <div class="overlap-header">⚡ Moderate Overlap (both 2-4 points)</div>
+              <div class="overlap-item">
+                <div class="overlap-label">Nights & weekends sprint</div>
+                <div class="overlap-scores">You [4] × Them [5]</div>
+              </div>
+              <div class="overlap-item">
+                <div class="overlap-label">Ship a real product to users</div>
+                <div class="overlap-scores">You [4] × Them [3]</div>
+              </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 20px; margin-top: 25px;">
+              <div style="font-weight: 600; color: #4ecdc4; margin-bottom: 10px; font-size: 15px;">
+                💡 Suggested First Move
+              </div>
+              <div style="font-size: 15px; line-height: 1.7;">
+                You're both heavily invested in <strong style="color: #fff;">building a product together</strong> with a <strong style="color: #fff;">shipping mindset</strong>. Your complementary strengths (Jordan's systems × Darius's vision) align perfectly for this.<br><br>
+                <strong style="color: #4ecdc4;">Next Step:</strong> Schedule a 2-week sprint to prototype a small product idea. Use Jordan's process frameworks to organize Darius's bold vision into actionable milestones.
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- NEXT STEPS -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="rocket" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Recommended Next Steps</h2>
+        <p style="color: #bbb; margin-bottom: 20px;">Based on your complementarity profile:</p>
+
+        <div class="next-steps-grid">
+          <div class="next-step-card" onclick="alert('Opening calendar booking...')">
+            <div class="step-icon"><i data-lucide="calendar" style="width: 32px; height: 32px;"></i></div>
+            <h4>Schedule First Call</h4>
+            <p>Book a 30-minute intro call to discuss the powerful question and see if there's a concrete collaboration opportunity.</p>
+          </div>
+
+          <div class="next-step-card" onclick="alert('Opening collaboration template...')">
+            <div class="step-icon"><i data-lucide="file-text" style="width: 32px; height: 32px;"></i></div>
+            <h4>Share Work Samples</h4>
+            <p>Exchange recent projects that demonstrate your complementary strengths (JORDAN: systems, DARIUS: vision).</p>
+          </div>
+
+          <div class="next-step-card" onclick="alert('Opening trial project ideas...')">
+            <div class="step-icon"><i data-lucide="flask-conical" style="width: 32px; height: 32px;"></i></div>
+            <h4>Design Trial Project</h4>
+            <p>Define a small 2-week project to test working dynamics before committing to something larger.</p>
+          </div>
+
+          <div class="next-step-card" onclick="alert('Opening expectations doc...')">
+            <div class="step-icon"><i data-lucide="scale" style="width: 32px; height: 32px;"></i></div>
+            <h4>Align Expectations</h4>
+            <p>Discuss time commitment, equity vs payment, decision-making style, and communication preferences upfront.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATA PORTABILITY -->
+      <div class="section">
+        <h2 class="section-header"><i data-lucide="package" class="icon" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i> Your Data, Your Control</h2>
+        <div class="card domain-technology">
+          <h3>Export Your CPX Profile</h3>
+          <p style="margin-bottom: 15px;">
+            Your collaboration profile is portable. Download it as JSON and use it with other AI providers or collaboration platforms.
+          </p>
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn-small btn-primary-small" onclick="alert('Downloading CPX profile as JSON...')">⬇️ Download Profile JSON</button>
+            <button class="btn-small btn-outline-small" onclick="alert('Opening revoke consent dialog...')">🔒 Revoke Access</button>
+            <button class="btn-small btn-outline-small" onclick="alert('Opening delete account dialog...')">🗑️ Delete Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Mission Match · Demo Day: March 9, 2026<br>
+    Track 3: Personal Data, Personal Value
+  </footer>
+
+  <!-- Stage 2 Consent Modal -->
+  <div id="consentModal" class="modal-overlay">
+    <div class="consent-modal">
+      <div class="modal-header">
+        <div class="modal-app-icon">MM</div>
+        <h2>Allow Mission Match to access your collaboration profile?</h2>
+        <p>Mission Match is requesting access to both JORDAN LEE and DARIUS WEBB's full profiles</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="permissions-header">Review profile permissions</div>
+
+        <div class="permission-item" onclick="togglePermissionItem(this)">
+          <div class="permission-item-header">
+            <div class="permission-item-title">Information Mission Match can view</div>
+            <div class="permission-item-arrow">▼</div>
+          </div>
+          <div class="permission-item-content">
+            <div class="permission-item-content-inner">
+              <ul>
+                <li>Full name, email address, phone number</li>
+                <li>LinkedIn, GitHub, and portfolio URLs</li>
+                <li>Company name, role, and career timeline</li>
+                <li>Salary expectations and current compensation</li>
+                <li>Shipped projects and work samples</li>
+                <li>Availability and time commitment preferences</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="permission-item" onclick="togglePermissionItem(this)">
+          <div class="permission-item-header">
+            <div class="permission-item-title">Actions Mission Match can take</div>
+            <div class="permission-item-arrow">▼</div>
+          </div>
+          <div class="permission-item-content">
+            <div class="permission-item-content-inner">
+              <ul>
+                <li>Share your profile with other consenting users</li>
+                <li>Generate collaboration fit analysis</li>
+                <li>Create powerful questions for first conversations</li>
+                <li>Store your profile data (encrypted at rest)</li>
+                <li>Send notifications about matches and connections</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="privacy-footer">
+        By clicking Allow, you agree to Mission Match's <a href="#">User Agreement</a> and <a href="#">Privacy Policy</a>. Both parties must consent to share profiles — you can revoke access at any time. Your CPX profile remains portable and exportable.
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-cancel" onclick="hideConsentModal()">Cancel</button>
+        <button class="btn btn-allow" onclick="grantConsent()">Allow</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+      });
+      document.getElementById(screenId).classList.add('active');
+
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        link.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      window.scrollTo(0, 0);
+    }
+
+    function showConsentModal() {
+      document.getElementById('consentModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideConsentModal() {
+      document.getElementById('consentModal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    function togglePermissionItem(element) {
+      element.classList.toggle('expanded');
+    }
+
+    function grantConsent() {
+      // In real implementation, this would make API call to grant mutual consent
+      hideConsentModal();
+      showScreen('stage2-results');
+
+      // Show a brief notification
+      setTimeout(() => {
+        const notification = document.createElement('div');
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #007a5a; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-family: DM Sans, sans-serif; font-size: 14px;';
+        notification.innerHTML = '✓ Stage 2 Access Granted — Full profiles unlocked';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+      }, 300);
+    }
+
+    // Point Allocation System
+    const MAX_POINTS = 10;
+    let pointsAllocated = {};
+
+    function adjustPoints(optionId, delta) {
+      const currentValue = pointsAllocated[optionId] || 0;
+      const newValue = currentValue + delta;
+
+      // Calculate total points used
+      const totalUsed = Object.values(pointsAllocated).reduce((sum, val) => sum + val, 0);
+      const availablePoints = MAX_POINTS - totalUsed + currentValue;
+
+      // Validate: can't go below 0, can't exceed available points
+      if (newValue < 0 || newValue > availablePoints) {
+        return;
+      }
+
+      // Update the allocation
+      pointsAllocated[optionId] = newValue;
+
+      // Update UI
+      document.getElementById(optionId).textContent = newValue;
+
+      // Update points remaining
+      const newTotal = Object.values(pointsAllocated).reduce((sum, val) => sum + val, 0);
+      const remaining = MAX_POINTS - newTotal;
+      document.getElementById('points-remaining').textContent = remaining;
+
+      // Update submit button state
+      const submitBtn = document.getElementById('submit-allocation-btn');
+      const errorMsg = document.getElementById('points-error');
+
+      if (remaining === 0) {
+        submitBtn.disabled = false;
+        errorMsg.style.display = 'none';
+      } else {
+        submitBtn.disabled = true;
+        if (newTotal > 0) {
+          errorMsg.style.display = 'block';
+        }
+      }
+    }
+
+    function submitAllocation() {
+      // In real implementation, this would send allocation to backend
+      // and wait for other person's allocation before showing comparison
+
+      // For demo purposes, immediately show mock comparison results
+      document.getElementById('allocation-results').style.display = 'block';
+      document.getElementById('allocation-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Show notification
+      const notification = document.createElement('div');
+      notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4ecdc4; color: #0a0a0f; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-family: DM Sans, sans-serif; font-size: 14px; font-weight: 600;';
+      notification.innerHTML = '✓ Allocation submitted! Comparing with match...';
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    }
+
+    // Tab switching for prioritization methods
+    function switchPriorityTab(method) {
+      // Update tab buttons
+      document.querySelectorAll('.priority-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.closest('.priority-tab').classList.add('active');
+
+      // Update method visibility
+      document.querySelectorAll('.priority-method').forEach(methodDiv => {
+        methodDiv.classList.remove('active');
+      });
+      document.getElementById(method + '-method').classList.add('active');
+    }
+
+    // Quick Pick System
+    let quickPickSelections = [];
+    let currentQuickQuestion = 0;
+
+    function selectQuickOption(questionIndex, selectedOption) {
+      // Store the selection
+      quickPickSelections[questionIndex] = selectedOption;
+
+      // Visual feedback - highlight selected option
+      const currentQuestion = document.querySelector(`.quick-question[data-question="${questionIndex}"]`);
+      currentQuestion.querySelectorAll('.quick-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      event.target.closest('.quick-option').classList.add('selected');
+
+      // Move to next question after brief delay
+      setTimeout(() => {
+        // Hide current question
+        currentQuestion.style.display = 'none';
+
+        currentQuickQuestion++;
+        const progress = (currentQuickQuestion / 4) * 100;
+        document.getElementById('quick-progress-bar').style.width = progress + '%';
+
+        if (currentQuickQuestion < 4) {
+          // Show next question
+          document.getElementById('quick-progress').textContent = `Question ${currentQuickQuestion + 1} of 4`;
+          const nextQuestion = document.querySelector(`.quick-question[data-question="${currentQuickQuestion}"]`);
+          nextQuestion.style.display = 'block';
+        } else {
+          // All done - show results
+          document.getElementById('quick-pick-container').style.display = 'none';
+          document.getElementById('quick-pick-results').style.display = 'block';
+          document.getElementById('quick-pick-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          // Show notification
+          const notification = document.createElement('div');
+          notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4ecdc4; color: #0a0a0f; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-family: DM Sans, sans-serif; font-size: 14px; font-weight: 600;';
+          notification.innerHTML = '✓ Profile complete! Comparing with match...';
+          document.body.appendChild(notification);
+          setTimeout(() => notification.remove(), 3000);
+        }
+      }, 400);
+    }
+
+    // Forced Choice System
+    const choicePairs = [
+      // Collaboration type comparisons
+      ['Building a product together', 'Running experiments & learning'],
+      ['Building a product together', 'Strategic advising / mentorship'],
+      ['Running experiments & learning', 'Strategic advising / mentorship'],
+
+      // Work style comparisons
+      ['Technical co-founder (build together)', 'Design & strategy partner'],
+      ['Technical co-founder (build together)', 'Async collaboration (flexible)'],
+      ['Design & strategy partner', 'Async collaboration (flexible)'],
+
+      // Time commitment comparisons
+      ['Nights & weekends sprint (10-20 hrs/wk)', 'Slow burn side project (2-5 hrs/wk)'],
+      ['Nights & weekends sprint (10-20 hrs/wk)', 'Occasional / ad-hoc (1-2 hrs/wk)'],
+      ['Slow burn side project (2-5 hrs/wk)', 'Occasional / ad-hoc (1-2 hrs/wk)'],
+
+      // Goal comparisons
+      ['Ship a real product to users', 'Learn new skills & explore'],
+      ['Ship a real product to users', 'Build portfolio / credibility'],
+      ['Learn new skills & explore', 'Build portfolio / credibility'],
+
+      // Cross-category comparisons (strategic)
+      ['Building a product together', 'Nights & weekends sprint (10-20 hrs/wk)'],
+      ['Ship a real product to users', 'Technical co-founder (build together)'],
+      ['Running experiments & learning', 'Learn new skills & explore'],
+      ['Strategic advising / mentorship', 'Async collaboration (flexible)'],
+      ['Slow burn side project (2-5 hrs/wk)', 'Learn new skills & explore'],
+      ['Nights & weekends sprint (10-20 hrs/wk)', 'Ship a real product to users'],
+      ['Build portfolio / credibility', 'Building a product together'],
+      ['Technical co-founder (build together)', 'Nights & weekends sprint (10-20 hrs/wk)'],
+      ['Design & strategy partner', 'Strategic advising / mentorship']
+    ];
+
+    let currentChoiceIndex = 0;
+    let choiceResults = {};
+
+    function makeChoice(pairIndex, selectedOption) {
+      const pair = choicePairs[currentChoiceIndex];
+      const notSelected = pair.find(option => option !== selectedOption);
+
+      // Record the choice
+      if (!choiceResults[selectedOption]) choiceResults[selectedOption] = 0;
+      if (!choiceResults[notSelected]) choiceResults[notSelected] = 0;
+      choiceResults[selectedOption]++;
+
+      // Animate card selection
+      const cards = document.querySelectorAll('.choice-card');
+      cards.forEach(card => {
+        if (card.querySelector('.choice-label').textContent === selectedOption) {
+          card.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.3) 0%, rgba(78, 205, 196, 0.1) 100%)';
+          card.style.borderColor = '#4ecdc4';
+        } else {
+          card.style.opacity = '0.3';
+        }
+      });
+
+      // Move to next choice after brief delay
+      setTimeout(() => {
+        currentChoiceIndex++;
+
+        if (currentChoiceIndex >= choicePairs.length) {
+          // Show results
+          document.getElementById('choice-container').style.display = 'none';
+          document.getElementById('forced-choice-results').style.display = 'block';
+
+          // In real implementation, compare with other person's results
+          // For now, just show completion message
+          const notification = document.createElement('div');
+          notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4ecdc4; color: #0a0a0f; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; font-family: DM Sans, sans-serif; font-size: 14px; font-weight: 600;';
+          notification.innerHTML = '✓ Choices complete! Comparing with match...';
+          document.body.appendChild(notification);
+          setTimeout(() => notification.remove(), 3000);
+        } else {
+          // Show next pair
+          renderChoicePair();
+        }
+      }, 400);
+    }
+
+    function renderChoicePair() {
+      const pair = choicePairs[currentChoiceIndex];
+      const progress = ((currentChoiceIndex + 1) / choicePairs.length) * 100;
+
+      document.getElementById('choice-progress').textContent = `${currentChoiceIndex + 1} of ${choicePairs.length}`;
+      document.getElementById('choice-progress-bar').style.width = progress + '%';
+
+      const container = document.getElementById('choice-container');
+      container.innerHTML = `
+        <div class="choice-pair">
+          <div class="choice-card" onclick="makeChoice(${currentChoiceIndex}, '${pair[0].replace(/'/g, "\\'")}')">
+            <div class="choice-label">${pair[0]}</div>
+            <div class="choice-tap-hint">TAP</div>
+          </div>
+
+          <div class="choice-vs">VS</div>
+
+          <div class="choice-card" onclick="makeChoice(${currentChoiceIndex}, '${pair[1].replace(/'/g, "\\'")}')">
+            <div class="choice-label">${pair[1]}</div>
+            <div class="choice-tap-hint">TAP</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('consentModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideConsentModal();
+      }
+    });
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

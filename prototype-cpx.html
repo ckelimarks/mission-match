@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPX - Collaborative Protocol Exchange</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Gradient background */
+    .gradient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.3;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .sphere-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #ff6b35, transparent);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .sphere-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #00d4ff, transparent);
+      bottom: -150px;
+      right: -150px;
+      animation-delay: 5s;
+    }
+
+    .sphere-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #ff6b35, transparent);
+      top: 50%;
+      left: 50%;
+      animation-delay: 10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(50px, -50px) scale(1.1); }
+      66% { transform: translate(-30px, 30px) scale(0.9); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 2px solid #00d4ff;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00d4ff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+    }
+
+    .nav-links a {
+      color: #e0e0e0;
+      text-decoration: none;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 1px;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #ff6b35;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #ff6b35, #ff4500);
+      color: white;
+      text-decoration: none;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #00d4ff, #0096c7);
+    }
+
+    .btn-secondary:hover {
+      box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 80px 20px;
+      border: 2px solid #00d4ff;
+      background: rgba(13, 13, 13, 0.8);
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .hero-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0d0d0d;
+      padding: 0 20px;
+      color: #00d4ff;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .hero .tagline {
+      font-size: 18px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 40px;
+    }
+
+    .hero .description {
+      font-size: 16px;
+      max-width: 700px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+      color: #bbb;
+    }
+
+    /* Section */
+    .section {
+      background: rgba(26, 26, 26, 0.6);
+      border-left: 4px solid #00d4ff;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .section-header {
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: #00d4ff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-header::before {
+      content: "//";
+      color: #ff6b35;
+      font-size: 20px;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(13, 13, 13, 0.8);
+      border: 1px solid #333;
+      padding: 30px;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      border-color: #ff6b35;
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      color: #ff6b35;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+    }
+
+    .card p {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Radar Chart */
+    .radar-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      background: rgba(13, 13, 13, 0.9);
+      border: 2px solid #00d4ff;
+      margin-bottom: 40px;
+    }
+
+    .radar-svg {
+      width: 500px;
+      height: 500px;
+    }
+
+    .radar-bg-circle {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 1;
+    }
+
+    .radar-axis-line {
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 1;
+    }
+
+    .radar-polygon-you {
+      fill: rgba(0, 212, 255, 0.15);
+      stroke: #00d4ff;
+      stroke-width: 2;
+    }
+
+    .radar-polygon-them {
+      fill: rgba(255, 107, 53, 0.1);
+      stroke: #ff6b35;
+      stroke-width: 2;
+    }
+
+    .radar-label {
+      fill: #e0e0e0;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .radar-score {
+      fill: #666;
+      font-size: 11px;
+    }
+
+    /* Protocol Exchange */
+    .protocol-status {
+      background: rgba(0, 212, 255, 0.1);
+      border: 2px solid #00d4ff;
+      padding: 30px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .protocol-status h2 {
+      color: #00d4ff;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 15px;
+    }
+
+    .protocol-status p {
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .protocol-status .stage {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(0, 212, 255, 0.2);
+      color: #00d4ff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 5px;
+    }
+
+    /* Code Block */
+    .code-block {
+      background: #000;
+      border: 1px solid #333;
+      padding: 20px;
+      font-family: 'Monaco', monospace;
+      font-size: 13px;
+      color: #0f0;
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    .code-block .comment {
+      color: #555;
+    }
+
+    .code-block .keyword {
+      color: #00d4ff;
+    }
+
+    .code-block .string {
+      color: #ff6b35;
+    }
+
+    /* Endpoint Display */
+    .endpoint {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #00d4ff;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .endpoint h4 {
+      color: #00d4ff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .endpoint code {
+      color: #ff6b35;
+      font-size: 14px;
+    }
+
+    .endpoint p {
+      color: #aaa;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    /* Aspect Scale */
+    .aspect-item {
+      background: rgba(13, 13, 13, 0.8);
+      border-left: 3px solid #00d4ff;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .aspect-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .aspect-name {
+      color: #00d4ff;
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .aspect-confidence {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .aspect-confidence.high {
+      color: #0f0;
+    }
+
+    .aspect-confidence.medium {
+      color: #ff6b35;
+    }
+
+    .scale-line {
+      position: relative;
+      height: 40px;
+      margin: 15px 0;
+    }
+
+    .scale-bar {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(to right, #00d4ff, #ff6b35);
+      opacity: 0.3;
+    }
+
+    .scale-marker {
+      position: absolute;
+      top: 10px;
+      width: 20px;
+      height: 20px;
+      background: #00d4ff;
+      border: 3px solid #0d0d0d;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .scale-label-left {
+      color: #00d4ff;
+    }
+
+    .scale-label-right {
+      color: #ff6b35;
+    }
+
+    .scale-value {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .evidence-quote {
+      background: rgba(0, 0, 0, 0.5);
+      border-left: 2px solid #666;
+      padding: 12px 15px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #999;
+      font-style: italic;
+    }
+
+    .evidence-quote::before {
+      content: "💬 Evidence from conversations:";
+      display: block;
+      font-size: 11px;
+      color: #666;
+      font-style: normal;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .layer-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: rgba(0, 212, 255, 0.2);
+      color: #00d4ff;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 3px;
+      margin-left: 10px;
+    }
+
+    .profile-status {
+      background: rgba(0, 212, 255, 0.1);
+      border: 2px solid #00d4ff;
+      padding: 25px;
+      margin-bottom: 30px;
+      text-align: center;
+      border-radius: 5px;
+    }
+
+    .profile-status h3 {
+      color: #00d4ff;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .btn-small {
+      padding: 10px 20px;
+      font-size: 12px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid #333;
+      margin-top: 80px;
+      color: #555;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* Overlap Items */
+    .overlap-item {
+      background: rgba(13, 13, 13, 0.8);
+      border-left: 4px solid #00d4ff;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .overlap-item h4 {
+      color: #00d4ff;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .overlap-item p {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Conversation Starters */
+    .starter-item {
+      background: rgba(13, 13, 13, 0.8);
+      border-left: 4px solid #ff6b35;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .starter-item .number {
+      color: #ff6b35;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .starter-item p {
+      color: #ddd;
+      font-size: 14px;
+      line-height: 1.6;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="gradient-bg">
+    <div class="sphere sphere-1"></div>
+    <div class="sphere sphere-2"></div>
+    <div class="sphere sphere-3"></div>
+  </div>
+
+  <div class="container">
+    <nav>
+      <div class="logo">CPX</div>
+      <div class="nav-links">
+        <a href="#" onclick="showScreen('home')">Home</a>
+        <a href="#" onclick="showScreen('protocol')">Protocol</a>
+        <a href="#" onclick="showScreen('profile')">Profile</a>
+        <a href="#" onclick="showScreen('results')">Demo Results</a>
+      </div>
+    </nav>
+
+    <!-- HOME SCREEN -->
+    <div id="home" class="screen active">
+      <div class="hero">
+        <div class="hero-badge">INFRASTRUCTURE LAYER</div>
+        <h1>Collaborative<br>Protocol Exchange</h1>
+        <div class="tagline">The Human API Layer</div>
+        <p class="description">
+          A universal handshake protocol for progressive disclosure of human collaboration context.
+          Not a personality test. Not a hiring tool.
+          <strong>Machine-readable collaboration infrastructure for an AI-agent world.</strong>
+        </p>
+        <button class="btn" onclick="showScreen('protocol')">Explore the Protocol →</button>
+      </div>
+
+      <div class="section">
+        <div class="section-header">The Problem</div>
+        <p style="color: #bbb; font-size: 16px; line-height: 1.8; margin-bottom: 30px;">
+          Team formation is <strong>socially awkward, random, and inefficient.</strong>
+          We've all been in that room trying to find collaborators—standing around making small talk,
+          hoping to find someone who works the way we do. <strong>No structure. No protocol.</strong>
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Awkward</h3>
+            <p>Approaching strangers to talk about collaboration feels forced and uncomfortable.</p>
+          </div>
+          <div class="card">
+            <h3>Random</h3>
+            <p>You might miss the perfect collaborator because you didn't happen to talk to them.</p>
+          </div>
+          <div class="card">
+            <h3>Inefficient</h3>
+            <p>Hours of small talk to figure out if you work well together. Trial and error.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">The Shift</div>
+        <p style="color: #bbb; font-size: 16px; line-height: 1.8; margin-bottom: 20px;">
+          <strong>The world is moving to AI agents.</strong> Agents will mediate hiring, partnerships, team formation.
+          Everyone is building agent tools, agent workflows, agent APIs.
+        </p>
+        <p style="color: #00d4ff; font-size: 18px; font-weight: bold; margin-bottom: 30px;">
+          But there's a missing infrastructure layer: How do humans exchange collaboration context through agents?
+        </p>
+        <div class="code-block">
+<span class="comment">// Software has APIs</span>
+<span class="keyword">GET</span> <span class="string">/api/users/123</span>
+<span class="keyword">POST</span> <span class="string">/api/orders</span>
+
+<span class="comment">// Humans need them too</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/abc123/public</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/abc123/full</span>
+        </div>
+      </div>
+
+      <div class="section" style="background: rgba(255, 107, 53, 0.1); border-left: 4px solid #ff6b35;">
+        <div class="section-header" style="color: #ff6b35;">Why This Matters Right Now</div>
+        <p style="color: #ddd; font-size: 17px; line-height: 1.8; margin-bottom: 20px; font-weight: 500;">
+          People are switching AI providers and <strong>losing years of context.</strong>
+        </p>
+        <p style="color: #bbb; font-size: 15px; line-height: 1.8; margin-bottom: 20px;">
+          Your AI knows your work patterns, your communication style, your goals. You've spent months training it through conversation.
+        </p>
+        <p style="color: #bbb; font-size: 15px; line-height: 1.8; margin-bottom: 30px;">
+          <strong>But that knowledge is trapped.</strong> Cancel ChatGPT? Move to Claude? Switch to a local model?
+          You lose everything. No export. No portability. Vendor lock-in.
+        </p>
+        <div style="background: rgba(0, 0, 0, 0.5); padding: 25px; border-left: 3px solid #00d4ff; margin-bottom: 20px;">
+          <p style="color: #00d4ff; font-size: 16px; font-weight: bold; margin-bottom: 15px;">
+            CPX solves this:
+          </p>
+          <p style="color: #bbb; font-size: 14px; line-height: 1.8;">
+            • Extract your collaboration profile from <strong>any AI</strong> (ChatGPT, Claude, local models)<br>
+            • Store it in a format <strong>you control</strong><br>
+            • Take it with you when you switch providers<br>
+            • Use it to find collaborators at events, online, anywhere
+          </p>
+        </div>
+        <p style="color: #aaa; font-size: 14px; font-style: italic;">
+          We're not asking you to share data you don't already have. We're giving you <strong>ownership</strong> of data that's currently trapped in vendor silos.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">The Vision</div>
+        <p style="color: #bbb; font-size: 16px; line-height: 1.8; margin-bottom: 20px;">
+          <strong>CPX is a universal handshake protocol for human collaboration.</strong>
+        </p>
+        <p style="color: #bbb; font-size: 16px; line-height: 1.8; margin-bottom: 30px;">
+          Think of it like this: Software exposes endpoints. <strong>Humans need to explain their endpoint too.</strong>
+          Your work style, your mission, your patterns—structured data that agents can interpret and exchange.
+        </p>
+        <p style="color: #ff6b35; font-size: 18px; font-weight: bold;">
+          "The bridge disappears and we get back to living."
+        </p>
+      </div>
+    </div>
+
+    <!-- PROTOCOL SCREEN -->
+    <div id="protocol" class="screen">
+      <div class="hero">
+        <div class="hero-badge">PROTOCOL SPECIFICATION</div>
+        <h1>CPX v0.1</h1>
+        <div class="tagline">Collaborative Protocol Exchange</div>
+        <p class="description">
+          A standard for progressive disclosure of human collaboration context.
+          Enables agents to mediate team formation, partnerships, and collaboration in a structured, consent-based way.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Core Concept</div>
+        <p style="color: #bbb; font-size: 16px; line-height: 1.8; margin-bottom: 30px;">
+          CPX enables humans to <strong>"explain their endpoint"</strong>—exposing structured collaboration context
+          in a machine-readable format that AI agents can interpret, exchange, and match.
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Machine-Readable</h3>
+            <p>Structured JSON format that any AI agent can parse and understand.</p>
+          </div>
+          <div class="card">
+            <h3>Progressive Disclosure</h3>
+            <p>Two-stage consent: anonymized overlap first, full context after mutual approval.</p>
+          </div>
+          <div class="card">
+            <h3>Consent-Based</h3>
+            <p>Users control what's shared at each stage. No data revealed without permission.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Protocol Endpoints</div>
+
+        <div class="endpoint">
+          <h4>Public Profile Access (Always Available)</h4>
+          <code>GET /cpx/human/{id}/public</code>
+          <p>Returns anonymized collaboration context. Like a Slack bot seeing channel names—no invitation needed.</p>
+          <div style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.5); font-size: 12px;">
+            <strong>Response when is_consent_granted: false</strong><br>
+            <span style="color: #0f0;">200 OK</span> • Returns: role, mission, aspects (no PII)
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <h4>Full Profile Access (Requires Consent)</h4>
+          <code>GET /cpx/human/{id}/full</code>
+          <p>Returns complete profile with PII. Like a Slack bot posting in a channel—requires explicit invitation.</p>
+          <div style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.5); font-size: 12px;">
+            <strong>Response when is_consent_granted: false</strong><br>
+            <span style="color: #f00;">403 Forbidden</span> • Error: "consent_not_granted"<br>
+            <div style="margin-top: 8px; color: #888;">
+              Hint: Request access via <code>POST /cpx/human/{id}/consent</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <h4>Grant Consent (Invitation)</h4>
+          <code>POST /cpx/human/{id}/consent</code>
+          <p>Grant another person's AI access to your full profile. Like /invite @bot in Slack.</p>
+          <div style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.5); font-size: 12px;">
+            <strong>Request Body:</strong><br>
+            { "handshake_id": "abc123", "duration_days": 30 }
+          </div>
+        </div>
+
+        <div class="endpoint">
+          <h4>Revoke Consent (Removal)</h4>
+          <code>DELETE /cpx/human/{id}/consent</code>
+          <p>Revoke access to your full profile. Like /remove @bot in Slack. Takes effect immediately.</p>
+          <div style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.5); font-size: 12px;">
+            <strong>Effect:</strong> is_consent_granted → false<br>
+            Other party sees: "Access revoked by user"
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Protocol Flow (Slack Bot Analogy)</div>
+        <div class="code-block">
+<span class="comment">// 1. Two humans meet (QR scan, NFC tap, etc.)</span>
+<span class="keyword">POST</span> <span class="string">/cpx/handshake</span>
+{
+  <span class="string">"initiator"</span>: <span class="string">"human_abc123"</span>,
+  <span class="string">"recipient"</span>: <span class="string">"human_def456"</span>
+}
+<span class="comment">// Creates handshake with is_consent_granted: false (both)</span>
+
+<span class="comment">// 2. Agents exchange public context (no consent needed)</span>
+<span class="comment">// Like Slack bot seeing channel list</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/abc123/public</span>  <span class="comment">→ 200 OK</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/def456/public</span>  <span class="comment">→ 200 OK</span>
+
+<span class="comment">// 3. AI analyzes overlap, returns conversation starters</span>
+<span class="comment">// Humans see: "You both care about X, Y, Z"</span>
+
+<span class="comment">// 4. Try to access full profile (FAILS - not invited yet)</span>
+<span class="comment">// Like Slack bot trying to post without invitation</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/abc123/full</span>  <span class="comment">→ 403 consent_not_granted</span>
+
+<span class="comment">// 5. Both humans consent (explicit "invitation")</span>
+<span class="keyword">POST</span> <span class="string">/cpx/human/abc123/consent</span> { <span class="string">"handshake_id"</span>: <span class="string">"xyz"</span> }
+<span class="keyword">POST</span> <span class="string">/cpx/human/def456/consent</span> { <span class="string">"handshake_id"</span>: <span class="string">"xyz"</span> }
+<span class="comment">// Sets is_consent_granted: true (both)</span>
+
+<span class="comment">// 6. NOW full profiles accessible (both invited)</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/abc123/full</span>  <span class="comment">→ 200 OK (name, contact, LinkedIn)</span>
+<span class="keyword">GET</span> <span class="string">/cpx/human/def456/full</span>  <span class="comment">→ 200 OK (name, contact, LinkedIn)</span>
+
+<span class="comment">// 7. Later: Revoke access (like /remove @bot)</span>
+<span class="keyword">DELETE</span> <span class="string">/cpx/human/abc123/consent</span>
+<span class="comment">// Sets is_consent_granted: false again</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Key Principles</div>
+        <div class="overlap-item">
+          <h4>1. Structure, Not Scoring</h4>
+          <p>CPX defines how to exchange context, not how to rate humans. No universal compatibility scores. Focus on facilitating conversation.</p>
+        </div>
+        <div class="overlap-item">
+          <h4>2. Progressive Disclosure</h4>
+          <p>Share depth gradually. Anonymized patterns first, identified details only after consent.</p>
+        </div>
+        <div class="overlap-item">
+          <h4>3. Agent-Mediated</h4>
+          <p>Designed for AI agents to interpret and exchange on behalf of humans. Machine-readable collaboration layer.</p>
+        </div>
+        <div class="overlap-item">
+          <h4>4. Extensible</h4>
+          <p>Today: role, mission, work patterns. Tomorrow: calendar data, communication style, creative output. The protocol adapts.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Ethics & Data Sovereignty</div>
+        <p style="color: #aaa; margin-bottom: 20px;">
+          CPX is built on Human API principles for ethical data exchange:
+        </p>
+        <div class="grid">
+          <div class="card">
+            <h3>Consent</h3>
+            <p>Two-stage, explicit, revocable. You control what's shared at each layer.</p>
+          </div>
+          <div class="card">
+            <h3>Transparency</h3>
+            <p>You see exactly what data is exchanged. No hidden inference.</p>
+          </div>
+          <div class="card">
+            <h3>Autonomy</h3>
+            <p>You decide who gets access, when, and for how long.</p>
+          </div>
+          <div class="card">
+            <h3>Reversibility</h3>
+            <p>Revoke access anytime. Delete your endpoint. Full data portability.</p>
+          </div>
+          <div class="card">
+            <h3>Anti-Extraction</h3>
+            <p>We don't infer without permission. You generate the profile, we don't guess.</p>
+          </div>
+          <div class="card">
+            <h3>Probabilistic Honesty</h3>
+            <p>We show confidence scores. Humans are stateful—this is working documentation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SCREEN -->
+    <div id="profile" class="screen">
+      <div class="hero">
+        <div class="hero-badge">YOUR_ENDPOINT</div>
+        <h1>Your Collaboration Profile</h1>
+        <div class="tagline">Machine-Readable Working Style</div>
+      </div>
+
+      <div class="profile-status">
+        <h3>✓ Profile Created</h3>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 5px;">
+          Generated from your conversation history (Feb 2026)
+        </p>
+        <p style="color: #666; font-size: 13px; margin-bottom: 20px; font-style: italic;">
+          ⚠️ Humans aren't APIs—we're stateful and context-sensitive. This is a snapshot, not a fixed identity.
+        </p>
+        <div class="profile-actions">
+          <button class="btn btn-small" onclick="alert('JSON view would show here')">View as Portable JSON</button>
+          <button class="btn-secondary btn btn-small" onclick="alert('QR code download')">Download QR Code</button>
+        </div>
+      </div>
+
+      <div class="section" style="background: rgba(255, 107, 53, 0.05); border-left-color: #ff6b35;">
+        <div class="section-header" style="color: #ff6b35;">Next Step</div>
+        <p style="color: #ddd; font-size: 16px; margin-bottom: 20px;">
+          <strong>Ready to find collaborators?</strong> Scan someone else's QR code to see your overlap.
+        </p>
+        <button class="btn" onclick="showScreen('results')" style="background: linear-gradient(135deg, #ff6b35, #ff4500);">
+          View Demo Handshake Results →
+        </button>
+        <p style="color: #666; font-size: 13px; margin-top: 15px;">
+          Or share your QR code so others can initiate a handshake with you.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Profile Overview</div>
+        <p style="color: #bbb; margin-bottom: 20px;">
+          <strong>Christopher Marks</strong> • Profile ID: abc123 • Updated: Feb 27, 2026
+        </p>
+        <div class="grid">
+          <div class="card">
+            <h3>Role</h3>
+            <p>AI product builder focused on developer tools and creative applications</p>
+          </div>
+          <div class="card">
+            <h3>Mission</h3>
+            <p>Building tools that help people think more clearly and create more effectively</p>
+          </div>
+          <div class="card">
+            <h3>Looking For</h3>
+            <p>Technical co-founders who ship fast and care about craft</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">🔹 Layer 1: Role & Identity</div>
+        <p style="color: #aaa; font-size: 13px; margin-bottom: 25px;">
+          How you approach work and contribution
+        </p>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Creative ← → Executor <span class="layer-badge">L1</span></span>
+            <span class="aspect-confidence high">High Confidence (85%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 65%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Pure Creative</span>
+            <span class="scale-value"><strong>65</strong> (Execution-leaning with creative flexibility)</span>
+            <span class="scale-label-right">100 = Pure Executor</span>
+          </div>
+          <div class="evidence-quote">
+            "Can you tweak this… can you shorten this section… make it more concise"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Shows iterative refinement mindset (execution focus)
+            </div>
+          </div>
+        </div>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Generalist ← → Specialist <span class="layer-badge">L1</span></span>
+            <span class="aspect-confidence medium">Medium Confidence (65%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 75%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Pure Generalist</span>
+            <span class="scale-value"><strong>75</strong> (Specialist with broad context awareness)</span>
+            <span class="scale-label-right">100 = Pure Specialist</span>
+          </div>
+          <div class="evidence-quote">
+            "I want to focus on instructional design and people operations"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Clear domain specialization
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">🔹 Layer 2: Trust & Safety</div>
+        <p style="color: #aaa; font-size: 13px; margin-bottom: 25px;">
+          Communication style and boundary management
+        </p>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Structure ← → Chaos <span class="layer-badge">L2</span></span>
+            <span class="aspect-confidence high">High Confidence (90%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 90%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Chaotic/Freeform</span>
+            <span class="scale-value"><strong>90</strong> (Highly structured approach)</span>
+            <span class="scale-label-right">100 = Maximum Structure</span>
+          </div>
+          <div class="evidence-quote">
+            "I need clear frameworks and organized systems to feel grounded"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Strong preference for defined processes
+            </div>
+          </div>
+        </div>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Directness <span class="layer-badge">L2</span></span>
+            <span class="aspect-confidence high">High Confidence (80%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 75%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Indirect/Diplomatic</span>
+            <span class="scale-value"><strong>75</strong> (Direct with empathy)</span>
+            <span class="scale-label-right">100 = Maximum Directness</span>
+          </div>
+          <div class="evidence-quote">
+            "I appreciate clear, honest feedback even when it's hard to hear"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Values transparent communication
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">🔹 Layer 3: Bandwidth & Depth</div>
+        <p style="color: #aaa; font-size: 13px; margin-bottom: 25px;">
+          How you build shared context and iterate
+        </p>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Iteration Speed <span class="layer-badge">L3</span></span>
+            <span class="aspect-confidence high">High Confidence (85%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 90%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Slow/Deliberate</span>
+            <span class="scale-value"><strong>90</strong> (Rapid refinement cycles)</span>
+            <span class="scale-label-right">100 = Maximum Speed</span>
+          </div>
+          <div class="evidence-quote">
+            "Can you tweak this… can you shorten this section… make it more concise"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Multiple refinement requests in quick succession
+            </div>
+          </div>
+        </div>
+
+        <div class="aspect-item">
+          <div class="aspect-header">
+            <span class="aspect-name">Polish Tolerance <span class="layer-badge">L3</span></span>
+            <span class="aspect-confidence medium">Medium Confidence (70%)</span>
+          </div>
+          <div class="scale-line">
+            <div class="scale-bar"></div>
+            <div class="scale-marker" style="left: 85%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span class="scale-label-left">0 = Ship Rough/Early</span>
+            <span class="scale-value"><strong>85</strong> (High polish before sharing)</span>
+            <span class="scale-label-right">100 = Perfect or Nothing</span>
+          </div>
+          <div class="evidence-quote">
+            "Multiple rounds of refinement before finalizing deliverables"
+            <div style="font-size: 11px; color: #555; margin-top: 5px;">
+              └─ Quality-driven approach to outputs
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="border-left-color: #ff6b35;">
+        <div class="section-header" style="color: #ff6b35;">⚠️ Potential Tension Points</div>
+        <p style="color: #aaa; margin-bottom: 25px;">
+          Areas where friction might occur with certain collaboration styles:
+        </p>
+
+        <div class="overlap-item" style="border-left-color: #ff6b35;">
+          <h4>High Structure Preference (90/100)</h4>
+          <p><strong>May clash with:</strong> Freeform, chaotic, "figure it out as we go" teams</p>
+          <p style="margin-top: 10px; color: #666; font-size: 13px;">
+            <strong>Watch for:</strong> Frustration when processes are unclear or constantly changing<br>
+            <strong>Mitigation:</strong> Establish clear frameworks and communication protocols early
+          </p>
+        </div>
+
+        <div class="overlap-item" style="border-left-color: #ff6b35;">
+          <h4>High Polish Tolerance (85/100)</h4>
+          <p><strong>May clash with:</strong> "Ship rough, iterate later" builders who prioritize speed over polish</p>
+          <p style="margin-top: 10px; color: #666; font-size: 13px;">
+            <strong>Watch for:</strong> Discomfort with releasing "good enough" work<br>
+            <strong>Mitigation:</strong> Agree on quality thresholds per deliverable type (prototype vs final)
+          </p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Your CPX Endpoint</div>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 20px;">
+          This is your machine-readable collaboration context. Agents use this data to match and introduce you to collaborators.
+        </p>
+        <div class="code-block">
+{
+  <span class="string">"cpx_version"</span>: <span class="string">"0.1"</span>,
+  <span class="string">"id"</span>: <span class="string">"abc123"</span>,
+  <span class="string">"role"</span>: <span class="string">"AI product builder"</span>,
+  <span class="string">"mission"</span>: <span class="string">"Building thinking tools"</span>,
+  <span class="string">"behavioral_patterns"</span>: {
+    <span class="string">"creative_score"</span>: 85,
+    <span class="string">"speed_score"</span>: 92,
+    <span class="string">"structure_score"</span>: 45
+  },
+  <span class="string">"proof_points"</span>: [
+    {
+      <span class="string">"name"</span>: <span class="string">"Mission Match"</span>,
+      <span class="string">"impact"</span>: <span class="string">"Built for hackathon"</span>
+    }
+  ]
+}
+        </div>
+        <button class="btn-secondary btn" style="margin-top: 20px;">Copy Endpoint Data</button>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Share Your Endpoint</div>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 30px;">
+          Generate a QR code for in-person handshakes. When someone scans it, their agent initiates a CPX exchange with yours.
+        </p>
+        <div style="text-align: center; padding: 40px; background: white; display: inline-block;">
+          <div style="width: 200px; height: 200px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">
+            [QR CODE]<br>
+            /cpx/handshake/abc123
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="results" class="screen">
+      <div class="hero">
+        <div class="hero-badge">PROTOCOL_EXCHANGE_COMPLETE</div>
+        <h1>Handshake Results</h1>
+        <div class="tagline">Collaboration Context Exchange</div>
+      </div>
+
+      <div class="protocol-status">
+        <h2>Protocol Exchange Complete</h2>
+        <p>Your agents have exchanged collaboration context using CPX v0.1</p>
+        <p style="margin-top: 15px;">
+          <span class="stage">Stage 1: Complete • "is_consent_granted": false</span>
+        </p>
+        <p style="margin-top: 20px; font-size: 14px; color: #aaa; line-height: 1.7;">
+          <strong>Public profile access only.</strong> Like a Slack bot that can see channels but can't post until invited.<br>
+          Both parties must consent to unlock full profiles (name, contact, projects).
+        </p>
+        <div style="margin-top: 25px; padding: 20px; background: rgba(0, 0, 0, 0.3); border: 1px solid #333; font-family: Monaco, monospace; font-size: 12px; text-align: left;">
+          <div style="color: #666;">// Current Access Level</div>
+          <div style="color: #00d4ff;">GET /api/human/abc123/<span style="color: #0f0;">public</span></div>
+          <div style="color: #888; margin-top: 10px;">→ Accessible: role, mission, aspects</div>
+          <br>
+          <div style="color: #ff6b35;">GET /api/human/abc123/<span style="color: #f00;">full</span></div>
+          <div style="color: #888;">→ 403 Forbidden: consent_not_granted</div>
+        </div>
+      </div>
+
+      <div class="section" style="border-left-color: #ff6b35; background: rgba(255, 107, 53, 0.05);">
+        <div class="section-header" style="color: #ff6b35;">⚠️ Important Context</div>
+        <p style="color: #ddd; font-size: 15px; line-height: 1.8; margin-bottom: 15px;">
+          <strong>Humans aren't APIs—we're stateful, context-sensitive, and probabilistic.</strong>
+        </p>
+        <p style="color: #aaa; font-size: 14px; line-height: 1.7;">
+          This analysis is a <strong>conversation starter, not a compatibility verdict.</strong>
+          Every relationship is a custom integration—you have to build it together.
+          These insights are based on conversation history (Jan-Feb 2026) and represent working documentation, not fixed identity.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Visual Comparison</div>
+        <p style="color: #aaa; font-size: 13px; margin-bottom: 20px; text-align: center;">
+          Behavioral patterns with confidence scores • Based on conversation history Jan-Feb 2026
+        </p>
+        <div class="radar-container">
+          <svg class="radar-svg" viewBox="0 0 500 500">
+            <!-- Background circles -->
+            <circle cx="250" cy="250" r="200" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="150" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="100" class="radar-bg-circle"/>
+            <circle cx="250" cy="250" r="50" class="radar-bg-circle"/>
+
+            <!-- Axis lines (6 axes) -->
+            <!-- Creative (0°) -->
+            <line x1="250" y1="250" x2="250" y2="50" class="radar-axis-line"/>
+            <!-- Specialist (60°) -->
+            <line x1="250" y1="250" x2="423.2" y2="150" class="radar-axis-line"/>
+            <!-- Ideas (120°) -->
+            <line x1="250" y1="250" x2="423.2" y2="350" class="radar-axis-line"/>
+            <!-- Speed (180°) -->
+            <line x1="250" y1="250" x2="250" y2="450" class="radar-axis-line"/>
+            <!-- Structure (240°) -->
+            <line x1="250" y1="250" x2="76.8" y2="350" class="radar-axis-line"/>
+            <!-- Direct (300°) -->
+            <line x1="250" y1="250" x2="76.8" y2="150" class="radar-axis-line"/>
+
+            <!-- THEM polygon (orange - behind) -->
+            <!-- Values: Creative:25, Specialist:20, Ideas:18, Speed:15, Structure:95, Direct:45 -->
+            <polygon points="250,200 276,188 269,346 250,420 84,281 157,198" class="radar-polygon-them"/>
+
+            <!-- YOU polygon (cyan - front) -->
+            <!-- Values: Creative:85, Specialist:60, Ideas:88, Speed:92, Structure:45, Direct:78 -->
+            <polygon points="250,80 340,174 426,338 434,434 178,287 94,106" class="radar-polygon-you"/>
+
+            <!-- Axis labels -->
+            <text x="250" y="35" text-anchor="middle" class="radar-label">Creative</text>
+            <text x="250" y="45" text-anchor="middle" class="radar-score">You: 85 | Them: 25</text>
+
+            <text x="440" y="145" text-anchor="start" class="radar-label">Specialist</text>
+            <text x="440" y="155" text-anchor="start" class="radar-score">You: 60 | Them: 20</text>
+
+            <text x="440" y="365" text-anchor="start" class="radar-label">Ideas</text>
+            <text x="440" y="375" text-anchor="start" class="radar-score">You: 88 | Them: 18</text>
+
+            <text x="250" y="485" text-anchor="middle" class="radar-label">Speed</text>
+            <text x="250" y="475" text-anchor="middle" class="radar-score">You: 92 | Them: 15</text>
+
+            <text x="60" y="365" text-anchor="end" class="radar-label">Structure</text>
+            <text x="60" y="375" text-anchor="end" class="radar-score">You: 45 | Them: 95</text>
+
+            <text x="60" y="145" text-anchor="end" class="radar-label">Direct</text>
+            <text x="60" y="155" text-anchor="end" class="radar-score">You: 78 | Them: 45</text>
+
+            <!-- Center dot -->
+            <circle cx="250" cy="250" r="3" fill="#666"/>
+          </svg>
+        </div>
+        <p style="text-align: center; color: #aaa; font-size: 14px; margin-top: 20px;">
+          <span style="color: #00d4ff;">█</span> Jordan Lee (Senior Product Manager) &nbsp;&nbsp;&nbsp;
+          <span style="color: #ff6b35;">█</span> Darius Webb (Founder/CEO) &nbsp;&nbsp;&nbsp;
+        </p>
+        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 10px;">
+          Overlap = shared area | Gaps = complementary differences | All scores 0-100
+        </p>
+      </div>
+
+      <!-- THE ONE QUESTION (MOVED TO TOP) -->
+      <div style="margin: 40px 0; padding: 35px; background: linear-gradient(135deg, rgba(0, 255, 0, 0.15), rgba(0, 212, 255, 0.15)); border: 3px solid #0f0; box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);">
+        <div style="font-size: 13px; color: #0f0; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; text-align: center;">
+          ⚡ Start Your Conversation Here
+        </div>
+        <div style="font-size: 20px; color: #fff; line-height: 1.8; margin-bottom: 25px; font-weight: 500; text-align: center;">
+          "If you had someone to turn your best ideas into systematic processes—what would you finally build?<br><br>
+          And if you had someone to inject bold vision into your organized systems—what would you let yourself try?"
+        </div>
+        <div style="font-size: 13px; color: #aaa; line-height: 1.8; padding: 20px; background: rgba(0, 0, 0, 0.5); border-left: 3px solid rgba(0, 255, 0, 0.5);">
+          <strong style="color: #0f0;">Why start here:</strong><br>
+          • <strong>Darius:</strong> You have visionary ideas but execution is inconsistent → Jordan's systems could unlock them<br>
+          • <strong>Jordan:</strong> You have process mastery but drowning in meetings → Darius's boldness could free you<br>
+          • This question helps you DISCOVER what you'd do with each other's strengths<br>
+          • Your answers will reveal whether you should actually work together
+        </div>
+      </div>
+
+      <!-- COMPLEMENTARITY MAP (Belbin-inspired) -->
+      <div class="section" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(255, 107, 53, 0.05)); border-left-color: #0f0;">
+        <div class="section-header" style="color: #0f0;">🎯 What You Could Build Together</div>
+        <p style="color: #ddd; margin-bottom: 30px; font-size: 15px;">
+          Based on complementary strengths (not just overlap):
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin-bottom: 30px; padding: 25px; background: rgba(0, 0, 0, 0.4); border: 2px solid rgba(0, 212, 255, 0.3);">
+          <!-- Jordan Column -->
+          <div style="text-align: right;">
+            <div style="font-size: 13px; color: #00d4ff; text-transform: uppercase; font-weight: bold; margin-bottom: 15px;">
+              Jordan Brings
+            </div>
+            <div style="font-size: 14px; color: #ddd; line-height: 2;">
+              📊 Process (85/100)<br>
+              🤝 Empathy (90/100)<br>
+              📋 Organization (88/100)
+            </div>
+          </div>
+
+          <!-- Center Operator -->
+          <div style="text-align: center; font-size: 32px; color: #0f0;">
+            +
+          </div>
+
+          <!-- Darius Column -->
+          <div style="text-align: left;">
+            <div style="font-size: 13px; color: #ff6b35; text-transform: uppercase; font-weight: bold; margin-bottom: 15px;">
+              Darius Brings
+            </div>
+            <div style="font-size: 14px; color: #ddd; line-height: 2;">
+              🎨 Vision (92/100)<br>
+              🚀 Bold Moves (88/100)<br>
+              💡 Creative Strategy (90/100)
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; font-size: 18px; color: #0f0; margin-bottom: 15px; font-weight: bold;">
+          = Potential: Visionary Strategy + Execution Discipline
+        </div>
+
+        <div style="background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; padding: 20px; margin-bottom: 25px;">
+          <div style="font-size: 14px; color: #ddd; margin-bottom: 15px;">
+            <strong style="color: #0f0;">⚡ What Energizes Both of You:</strong>
+          </div>
+          <div style="font-size: 13px; color: #aaa; line-height: 1.8; padding-left: 20px;">
+            • Building things that didn't exist before<br>
+            • Helping people/teams reach their potential<br>
+            • Growth through intentional reflection and iteration
+          </div>
+        </div>
+
+        <div style="background: rgba(255, 107, 53, 0.1); border: 1px solid #ff6b35; padding: 20px;">
+          <div style="font-size: 14px; color: #ddd; margin-bottom: 15px;">
+            <strong style="color: #ff6b35;">⚠️ What to Align On First:</strong>
+          </div>
+          <div style="font-size: 13px; color: #aaa; line-height: 1.8; padding-left: 20px;">
+            • <strong>Decision-making rhythm</strong> — Jordan needs clarity before moving, Darius trusts gut instincts<br>
+            • <strong>Financial expectations</strong> — Jordan values stability ($115k), Darius rides variable income ($160k)<br>
+            • <strong>Communication cadence</strong> — Jordan struggles to say no, Darius needs space to process emotions
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section">
+        <div class="section-header">Collaboration Overlap</div>
+        <p style="color: #aaa; margin-bottom: 30px;">
+          Your agents identified these shared contexts and potential synergies (Layer analysis from Human API framework):
+        </p>
+
+        <div class="overlap-item">
+          <h4>Process Design <span style="color: #00d4ff; font-size: 11px; margin-left: 10px;">[L3: Bandwidth/Depth]</span></h4>
+          <p>Both design systematic workflows—you for AI products, them for compliance frameworks. Different motivations (innovation vs stability) but shared discipline in structured thinking. <strong>Fast context-building potential.</strong></p>
+        </div>
+
+        <div class="overlap-item">
+          <h4>Human-Technology Interface <span style="color: #00d4ff; font-size: 11px; margin-left: 10px;">[L1: Context]</span></h4>
+          <p>You build tools requiring user trust; they manage resistance to change. They understand why people resist technology; you need that insight for adoption. <strong>Complementary domain knowledge.</strong></p>
+        </div>
+
+        <div class="overlap-item">
+          <h4>Risk and Ethics <span style="color: #00d4ff; font-size: 11px; margin-left: 10px;">[L2: Safety/Trust]</span></h4>
+          <p>Their risk frameworks could inform your AI product safety features. Consumer AI faces growing regulatory scrutiny that their enterprise experience anticipates. <strong>Boundary-setting alignment.</strong></p>
+        </div>
+      </div>
+
+      <div class="section" style="border-left-color: #ff6b35;">
+        <div class="section-header" style="color: #ff6b35;">⚠️ Tension Points</div>
+        <p style="color: #aaa; margin-bottom: 30px;">
+          Potential layer violations to watch for. Not dealbreakers—just areas requiring conscious negotiation:
+        </p>
+
+        <div class="overlap-item" style="border-left-color: #ff6b35;">
+          <h4>Pace Mismatch <span style="color: #ff6b35; font-size: 11px; margin-left: 10px;">[L2: Safety] Risk: Flooding</span></h4>
+          <p>You ship fast and iterate (92/100 speed), they prefer deliberation and long planning cycles (20/100 speed). <strong>Could cause Layer 2 flooding if not managed.</strong> Watch for: You feeling held back, them feeling rushed. Repair: Explicit pace agreements per project.</p>
+        </div>
+
+        <div class="overlap-item" style="border-left-color: #ff6b35;">
+          <h4>Structure/Chaos Gap <span style="color: #ff6b35; font-size: 11px; margin-left: 10px;">[L3: Bandwidth] Risk: Context Loss</span></h4>
+          <p>You operate with low structure (45/100), they require high structure (95/100). <strong>Different context-building approaches.</strong> Watch for: Documentation expectations, process overhead. Repair: Find shared minimum viable process.</p>
+        </div>
+
+        <div class="overlap-item" style="border-left-color: #ff6b35;">
+          <h4>Polish Tolerance <span style="color: #ff6b35; font-size: 11px; margin-left: 10px;">[L2: Safety] Risk: Quality Conflict</span></h4>
+          <p>You ship rough/early (15/100 polish tolerance), they require extensive approvals (92/100). <strong>Could trigger Layer 2 safety concerns.</strong> Watch for: "Done" definition mismatch. Repair: Separate internal prototypes from external deliverables.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Conversation Starters</div>
+        <p style="color: #aaa; margin-bottom: 15px;">
+          Based on the protocol exchange, your agents suggest these discussion topics.
+        </p>
+        <p style="color: #666; font-size: 13px; margin-bottom: 30px; font-style: italic;">
+          Note: These are starting points, not outcomes. Every partnership is a custom integration.
+        </p>
+
+        <div class="starter-item">
+          <div class="number">1</div>
+          <p><strong>[L2: Trust Building]</strong> What are the top 3 compliance fears that would prevent adoption of consumer-facing AI tools, and how could product design address them preemptively?</p>
+        </div>
+
+        <div class="starter-item">
+          <div class="number">2</div>
+          <p><strong>[L3: Context Transfer]</strong> How do you build trust with skeptical users in highly regulated environments, and what parallels exist with gaining consumer trust in personal AI systems?</p>
+        </div>
+
+        <div class="starter-item">
+          <div class="number">3</div>
+          <p><strong>[L1: Domain Context]</strong> What lessons from legacy financial system stability could apply to building reliable AI workflows that people depend on daily?</p>
+        </div>
+      </div>
+
+      <div class="section" style="border-left-color: #ff6b35;">
+        <div class="section-header" style="color: #ff6b35;">Grant Full Access (Stage 2)</div>
+        <p style="color: #bbb; font-size: 15px; margin-bottom: 20px;">
+          <strong>Think of this like inviting a Slack bot to a channel.</strong>
+        </p>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 30px; line-height: 1.7;">
+          Right now, their AI can see your <strong>public profile</strong> (role, mission, aspects).<br>
+          To share your <strong>full profile</strong> (name, contact, LinkedIn, projects), you both must consent.
+        </p>
+
+        <div style="background: rgba(0, 0, 0, 0.5); padding: 20px; margin-bottom: 25px; border-left: 3px solid #00d4ff;">
+          <div style="font-size: 13px; color: #aaa; margin-bottom: 15px;">
+            <strong style="color: #00d4ff;">If you grant consent:</strong>
+          </div>
+          <div style="font-size: 13px; color: #888; line-height: 1.8;">
+            • They get your name, contact info, LinkedIn<br>
+            • They see specific projects with URLs<br>
+            • They access detailed aspect evidence<br>
+            • You can revoke access anytime
+          </div>
+          <div style="margin-top: 15px; padding: 12px; background: rgba(255, 107, 53, 0.1); border: 1px solid #ff6b35; font-size: 12px; color: #ff6b35;">
+            ⏱️ Access expires after 30 days (renewable)
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+          <button class="btn" style="background: linear-gradient(135deg, #00d4ff, #0096c7); flex: 1;" onclick="alert('Consent granted! Both parties now have full access.')">
+            ✓ Grant Full Access
+          </button>
+          <button class="btn" style="background: rgba(100, 100, 100, 0.3); flex: 1;" onclick="alert('You can grant consent later from your handshake history.')">
+            Maybe Later
+          </button>
+        </div>
+
+        <p style="color: #666; font-size: 12px; margin-top: 20px; text-align: center;">
+          Both parties must consent independently. Access is revocable and time-limited.
+        </p>
+      </div>
+    </div>
+
+    <footer>
+      CPX v0.1 • Collaborative Protocol Exchange<br>
+      The Human API Layer for an AI-Agent World<br>
+      <span style="margin-top: 10px; display: block; color: #333;">
+        "Explain your endpoint. The bridge disappears and we get back to living."
+      </span>
+    </footer>
+  </div>
+
+  <script>
+    function showScreen(screenId) {
+      // Hide all screens
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+      });
+
+      // Show selected screen
+      document.getElementById(screenId).classList.add('active');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>

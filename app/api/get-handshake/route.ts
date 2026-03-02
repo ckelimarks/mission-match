@@ -7,11 +7,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const handshakeId = searchParams.get('handshakeId');
+    const handshakeId = searchParams.get('id') || searchParams.get('handshakeId');
 
     if (!handshakeId) {
       return NextResponse.json(
-        { error: 'handshakeId is required' },
+        { error: 'handshakeId or id is required' },
         { status: 400 }
       );
     }
@@ -31,7 +31,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(handshake);
+    // Fetch associated analysis
+    const { data: analysis } = await supabase
+      .from('analyses')
+      .select('*')
+      .eq('handshake_id', handshakeId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    return NextResponse.json({
+      handshake,
+      analysis: analysis || null,
+    });
   } catch (error) {
     console.error('Get handshake error:', error);
 

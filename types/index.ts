@@ -67,6 +67,7 @@ export type ProofPoint = {
 export type Profile = {
   id: string;
   device_id: string;
+  claim_token: string;
   display_name: string | null;
   role: string | null;
   mission: string | null;

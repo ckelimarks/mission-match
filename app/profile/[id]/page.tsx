@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import type { Profile } from '@/types';
-import ProfileView from '@/components/ProfileView';
+import ProfileViewWrapper from '@/components/ProfileViewWrapper';
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const { data: profile, error } = await supabase
@@ -14,5 +14,5 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     notFound();
   }
 
-  return <ProfileView profile={profile as Profile} />;
+  return <ProfileViewWrapper profile={profile as Profile} />;
 }

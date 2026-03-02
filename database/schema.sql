@@ -14,6 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   device_id UUID NOT NULL UNIQUE,
+  claim_token TEXT UNIQUE NOT NULL DEFAULT gen_random_uuid()::text,
   display_name TEXT,
   role TEXT,
   mission TEXT,
@@ -37,6 +38,9 @@ CREATE TABLE profiles (
 
 -- Index for device_id lookups
 CREATE INDEX idx_profiles_device_id ON profiles(device_id);
+
+-- Index for claim token lookups
+CREATE INDEX idx_profiles_claim_token ON profiles(claim_token);
 
 -- ============================================================================
 -- Handshakes Table

@@ -1,15 +1,24 @@
 'use client';
 
 import type { Profile, AspectScore } from '@/types';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import QRCode from 'react-qr-code';
 
 interface ProfileViewProps {
   profile: Profile;
+  isOwner?: boolean;
 }
 
-export default function ProfileView({ profile }: ProfileViewProps) {
+export default function ProfileView({ profile, isOwner = false }: ProfileViewProps) {
   const [showBoostPrompt, setShowBoostPrompt] = useState(false);
+  const [showClaimQR, setShowClaimQR] = useState(false);
+  const shareQrRef = useRef<HTMLDivElement>(null);
+  const claimQrRef = useRef<HTMLDivElement>(null);
+
+  const handleConnect = () => {
+    // Navigate to handshake flow
+    window.location.href = `/handshake/${profile.id}`;
+  };
 
   const getStrengthColor = (strength: number) => {
     if (strength >= 4) return 'text-accent-cyan';
@@ -86,33 +95,90 @@ export default function ProfileView({ profile }: ProfileViewProps) {
           <p className="text-text-secondary uppercase tracking-[0.3em] text-sm font-medium">
             ID: {profile.id.slice(0, 8)}...
           </p>
+
+          {!isOwner && (
+            <div className="mt-6">
+              <button
+                onClick={handleConnect}
+                className="px-8 py-4 bg-gradient-to-r from-accent-cyan to-blue-500 text-black font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-cyan hover:translate-y-[-2px]"
+              >
+                Connect →
+              </button>
+              <p className="text-text-secondary text-xs mt-2">
+                Initiate a collaboration handshake
+              </p>
+            </div>
+          )}
         </header>
 
         {/* QR Code Section */}
         <div className="section mb-8" data-section="QR_CODE">
           <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
             <span className="text-accent-cyan text-xl">//</span>
-            Your QR Code
+            {isOwner ? 'Your QR Codes' : 'Share QR Code'}
           </h2>
 
-          <div className="flex flex-col items-center">
-            <div className="bg-white p-6 rounded-lg mb-4">
-              <QRCode
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/handshake/${profile.id}`}
-                size={200}
-                level="M"
-              />
-            </div>
+          {isOwner ? (
+            /* Owner view: Show both Share and Claim QRs */
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Share QR */}
+              <div className="flex flex-col items-center">
+                <div className="bg-white p-6 rounded-lg mb-4" ref={shareQrRef}>
+                  <QRCode
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${profile.id}`}
+                    size={200}
+                    level="M"
+                  />
+                </div>
+                <div className="text-center max-w-md">
+                  <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
+                    Share QR
+                  </p>
+                  <p className="text-text-secondary text-sm">
+                    Others scan this to view your profile and initiate a handshake.
+                  </p>
+                </div>
+              </div>
 
-            <div className="text-center max-w-md">
-              <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
-                Share Your Profile
-              </p>
-              <p className="text-text-secondary text-sm">
-                Others can scan this code to initiate a collaboration handshake and see your overlap areas.
-              </p>
+              {/* Claim QR */}
+              <div className="flex flex-col items-center">
+                <div className="bg-white p-6 rounded-lg mb-4" ref={claimQrRef}>
+                  <QRCode
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/claim?token=${profile.claim_token}`}
+                    size={200}
+                    level="M"
+                  />
+                </div>
+                <div className="text-center max-w-md">
+                  <p className="text-accent-orange mb-2 font-bold uppercase text-sm tracking-wider">
+                    Recovery QR
+                  </p>
+                  <p className="text-text-secondary text-sm">
+                    Save this QR to reclaim your profile on another device. Keep it private!
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Visitor view: Show only Share QR */
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-6 rounded-lg mb-4">
+                <QRCode
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${profile.id}`}
+                  size={200}
+                  level="M"
+                />
+              </div>
+              <div className="text-center max-w-md">
+                <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
+                  Share Your Profile
+                </p>
+                <p className="text-text-secondary text-sm">
+                  Scan this code to share this profile or initiate a collaboration handshake.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile Strength */}
