@@ -17,6 +17,7 @@ export default function HandshakeResultPage() {
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [granting, setGranting] = useState(false);
+  const [showDebug, setShowDebug] = useState(true);
 
   useEffect(() => {
     const profileId = localStorage.getItem('mission_match_profile_id');
@@ -190,6 +191,48 @@ export default function HandshakeResultPage() {
                 </div>
               </div>
             </div>
+
+            {/* Debug Panel */}
+            {showDebug && (
+              <div className="section mb-8" data-section="DEBUG">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-display text-xl font-bold uppercase tracking-wide flex items-center gap-4">
+                    <span className="text-accent-orange text-xl">//</span>
+                    Debug Info
+                  </h2>
+                  <button
+                    onClick={() => setShowDebug(false)}
+                    className="text-text-secondary text-xs hover:text-accent-cyan"
+                  >
+                    Hide
+                  </button>
+                </div>
+                <div className="bg-forge-black border-l-4 border-accent-orange p-6 font-mono text-xs">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-accent-orange">My Profile ID:</span>
+                      <div className="text-text-primary break-all">{myProfileId || 'NOT SET'}</div>
+                    </div>
+                    <div>
+                      <span className="text-accent-orange">Initiator ID:</span>
+                      <div className="text-text-primary break-all">{handshake.initiator_id}</div>
+                    </div>
+                    <div>
+                      <span className="text-accent-orange">Recipient ID:</span>
+                      <div className="text-text-primary break-all">{handshake.recipient_id}</div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-grid-line">
+                      <span className="text-accent-orange">Match Status:</span>
+                      <div className="text-text-primary">
+                        {myProfileId === handshake.initiator_id && '✓ You are the INITIATOR'}
+                        {myProfileId === handshake.recipient_id && '✓ You are the RECIPIENT'}
+                        {myProfileId !== handshake.initiator_id && myProfileId !== handshake.recipient_id && '✗ Profile ID mismatch - this is the bug!'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Analysis Status */}
             {analysis && (
