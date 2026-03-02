@@ -21,6 +21,17 @@ export default function HandshakeResultPage() {
     fetchHandshake();
   }, []);
 
+  // Auto-poll while analysis is pending
+  useEffect(() => {
+    if (analysis?.analysis_status === 'pending') {
+      const interval = setInterval(() => {
+        fetchHandshake();
+      }, 3000); // Poll every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [analysis?.analysis_status]);
+
   const fetchHandshake = async () => {
     try {
       const response = await fetch(`/api/get-handshake?id=${handshakeId}`);
