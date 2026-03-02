@@ -200,12 +200,23 @@ export default function HandshakeResultPage() {
                     <span className="text-accent-orange text-xl">//</span>
                     Debug Info
                   </h2>
-                  <button
-                    onClick={() => setShowDebug(false)}
-                    className="text-text-secondary text-xs hover:text-accent-cyan"
-                  >
-                    Hide
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        fetchHandshake();
+                        alert('Refreshing data...');
+                      }}
+                      className="px-3 py-1 bg-accent-orange text-black text-xs font-bold uppercase hover:opacity-80"
+                    >
+                      Force Refresh
+                    </button>
+                    <button
+                      onClick={() => setShowDebug(false)}
+                      className="text-text-secondary text-xs hover:text-accent-cyan"
+                    >
+                      Hide
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-forge-black border-l-4 border-accent-orange p-6 font-mono text-xs">
                   <div className="space-y-2">
@@ -227,6 +238,18 @@ export default function HandshakeResultPage() {
                         {myProfileId === handshake.initiator_id && '✓ You are the INITIATOR'}
                         {myProfileId === handshake.recipient_id && '✓ You are the RECIPIENT'}
                         {myProfileId !== handshake.initiator_id && myProfileId !== handshake.recipient_id && '✗ Profile ID mismatch - this is the bug!'}
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-grid-line">
+                      <span className="text-accent-orange">Analysis Status:</span>
+                      <div className="text-text-primary">
+                        {analysis ? `${analysis.analysis_status} (stage ${analysis.stage})` : 'No analysis data'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-accent-orange">Has Overlap Data:</span>
+                      <div className="text-text-primary">
+                        {analysis?.overlap ? 'Yes' : 'No'}
                       </div>
                     </div>
                   </div>
