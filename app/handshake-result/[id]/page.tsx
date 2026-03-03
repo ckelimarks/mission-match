@@ -307,8 +307,8 @@ export default function HandshakeResultPage() {
 
                 {analysis.analysis_status === 'completed' && analysis.stage === 1 && (
                   <div className="section mb-8" data-section="OVERLAP_ANALYSIS">
-                    {/* Hook Alignment */}
-                    {analysis.hook_alignment && (
+                    {/* Hook Alignment - now stored in overlap.hook_alignment */}
+                    {(analysis.overlap as any)?.hook_alignment && (
                       <div className="mb-8">
                         <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
                           <span className="text-accent-cyan text-xl">//</span>
@@ -316,21 +316,26 @@ export default function HandshakeResultPage() {
                         </h2>
                         <div className="bg-forge-black border-l-4 border-accent-cyan p-6">
                           <p className="text-text-primary text-lg italic">
-                            "{analysis.hook_alignment}"
+                            "{(analysis.overlap as any).hook_alignment}"
                           </p>
                         </div>
                       </div>
                     )}
 
-                    {/* Overlap Areas */}
+                    {/* Overlap Areas - now stored in overlap.items */}
                     <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
                       <span className="text-accent-cyan text-xl">//</span>
                       Overlap Analysis
                     </h2>
 
-                    {analysis.overlap && (analysis.overlap as OverlapItem[]).length > 0 ? (
+                    {(() => {
+                      // Handle both old format (array) and new format (object with items)
+                      const overlapItems = Array.isArray(analysis.overlap)
+                        ? analysis.overlap
+                        : (analysis.overlap as any)?.items || [];
+                      return overlapItems.length > 0 ? (
                       <div className="space-y-6">
-                        {(analysis.overlap as OverlapItem[]).map((item, i) => (
+                        {(overlapItems as OverlapItem[]).map((item, i) => (
                           <div key={i} className="bg-forge-black border-l-4 border-accent-orange p-6">
                             <div className="text-accent-orange font-bold uppercase text-sm mb-3">
                               {item.category}
@@ -352,17 +357,22 @@ export default function HandshakeResultPage() {
                       <div className="bg-forge-black border-l-4 border-grid-line p-6">
                         <p className="text-text-secondary">No overlap analysis available yet.</p>
                       </div>
-                    )}
+                    );
+                    })()}
 
-                    {/* Working Style Preview */}
-                    {analysis.working_style_preview && (analysis.working_style_preview as any[]).length > 0 && (
+                    {/* Working Style Preview - now stored in overlap.working_style_preview */}
+                    {(() => {
+                      const wsPreview = Array.isArray(analysis.overlap)
+                        ? [] // old format didn't have this
+                        : (analysis.overlap as any)?.working_style_preview || [];
+                      return wsPreview.length > 0 && (
                       <div className="mt-8">
                         <h3 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-3">
                           <span className="text-accent-cyan">//</span>
                           Working Style Compatibility
                         </h3>
                         <div className="grid gap-3">
-                          {(analysis.working_style_preview as any[]).map((ws, i) => (
+                          {wsPreview.map((ws: any, i: number) => (
                             <div key={i} className="bg-forge-black p-4 border-l-2 border-accent-orange">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="font-bold text-text-primary">{ws.dimension}</span>
@@ -379,7 +389,8 @@ export default function HandshakeResultPage() {
                           ))}
                         </div>
                       </div>
-                    )}
+                    );
+                    })()}
 
                     {/* Conversation Starters */}
                     {analysis.conversation_starters && (analysis.conversation_starters as string[]).length > 0 && (

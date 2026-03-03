@@ -173,17 +173,23 @@ Return ONLY valid JSON:
     const jsonText = jsonMatch ? jsonMatch[1] : content.text;
 
     console.log('[ANALYZE-STAGE1] Parsing JSON response...');
-    const analysis = JSON.parse(jsonText);
+    const analysisResult = JSON.parse(jsonText);
     console.log('[ANALYZE-STAGE1] Parsed successfully, updating database...');
 
-    // Update analysis in database with new fields
+    // Store all analysis data in overlap column (JSONB)
+    // The analyses table only has: overlap, conversation_starters, analysis_status, etc.
+    // Pack working_style_preview and hook_alignment into overlap as a combined object
+    const overlapData = {
+      items: analysisResult.overlap || [],
+      working_style_preview: analysisResult.working_style_preview || [],
+      hook_alignment: analysisResult.hook_alignment || null,
+    };
+
     const { error: updateError } = await supabase
       .from('analyses')
       .update({
-        overlap: analysis.overlap,
-        conversation_starters: analysis.conversation_starters,
-        working_style_preview: analysis.working_style_preview || null,
-        hook_alignment: analysis.hook_alignment || null,
+        overlap: overlapData,
+        conversation_starters: analysisResult.conversation_starters,
         analysis_status: 'completed',
         completed_at: new Date().toISOString(),
       })
