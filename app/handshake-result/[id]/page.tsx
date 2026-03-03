@@ -1063,7 +1063,7 @@ export default function HandshakeResultPage() {
                                 </div>
                                 {prioritizationData.alignment?.divergences.length > 0 && (
                                   <div style={{ fontSize: '14px', color: 'var(--mm-red)', marginBottom: '15px' }}>
-                                    <strong>⚠️ Divergence on {prioritizationData.alignment?.divergences.length}/{prioritizationData.alignment?.totalQuestions}:</strong>{' '}
+                                    <strong>&#x26A0; Divergence on {prioritizationData.alignment?.divergences.length}/{prioritizationData.alignment?.totalQuestions}:</strong>{' '}
                                     Different views on {prioritizationData.alignment?.divergences.length} priorities.
                                   </div>
                                 )}
