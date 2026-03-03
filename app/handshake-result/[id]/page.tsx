@@ -328,10 +328,11 @@ export default function HandshakeResultPage() {
 
   // Fetch prioritizations when mutual consent is achieved
   useEffect(() => {
-    if (mutualConsent) {
+    if (mutualConsent && handshakeId) {
+      console.log('[PRIORITIZATION] Triggering fetch, mutualConsent:', mutualConsent);
       fetchPrioritizations();
     }
-  }, [mutualConsent]);
+  }, [mutualConsent, handshakeId]);
 
   return (
     <>
