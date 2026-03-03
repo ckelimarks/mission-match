@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role key to bypass RLS for analysis
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    console.log('[ANALYZE-STAGE1] Using service role key:', hasServiceKey);
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get handshake with both profiles - fetch all fields for rich analysis
@@ -199,7 +201,24 @@ Return ONLY valid JSON:
     });
 
     if (existingAnalysis?.id) {
-      // Update by ID directly
+      // First try minimal update - just status
+      console.log('[ANALYZE-STAGE1] Trying minimal update first...');
+      const { data: minimalUpdate, error: minimalError } = await supabase
+        .from('analyses')
+        .update({ analysis_status: 'completed' })
+        .eq('id', existingAnalysis.id)
+        .select();
+
+      console.log('[ANALYZE-STAGE1] Minimal update result:', {
+        success: minimalUpdate?.length || 0,
+        error: minimalError?.message,
+      });
+
+      if (minimalError) {
+        console.error('[ANALYZE-STAGE1] Minimal update failed:', minimalError);
+      }
+
+      // Now try full update with JSONB
       const { data: updatedRows, error: updateError } = await supabase
         .from('analyses')
         .update({
@@ -211,10 +230,10 @@ Return ONLY valid JSON:
         .eq('id', existingAnalysis.id)
         .select();
 
-      console.log('[ANALYZE-STAGE1] Update by ID result:', {
+      console.log('[ANALYZE-STAGE1] Full update result:', {
         updatedCount: updatedRows?.length || 0,
         error: updateError?.message,
-        firstRow: updatedRows?.[0] ? 'has data' : 'no data',
+        overlapSaved: updatedRows?.[0]?.overlap ? 'yes' : 'no',
       });
 
       if (updateError) {
