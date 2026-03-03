@@ -130,23 +130,7 @@ Return JSON with these fields:
 
 Be specific, not vague. Extract from our actual conversations.`;
 
-// Mock pending connections for A
-const PENDING_CONNECTIONS = [
-  {
-    id: 'conn-1',
-    name: 'DARIUS WEBB',
-    role: 'Founder & CEO',
-    scannedAt: '2 min ago',
-    status: 'new' as const,
-  },
-  {
-    id: 'conn-2',
-    name: 'MAYA CHEN',
-    role: 'Lead Designer',
-    scannedAt: '15 min ago',
-    status: 'viewed' as const,
-  },
-];
+// Real connections are fetched from the API via the connections state
 
 // ============================================================================
 // MAIN COMPONENT
@@ -601,7 +585,12 @@ export default function DemoPage() {
             </div>
 
             <div className="connections-list">
-              {PENDING_CONNECTIONS.length === 0 ? (
+              {isLoadingConnections ? (
+                <div className="loading-state">
+                  <div className="loading-spinner"></div>
+                  <p>Loading connections...</p>
+                </div>
+              ) : connections.length === 0 ? (
                 <div className="empty-state">
                   <p>No connections yet. Share your QR code to get started!</p>
                   <button className="btn" onClick={() => setScreen('my-profile')}>
@@ -609,19 +598,19 @@ export default function DemoPage() {
                   </button>
                 </div>
               ) : (
-                PENDING_CONNECTIONS.map((conn) => (
+                connections.map((conn) => (
                   <div
-                    key={conn.id}
-                    className={`connection-card ${conn.status === 'new' ? 'new' : ''}`}
-                    onClick={() => setScreen('stage1')}
+                    key={conn.handshakeId}
+                    className={`connection-card ${conn.status === 'pending' ? 'new' : ''}`}
+                    onClick={() => window.location.href = `/handshake-result/${conn.handshakeId}`}
                   >
                     <div className="connection-info">
-                      <div className="connection-name">{conn.name}</div>
-                      <div className="connection-role">{conn.role}</div>
+                      <div className="connection-name">{conn.otherParty?.displayName || conn.otherParty?.role || 'Anonymous'}</div>
+                      <div className="connection-role">{conn.otherParty?.role || 'Builder'}</div>
                     </div>
                     <div className="connection-meta">
-                      <span className="connection-time">{conn.scannedAt}</span>
-                      {conn.status === 'new' && <span className="new-badge">NEW</span>}
+                      <span className="connection-time">{new Date(conn.createdAt).toLocaleDateString()}</span>
+                      {conn.status === 'pending' && !conn.theirConsent && <span className="new-badge">NEW</span>}
                     </div>
                     <div className="connection-action">
                       View Match →
