@@ -6,21 +6,32 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ProofPoint } from '@/types';
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
+// Lazy initialization to avoid build-time errors
+let _anthropic: Anthropic | null = null;
 
-if (!apiKey) {
-  throw new Error('ANTHROPIC_API_KEY environment variable is required');
+export function getAnthropic(): Anthropic {
+  if (!_anthropic) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is required');
+    }
+    _anthropic = new Anthropic({ apiKey });
+  }
+  return _anthropic;
 }
 
-export const anthropic = new Anthropic({
-  apiKey,
+// For backwards compatibility - use as a proxy
+export const anthropic = new Proxy({} as Anthropic, {
+  get(_, prop) {
+    return (getAnthropic() as any)[prop];
+  },
 });
 
 /**
  * Extract collaboration profile from conversation history
  */
 export async function extractProfile(conversationText: string) {
-  const message = await anthropic.messages.create({
+  const message = await getAnthropic().messages.create({
     model: 'claude-sonnet-4-5-20250929',
     max_tokens: 4096,
     messages: [
