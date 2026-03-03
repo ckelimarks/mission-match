@@ -5,12 +5,49 @@ import type { ProfileInput } from '@/types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+// Sanitize JSON string to handle common copy/paste issues
+function sanitizeJsonString(input: string): string {
+  let cleaned = input;
+
+  // Remove code block wrappers
+  const jsonMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    cleaned = jsonMatch[1];
+  }
+
+  // Replace smart quotes with straight quotes
+  cleaned = cleaned
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')  // Smart double quotes
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")  // Smart single quotes
+    .replace(/[\u2013\u2014]/g, '-')  // Em/en dashes
+    .replace(/\u2026/g, '...')  // Ellipsis
+    .replace(/[\u00A0]/g, ' ')  // Non-breaking space
+    .replace(/[\r\n]+/g, '\n')  // Normalize line endings
+    .trim();
+
+  return cleaned;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
     // Accept either { profileData: ... } or direct profile input
-    const profileData = body.profileData || body;
+    // Also handle raw JSON string in profileData
+    let profileData = body.profileData || body;
+
+    // If profileData is a string, sanitize and parse it
+    if (typeof profileData === 'string') {
+      try {
+        const sanitized = sanitizeJsonString(profileData);
+        profileData = JSON.parse(sanitized);
+      } catch (parseError) {
+        return NextResponse.json(
+          { error: 'Invalid JSON format. Please check for smart quotes or special characters.', details: parseError instanceof Error ? parseError.message : 'Parse error' },
+          { status: 400 }
+        );
+      }
+    }
 
     if (!profileData) {
       return NextResponse.json(

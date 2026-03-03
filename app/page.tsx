@@ -285,21 +285,11 @@ export default function DemoPage() {
     setCreateProfileError(null);
 
     try {
-      // Parse the JSON - handle both code block wrapped and raw JSON
-      let jsonText = profileJson;
-      const jsonMatch = profileJson.match(/```json\n([\s\S]*?)\n```/) ||
-                        profileJson.match(/```\n([\s\S]*?)\n```/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[1];
-      }
-
-      const profileData = JSON.parse(jsonText);
-
-      // Send to API
+      // Send raw text to API - server handles sanitization and parsing
       const response = await fetch('/api/save-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileData }),
+        body: JSON.stringify({ profileData: profileJson }),
       });
 
       if (!response.ok) {
@@ -308,30 +298,32 @@ export default function DemoPage() {
       }
 
       const data = await response.json();
+      const profileData = data.profile;
 
       // Store profile ID
       localStorage.setItem('mm_profile_id', data.profileId);
       localStorage.setItem('mm_device_id', data.deviceId);
       setMyProfileId(data.profileId);
+      setMyFullProfile(profileData);
 
-      // Create a display profile from the data
+      // Create a display profile from the returned data
       setMyProfile({
-        name: profileData.hook?.split('.')[0]?.toUpperCase() || 'YOUR PROFILE',
-        role: profileData.collaboration_fit?.looking_for || 'Builder',
+        name: profileData.role?.split('.')[0]?.toUpperCase() || 'YOUR PROFILE',
+        role: profileData.mission || 'Builder',
         aspects: [
-          { name: 'Sync ↔ Async', score: profileData.working_style?.core_dimensions?.sync_async?.score || 50 },
-          { name: 'Ship ↔ Polish', score: profileData.working_style?.core_dimensions?.fast_ship_high_polish?.score || 50 },
-          { name: 'Solo ↔ Multiplier', score: profileData.working_style?.core_dimensions?.solo_multiplier?.score || 50 },
+          { name: 'Sync ↔ Async', score: profileData.role_aspects?.core_dimensions?.sync_async?.score || 50 },
+          { name: 'Ship ↔ Polish', score: profileData.role_aspects?.core_dimensions?.fast_ship_high_polish?.score || 50 },
+          { name: 'Solo ↔ Multiplier', score: profileData.role_aspects?.core_dimensions?.solo_multiplier?.score || 50 },
         ],
         radar: {
           process: profileData.working_style?.core_dimensions?.sync_async?.score || 50,
           empathy: 50,
-          org: profileData.working_style?.core_dimensions?.solo_multiplier?.score || 50,
-          speed: profileData.working_style?.core_dimensions?.fast_ship_high_polish?.score || 50,
-          vision: profileData.working_style?.core_dimensions?.builder_strategist?.score || 50,
+          org: profileData.role_aspects?.core_dimensions?.solo_multiplier?.score || 50,
+          speed: profileData.role_aspects?.core_dimensions?.fast_ship_high_polish?.score || 50,
+          vision: profileData.role_aspects?.core_dimensions?.builder_strategist?.score || 50,
           bold: 50,
         },
-        contact: profileData.contact || {},
+        contact: profileData.communication_aspects || {},
       });
 
       setScreen('my-profile');

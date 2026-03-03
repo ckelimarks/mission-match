@@ -102,18 +102,14 @@ export default function ConnectPage() {
     setSubmitError(null);
 
     try {
-      const jsonMatch = profileData.match(/```json\n([\s\S]*?)\n```/) ||
-                        profileData.match(/```\n([\s\S]*?)\n```/);
-      const jsonText = jsonMatch ? jsonMatch[1] : profileData;
-      const extractedData = JSON.parse(jsonText);
-
       let myProfileId = existingProfileId;
 
       if (!myProfileId) {
+        // Send raw text to API - server handles sanitization and parsing
         const saveResponse = await fetch('/api/save-profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profileData: extractedData }),
+          body: JSON.stringify({ profileData: profileData }),
         });
 
         if (!saveResponse.ok) {
