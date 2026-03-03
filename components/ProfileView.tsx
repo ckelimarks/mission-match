@@ -121,21 +121,21 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
           {isOwner ? (
             /* Owner view: Show both Share and Claim QRs */
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Share QR */}
+              {/* Share QR - Links to /connect for handshake flow */}
               <div className="flex flex-col items-center">
                 <div className="bg-white p-6 rounded-lg mb-4" ref={shareQrRef}>
                   <QRCode
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${profile.id}`}
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`}
                     size={200}
                     level="M"
                   />
                 </div>
                 <div className="text-center max-w-md">
                   <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
-                    Share QR
+                    Connect QR
                   </p>
                   <p className="text-text-secondary text-sm">
-                    Others scan this to view your profile and initiate a handshake.
+                    Others scan this to create their profile and connect with you.
                   </p>
                 </div>
               </div>
@@ -160,21 +160,21 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
               </div>
             </div>
           ) : (
-            /* Visitor view: Show only Share QR */
+            /* Visitor view: Show connect QR */
             <div className="flex flex-col items-center">
               <div className="bg-white p-6 rounded-lg mb-4">
                 <QRCode
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${profile.id}`}
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`}
                   size={200}
                   level="M"
                 />
               </div>
               <div className="text-center max-w-md">
                 <p className="text-text-primary mb-2 font-bold uppercase text-sm tracking-wider">
-                  Share Your Profile
+                  Connect With This Person
                 </p>
                 <p className="text-text-secondary text-sm">
-                  Scan this code to share this profile or initiate a collaboration handshake.
+                  Scan this code to create your profile and initiate a collaboration handshake.
                 </p>
               </div>
             </div>
