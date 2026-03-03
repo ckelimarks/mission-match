@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('[GET-CONNECTIONS] Fetching for profileId:', profileId);
+
     // Get all handshakes where this profile is the initiator (someone scanned their QR)
     // Include both directions to show all connections
     const { data: handshakes, error: handshakeError } = await supabase
@@ -37,6 +39,11 @@ export async function GET(request: NextRequest) {
       .or(`initiator_id.eq.${profileId},recipient_id.eq.${profileId}`)
       .order('created_at', { ascending: false });
 
+    console.log('[GET-CONNECTIONS] Query result:', {
+      handshakeCount: handshakes?.length || 0,
+      error: handshakeError?.message
+    });
+
     if (handshakeError) {
       console.error('Handshake fetch error:', handshakeError);
       return NextResponse.json(
@@ -46,6 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!handshakes || handshakes.length === 0) {
+      console.log('[GET-CONNECTIONS] No handshakes found for profile');
       return NextResponse.json({ connections: [] });
     }
 
