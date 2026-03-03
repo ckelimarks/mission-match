@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const profileId = searchParams.get('profileId');
+    const profileId = searchParams.get('profileId') || searchParams.get('id');
 
     if (!profileId) {
       return NextResponse.json(
-        { error: 'profileId is required' },
+        { error: 'profileId or id is required' },
         { status: 400 }
       );
     }
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json({ profile });
   } catch (error) {
     console.error('Get profile error:', error);
 
