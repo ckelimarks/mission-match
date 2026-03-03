@@ -113,6 +113,20 @@ New rich profile format is mapped to existing DB columns to avoid migrations:
 
 **When querying:** Select actual column names, not the new field names.
 
+### 8. Analyses Table Schema
+The `analyses` table only has basic columns. Extra analysis fields are packed into `overlap` JSONB:
+
+```typescript
+// What we store in overlap column:
+{
+  items: [...],              // The actual overlap items
+  working_style_preview: [], // Working style compatibility
+  hook_alignment: "..."      // Mission alignment text
+}
+```
+
+**Frontend must handle both formats:** Old (overlap is array) vs new (overlap is object with items).
+
 ## Key Files
 
 | File | Purpose |
