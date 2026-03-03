@@ -31,6 +31,13 @@ export default function HandshakeResultPage() {
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [granting, setGranting] = useState(false);
 
+  // Prioritization state
+  const [priorityMethod, setPriorityMethod] = useState<'quick-pick' | 'point-allocation'>('quick-pick');
+  const [quickPickAnswers, setQuickPickAnswers] = useState<Record<number, string>>({});
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [pointsRemaining, setPointsRemaining] = useState(10);
+  const [pointAllocation, setPointAllocation] = useState<Record<string, number>>({});
+
   useEffect(() => {
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
     setMyProfileId(profileId);
@@ -213,6 +220,60 @@ export default function HandshakeResultPage() {
 
   const getConversationStarters = (): string[] => {
     return (analysis?.conversation_starters as string[]) || [];
+  };
+
+  // Prioritization data
+  const quickPickQuestions = [
+    {
+      question: "What kind of collaboration are you most interested in?",
+      options: [
+        "Building a product together",
+        "Running experiments & learning",
+        "Strategic advising / mentorship"
+      ]
+    },
+    {
+      question: "What's your preferred working style?",
+      options: [
+        "Technical co-founder (build together)",
+        "Design & strategy partner",
+        "Async collaboration (flexible)"
+      ]
+    },
+    {
+      question: "How much time can you commit?",
+      options: [
+        "Nights & weekends sprint (10-20 hrs/wk)",
+        "Slow burn side project (2-5 hrs/wk)",
+        "Occasional / ad-hoc (1-2 hrs/wk)"
+      ]
+    },
+    {
+      question: "What's your primary goal?",
+      options: [
+        "Ship a real product to users",
+        "Learn new skills & explore",
+        "Build portfolio / credibility"
+      ]
+    }
+  ];
+
+  const handleQuickPickAnswer = (questionIndex: number, answer: string) => {
+    setQuickPickAnswers(prev => ({ ...prev, [questionIndex]: answer }));
+    if (questionIndex < quickPickQuestions.length - 1) {
+      setCurrentQuestion(questionIndex + 1);
+    }
+  };
+
+  const adjustPoints = (optionId: string, delta: number) => {
+    const currentValue = pointAllocation[optionId] || 0;
+    const newValue = Math.max(0, currentValue + delta);
+    const pointDiff = newValue - currentValue;
+
+    if (pointsRemaining - pointDiff >= 0) {
+      setPointAllocation(prev => ({ ...prev, [optionId]: newValue }));
+      setPointsRemaining(prev => prev - pointDiff);
+    }
   };
 
   return (
@@ -717,6 +778,238 @@ export default function HandshakeResultPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* PRIORITIZATION SECTION */}
+                    <div className="mt-12">
+                      <h2 className="mm-section-header">
+                        <span className="icon">&#x1F3AF;</span>
+                        Prioritize Your Collaboration
+                      </h2>
+                      <p className="text-[var(--mm-text-muted)] text-sm mb-6">
+                        Choose how you want to reveal your priorities:
+                      </p>
+
+                      {/* Tab Switcher */}
+                      <div className="prioritization-tabs">
+                        <button
+                          className={`priority-tab ${priorityMethod === 'quick-pick' ? 'active' : ''}`}
+                          onClick={() => setPriorityMethod('quick-pick')}
+                        >
+                          &#x2713; Quick Pick (4 clicks)
+                        </button>
+                        <button
+                          className={`priority-tab ${priorityMethod === 'point-allocation' ? 'active' : ''}`}
+                          onClick={() => setPriorityMethod('point-allocation')}
+                        >
+                          &#x1F3AE; Point Allocation (RPG)
+                        </button>
+                      </div>
+
+                      {/* Quick Pick Method */}
+                      {priorityMethod === 'quick-pick' && (
+                        <div className="priority-method active" style={{
+                          background: 'rgba(78, 205, 196, 0.05)',
+                          border: '1px solid rgba(78, 205, 196, 0.2)',
+                          borderRadius: '8px',
+                          padding: '30px',
+                          marginTop: '20px'
+                        }}>
+                          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                            <div style={{ fontSize: '15px', color: 'var(--mm-cyan)', fontWeight: 600, marginBottom: '8px' }}>
+                              TAP ONE ANSWER PER QUESTION
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#888' }}>
+                              Question {currentQuestion + 1} of {quickPickQuestions.length}
+                            </div>
+                            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '12px', overflow: 'hidden' }}>
+                              <div style={{
+                                width: `${(currentQuestion / quickPickQuestions.length) * 100}%`,
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%)',
+                                transition: 'width 0.3s'
+                              }}></div>
+                            </div>
+                          </div>
+
+                          {/* Questions */}
+                          {quickPickQuestions.map((q, qIndex) => (
+                            <div
+                              key={qIndex}
+                              style={{ display: currentQuestion === qIndex ? 'block' : 'none' }}
+                            >
+                              <div style={{ fontSize: '18px', fontWeight: 600, color: '#fff', marginBottom: '20px' }}>
+                                {q.question}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {q.options.map((option, oIndex) => (
+                                  <button
+                                    key={oIndex}
+                                    onClick={() => handleQuickPickAnswer(qIndex, option)}
+                                    className="quick-option"
+                                    style={{
+                                      background: quickPickAnswers[qIndex] === option ? 'rgba(78, 205, 196, 0.2)' : 'rgba(255, 255, 255, 0.02)',
+                                      border: quickPickAnswers[qIndex] === option ? '2px solid var(--mm-cyan)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                      borderRadius: '8px',
+                                      padding: '16px 20px',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      textAlign: 'left',
+                                      fontSize: '15px',
+                                      color: '#fff',
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center'
+                                    }}
+                                  >
+                                    <span>{option}</span>
+                                    {quickPickAnswers[qIndex] === option && (
+                                      <span style={{ color: 'var(--mm-cyan)', fontSize: '20px' }}>✓</span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Navigation */}
+                          {currentQuestion > 0 && (
+                            <button
+                              onClick={() => setCurrentQuestion(prev => prev - 1)}
+                              className="mm-btn-primary mt-6"
+                              style={{ opacity: 0.7 }}
+                            >
+                              ← Previous Question
+                            </button>
+                          )}
+
+                          {/* Submit Button */}
+                          {Object.keys(quickPickAnswers).length === quickPickQuestions.length && (
+                            <button
+                              onClick={() => {/* TODO: Save answers */}}
+                              className="mm-btn-primary w-full mt-6"
+                            >
+                              Save My Priorities
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Point Allocation Method */}
+                      {priorityMethod === 'point-allocation' && (
+                        <div className="priority-method active" style={{
+                          background: 'rgba(78, 205, 196, 0.05)',
+                          border: '1px solid rgba(78, 205, 196, 0.2)',
+                          borderRadius: '8px',
+                          padding: '30px',
+                          marginTop: '20px'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                            <div style={{ fontSize: '14px', color: 'var(--mm-cyan)', fontWeight: 600 }}>
+                              YOUR ALLOCATION
+                            </div>
+                            <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Space Mono, monospace' }}>
+                              <span style={{ color: pointsRemaining === 0 ? 'var(--mm-cyan)' : '#ff6b6b' }}>
+                                {pointsRemaining}
+                              </span>
+                              <span style={{ color: '#888', fontSize: '14px', marginLeft: '6px' }}>
+                                POINTS LEFT
+                              </span>
+                            </div>
+                          </div>
+
+                          <p style={{ fontSize: '14px', color: '#888', marginBottom: '20px' }}>
+                            Allocate 10 points across options. Higher points = stronger preference.
+                          </p>
+
+                          {/* Point Allocation Questions */}
+                          {quickPickQuestions.map((q, qIndex) => (
+                            <div key={qIndex} style={{ marginBottom: '30px' }}>
+                              <div style={{ fontSize: '16px', fontWeight: 600, color: '#fff', marginBottom: '15px' }}>
+                                {q.question}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {q.options.map((option, oIndex) => {
+                                  const optionId = `q${qIndex}-o${oIndex}`;
+                                  const points = pointAllocation[optionId] || 0;
+                                  return (
+                                    <div key={oIndex} style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      background: 'rgba(255, 255, 255, 0.02)',
+                                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                                      borderRadius: '6px',
+                                      padding: '12px 16px'
+                                    }}>
+                                      <span style={{ fontSize: '14px', color: '#fff', flex: 1 }}>
+                                        {option}
+                                      </span>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <button
+                                          onClick={() => adjustPoints(optionId, -1)}
+                                          disabled={points === 0}
+                                          style={{
+                                            background: points === 0 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(78, 205, 196, 0.1)',
+                                            border: '1px solid rgba(78, 205, 196, 0.3)',
+                                            borderRadius: '4px',
+                                            width: '32px',
+                                            height: '32px',
+                                            cursor: points === 0 ? 'not-allowed' : 'pointer',
+                                            color: points === 0 ? '#444' : 'var(--mm-cyan)',
+                                            fontSize: '16px'
+                                          }}
+                                        >
+                                          ◀
+                                        </button>
+                                        <span style={{
+                                          fontFamily: 'Space Mono, monospace',
+                                          fontSize: '18px',
+                                          fontWeight: 700,
+                                          color: 'var(--mm-cyan)',
+                                          minWidth: '24px',
+                                          textAlign: 'center'
+                                        }}>
+                                          {points}
+                                        </span>
+                                        <button
+                                          onClick={() => adjustPoints(optionId, 1)}
+                                          disabled={pointsRemaining === 0}
+                                          style={{
+                                            background: pointsRemaining === 0 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(78, 205, 196, 0.1)',
+                                            border: '1px solid rgba(78, 205, 196, 0.3)',
+                                            borderRadius: '4px',
+                                            width: '32px',
+                                            height: '32px',
+                                            cursor: pointsRemaining === 0 ? 'not-allowed' : 'pointer',
+                                            color: pointsRemaining === 0 ? '#444' : 'var(--mm-cyan)',
+                                            fontSize: '16px'
+                                          }}
+                                        >
+                                          ▶
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Submit Button */}
+                          <button
+                            onClick={() => {/* TODO: Save points */}}
+                            disabled={pointsRemaining !== 0}
+                            className="mm-btn-primary w-full mt-6"
+                            style={{
+                              opacity: pointsRemaining !== 0 ? 0.5 : 1,
+                              cursor: pointsRemaining !== 0 ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            {pointsRemaining !== 0 ? `Allocate ${pointsRemaining} more points` : 'Save My Priorities'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </>

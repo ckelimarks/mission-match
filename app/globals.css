@@ -899,3 +899,70 @@ body {
   line-height: 1.6;
   margin-bottom: 10px;
 }
+
+/* Prioritization Tabs */
+.prioritization-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0;
+}
+
+.priority-tab {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.priority-tab:hover {
+  color: var(--mm-cyan);
+}
+
+.priority-tab.active {
+  color: var(--mm-cyan);
+  border-bottom-color: var(--mm-cyan);
+}
+
+.priority-method {
+  display: none;
+}
+
+.priority-method.active {
+  display: block;
+}
+
+/* Quick Pick Option Styles */
+.quick-option {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.quick-option:hover {
+  background: rgba(78, 205, 196, 0.1) !important;
+  border-color: rgba(78, 205, 196, 0.4) !important;
+  transform: translateX(4px);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .prioritization-tabs {
+    flex-wrap: wrap;
+  }
+
+  .priority-tab {
+    flex: 1 1 auto;
+    min-width: 140px;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}
