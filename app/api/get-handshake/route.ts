@@ -33,14 +33,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch associated analysis
-    const { data: analysis } = await supabase
+    // Fetch associated analysis - prioritize completed ones
+    // First try to get completed analysis
+    let { data: analysis } = await supabase
       .from('analyses')
       .select('*')
       .eq('handshake_id', handshakeId)
+      .eq('analysis_status', 'completed')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
+
+    // If no completed analysis, fall back to any analysis
+    if (!analysis) {
+      const { data: fallbackAnalysis } = await supabase
+        .from('analyses')
+        .select('*')
+        .eq('handshake_id', handshakeId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      analysis = fallbackAnalysis;
+    }
+
+    console.log('[GET-HANDSHAKE] Analysis found:', {
+      id: analysis?.id,
+      status: analysis?.analysis_status,
+      hasOverlap: !!analysis?.overlap,
+    });
 
     return NextResponse.json({
       handshake,
