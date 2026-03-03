@@ -5,27 +5,117 @@ import type { ProfileInput } from '@/types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Sanitize JSON string to handle common copy/paste issues
-function sanitizeJsonString(input: string): string {
-  let cleaned = input;
+// Robust JSON repair for common AI output issues
+function repairJson(input: string): string {
+  let text = input;
 
-  // Remove code block wrappers
-  const jsonMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  // Step 1: Remove code block wrappers
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (jsonMatch) {
-    cleaned = jsonMatch[1];
+    text = jsonMatch[1];
   }
 
-  // Replace smart quotes with straight quotes
-  cleaned = cleaned
+  // Step 2: Replace smart quotes and special characters
+  text = text
     .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')  // Smart double quotes
     .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")  // Smart single quotes
     .replace(/[\u2013\u2014]/g, '-')  // Em/en dashes
     .replace(/\u2026/g, '...')  // Ellipsis
     .replace(/[\u00A0]/g, ' ')  // Non-breaking space
-    .replace(/[\r\n]+/g, '\n')  // Normalize line endings
-    .trim();
+    .replace(/\r\n/g, '\n')  // Normalize line endings
+    .replace(/\r/g, '\n');
 
-  return cleaned;
+  // Step 3: Fix missing quotes around string values
+  // Pattern: "key": value" or "key": value, or "key": value}
+  // Where value doesn't start with ", {, [, true, false, null, or a number
+  text = text.replace(
+    /("[\w_]+")\s*:\s*(?!")(?!\{)(?!\[)(?!true)(?!false)(?!null)(?!-?\d)([^,}\]\n]+?)([,}\]])/g,
+    (match, key, value, ending) => {
+      // Don't double-quote if it ends with a quote already
+      const trimmedValue = value.trim();
+      if (trimmedValue.endsWith('"')) {
+        // Missing opening quote
+        return `${key}: "${trimmedValue}${ending}`;
+      }
+      return match;
+    }
+  );
+
+  // Step 4: More aggressive fix - find lines with "key": unquotedValue pattern
+  const lines = text.split('\n');
+  const fixedLines = lines.map(line => {
+    // Match "key": followed by text that should be quoted but isn't
+    const match = line.match(/^(\s*"[\w_]+")\s*:\s*([A-Za-z][^,}\]]*)(,?\s*)$/);
+    if (match) {
+      const [, keyPart, valuePart, ending] = match;
+      // Check if value looks like it should be a string (starts with letter, not a keyword)
+      const trimmedValue = valuePart.trim();
+      if (!['true', 'false', 'null'].includes(trimmedValue) &&
+          !trimmedValue.startsWith('"') &&
+          !trimmedValue.startsWith('{') &&
+          !trimmedValue.startsWith('[')) {
+        // Add quotes, handling case where closing quote exists but opening doesn't
+        if (trimmedValue.endsWith('"')) {
+          return `${keyPart}: "${trimmedValue}${ending}`;
+        } else {
+          return `${keyPart}: "${trimmedValue}"${ending}`;
+        }
+      }
+    }
+    return line;
+  });
+  text = fixedLines.join('\n');
+
+  // Step 5: Remove trailing commas before } or ]
+  text = text.replace(/,(\s*[}\]])/g, '$1');
+
+  // Step 6: Ensure proper escaping of quotes inside strings
+  // This is tricky - we need to find unescaped quotes inside string values
+  // For now, just trim whitespace
+  text = text.trim();
+
+  return text;
+}
+
+// Try multiple parse strategies
+function parseJsonRobust(input: string): any {
+  const repaired = repairJson(input);
+
+  // Try 1: Direct parse
+  try {
+    return JSON.parse(repaired);
+  } catch (e1) {
+    console.log('Direct parse failed, trying line-by-line repair...');
+  }
+
+  // Try 2: Even more aggressive line-by-line repair
+  let text = repaired;
+  const lines = text.split('\n');
+  const repairedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Fix unquoted string values more aggressively
+    // Look for pattern: "key": SomeValue" (missing opening quote)
+    const unquotedMatch = line.match(/^(\s*"[^"]+"\s*:\s*)([A-Za-z][^"]*)(")(\s*,?\s*)$/);
+    if (unquotedMatch) {
+      const [, prefix, value, closeQuote, suffix] = unquotedMatch;
+      line = `${prefix}"${value}${closeQuote}${suffix}`;
+    }
+
+    repairedLines.push(line);
+  }
+
+  text = repairedLines.join('\n');
+
+  try {
+    return JSON.parse(text);
+  } catch (e2) {
+    console.log('Line-by-line repair failed');
+    console.log('Final text (first 1000 chars):', text.substring(0, 1000));
+    throw e2;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -36,14 +126,19 @@ export async function POST(request: NextRequest) {
     // Also handle raw JSON string in profileData
     let profileData = body.profileData || body;
 
-    // If profileData is a string, sanitize and parse it
+    // If profileData is a string, repair and parse it
     if (typeof profileData === 'string') {
       try {
-        const sanitized = sanitizeJsonString(profileData);
-        profileData = JSON.parse(sanitized);
+        console.log('Raw input length:', profileData.length);
+        profileData = parseJsonRobust(profileData);
+        console.log('Successfully parsed profile');
       } catch (parseError) {
+        console.error('JSON parse error after repair:', parseError);
         return NextResponse.json(
-          { error: 'Invalid JSON format. Please check for smart quotes or special characters.', details: parseError instanceof Error ? parseError.message : 'Parse error' },
+          {
+            error: 'Could not parse profile JSON even after repair. Please try regenerating from your AI.',
+            details: parseError instanceof Error ? parseError.message : 'Parse error',
+          },
           { status: 400 }
         );
       }
