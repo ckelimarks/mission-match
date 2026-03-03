@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
 
     console.log('[GET-CONNECTIONS] Fetching for profileId:', profileId);
 
-    // Get all handshakes where this profile is the initiator (someone scanned their QR)
-    // Include both directions to show all connections
-    const { data: handshakes, error: handshakeError } = await supabase
+    // Get all handshakes where this profile is initiator OR recipient
+    // Try two separate queries and combine results
+    const { data: asInitiator, error: err1 } = await supabase
       .from('handshakes')
       .select(`
         id,
@@ -36,8 +36,29 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       `)
-      .or(`initiator_id.eq.${profileId},recipient_id.eq.${profileId}`)
+      .eq('initiator_id', profileId)
       .order('created_at', { ascending: false });
+
+    const { data: asRecipient, error: err2 } = await supabase
+      .from('handshakes')
+      .select(`
+        id,
+        initiator_id,
+        recipient_id,
+        status,
+        initiator_consented,
+        recipient_consented,
+        created_at,
+        updated_at
+      `)
+      .eq('recipient_id', profileId)
+      .order('created_at', { ascending: false });
+
+    console.log('[GET-CONNECTIONS] As initiator:', asInitiator?.length || 0, 'error:', err1?.message);
+    console.log('[GET-CONNECTIONS] As recipient:', asRecipient?.length || 0, 'error:', err2?.message);
+
+    const handshakeError = err1 || err2;
+    const handshakes = [...(asInitiator || []), ...(asRecipient || [])];
 
     console.log('[GET-CONNECTIONS] Query result:', {
       handshakeCount: handshakes?.length || 0,
