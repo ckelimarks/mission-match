@@ -9,8 +9,11 @@ interface ProfileData {
   id: string;
   role?: string;
   mission?: string;
-  role_aspects?: any;
-  collaboration_aspects?: any;
+  proof_points?: any[];
+  role_aspects?: any; // working_style
+  collaboration_aspects?: any; // collaboration_fit
+  communication_aspects?: any; // contact info
+  shipping_aspects?: any; // intellectual_signature
 }
 
 export default function HandshakeResultPage() {
@@ -215,7 +218,13 @@ export default function HandshakeResultPage() {
             {/* Travis Bonnet Style Header */}
             <div className="results-header">
               <div className="results-header-label">
-                Collaboration Protocol &middot; {analysis?.analysis_status === 'completed' ? 'Analysis Complete' : 'Analyzing...'}
+                Collaboration Protocol &middot; {
+                  mutualConsent
+                    ? 'Stage 2 Access Granted'
+                    : analysis?.analysis_status === 'completed'
+                    ? 'Stage 1 Complete'
+                    : 'Analyzing...'
+                }
               </div>
 
               <div className="results-header-people">
@@ -233,7 +242,11 @@ export default function HandshakeResultPage() {
               </div>
 
               <div className="results-description">
-                <p>Two profiles analyzed for collaboration fit. This is Stage 1 — public data only, no PII shared.</p>
+                <p>
+                  {mutualConsent
+                    ? 'Both parties have granted consent. Full profiles with contact information are now visible.'
+                    : 'Two profiles analyzed for collaboration fit. This is Stage 1 — public data only, no PII shared.'}
+                </p>
               </div>
             </div>
 
@@ -386,16 +399,283 @@ export default function HandshakeResultPage() {
                   </div>
                 )}
 
-                {/* Mutual Consent Achieved */}
+                {/* STAGE 2: Mutual Consent Achieved - Full Profile Access */}
                 {mutualConsent && (
-                  <div className="consent-section mt-10" style={{ borderColor: 'var(--mm-cyan)', background: 'rgba(78, 205, 196, 0.1)' }}>
-                    <div className="flex items-center gap-2 text-[var(--mm-cyan)] font-bold text-lg mb-3">
-                      <span>&#x2713;</span> Full Profile Access Enabled
+                  <>
+                    {/* Consent Badge */}
+                    <div className="text-center mt-10 mb-8">
+                      <div className="consent-badge">
+                        <span>&#x2713;</span> Full Profile Access Enabled
+                      </div>
                     </div>
-                    <p>
-                      Both parties have granted consent. Stage 2 analysis with full profiles is now available!
-                    </p>
-                  </div>
+
+                    {/* Contact Cards */}
+                    <div className="mb-10">
+                      <h2 className="mm-section-header">
+                        <span className="icon">&#x1F464;</span>
+                        Contact Information
+                      </h2>
+                      <p className="text-[var(--mm-text-muted)] text-sm mb-4">Now that consent is granted, you can connect directly.</p>
+
+                      <div className="contact-cards">
+                        {/* Person A Contact Card */}
+                        <div className="contact-card left">
+                          <h3>PERSON A</h3>
+                          <div className="role">{getProfileRole(initiatorProfile)}</div>
+                          <div className="contact-info">
+                            {initiatorProfile?.communication_aspects?.email && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x2709;</span>
+                                <a href={`mailto:${initiatorProfile.communication_aspects.email}`}>
+                                  {initiatorProfile.communication_aspects.email}
+                                </a>
+                              </div>
+                            )}
+                            {initiatorProfile?.communication_aspects?.phone && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x260E;</span>
+                                <span>{initiatorProfile.communication_aspects.phone}</span>
+                              </div>
+                            )}
+                            {initiatorProfile?.communication_aspects?.linkedin && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F517;</span>
+                                <a href={initiatorProfile.communication_aspects.linkedin} target="_blank" rel="noopener noreferrer">
+                                  LinkedIn
+                                </a>
+                              </div>
+                            )}
+                            {initiatorProfile?.communication_aspects?.twitter && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F426;</span>
+                                <a href={`https://twitter.com/${initiatorProfile.communication_aspects.twitter}`} target="_blank" rel="noopener noreferrer">
+                                  @{initiatorProfile.communication_aspects.twitter}
+                                </a>
+                              </div>
+                            )}
+                            {initiatorProfile?.communication_aspects?.website && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F310;</span>
+                                <a href={initiatorProfile.communication_aspects.website} target="_blank" rel="noopener noreferrer">
+                                  {initiatorProfile.communication_aspects.website}
+                                </a>
+                              </div>
+                            )}
+                            {initiatorProfile?.communication_aspects?.timezone && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F551;</span>
+                                <span>{initiatorProfile.communication_aspects.timezone}</span>
+                              </div>
+                            )}
+                            {initiatorProfile?.collaboration_aspects?.availability && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F4C5;</span>
+                                <span>{initiatorProfile.collaboration_aspects.availability}</span>
+                              </div>
+                            )}
+                          </div>
+                          {initiatorProfile?.communication_aspects?.email && (
+                            <div className="contact-actions">
+                              <a
+                                href={`mailto:${initiatorProfile.communication_aspects.email}`}
+                                className="btn-small primary"
+                              >
+                                &#x2709; Email
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Person B Contact Card */}
+                        <div className="contact-card right">
+                          <h3>PERSON B</h3>
+                          <div className="role">{getProfileRole(recipientProfile)}</div>
+                          <div className="contact-info">
+                            {recipientProfile?.communication_aspects?.email && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x2709;</span>
+                                <a href={`mailto:${recipientProfile.communication_aspects.email}`}>
+                                  {recipientProfile.communication_aspects.email}
+                                </a>
+                              </div>
+                            )}
+                            {recipientProfile?.communication_aspects?.phone && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x260E;</span>
+                                <span>{recipientProfile.communication_aspects.phone}</span>
+                              </div>
+                            )}
+                            {recipientProfile?.communication_aspects?.linkedin && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F517;</span>
+                                <a href={recipientProfile.communication_aspects.linkedin} target="_blank" rel="noopener noreferrer">
+                                  LinkedIn
+                                </a>
+                              </div>
+                            )}
+                            {recipientProfile?.communication_aspects?.twitter && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F426;</span>
+                                <a href={`https://twitter.com/${recipientProfile.communication_aspects.twitter}`} target="_blank" rel="noopener noreferrer">
+                                  @{recipientProfile.communication_aspects.twitter}
+                                </a>
+                              </div>
+                            )}
+                            {recipientProfile?.communication_aspects?.website && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F310;</span>
+                                <a href={recipientProfile.communication_aspects.website} target="_blank" rel="noopener noreferrer">
+                                  {recipientProfile.communication_aspects.website}
+                                </a>
+                              </div>
+                            )}
+                            {recipientProfile?.communication_aspects?.timezone && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F551;</span>
+                                <span>{recipientProfile.communication_aspects.timezone}</span>
+                              </div>
+                            )}
+                            {recipientProfile?.collaboration_aspects?.availability && (
+                              <div className="contact-info-item">
+                                <span className="icon">&#x1F4C5;</span>
+                                <span>{recipientProfile.collaboration_aspects.availability}</span>
+                              </div>
+                            )}
+                          </div>
+                          {recipientProfile?.communication_aspects?.email && (
+                            <div className="contact-actions">
+                              <a
+                                href={`mailto:${recipientProfile.communication_aspects.email}`}
+                                className="btn-small primary"
+                              >
+                                &#x2709; Email
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Deep Dive: Evidence-Based Aspects */}
+                    <div className="mb-10">
+                      <h2 className="mm-section-header">
+                        <span className="icon">&#x1F50D;</span>
+                        Deep Dive: Evidence-Based Profiles
+                      </h2>
+                      <p className="text-[var(--mm-text-muted)] text-sm mb-4">Not personality tests — concrete evidence from work history and shipped projects.</p>
+
+                      <div className="two-sided-section">
+                        {/* Person A Profile */}
+                        <div className="side-left">
+                          <div className="side-label">Person A&apos;s Profile</div>
+
+                          {/* Working Style Dimensions */}
+                          {initiatorProfile?.role_aspects?.core_dimensions && (
+                            <>
+                              {Object.entries(initiatorProfile.role_aspects.core_dimensions).map(([key, dim]: [string, any]) => (
+                                <div key={key} className="aspect-detailed">
+                                  <div className="aspect-detailed-header">
+                                    <h4>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                                    <div className="aspect-score-badge">{dim.score}/100</div>
+                                  </div>
+                                  {dim.evidence && (
+                                    <div className="aspect-description">{dim.evidence}</div>
+                                  )}
+                                </div>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Proof Points as Evidence */}
+                          {initiatorProfile?.proof_points?.slice(0, 2).map((pp: any, i: number) => (
+                            <div key={i} className="evidence-box">
+                              <div className="label">Proof Point</div>
+                              <div className="quote">&ldquo;{pp.description || pp.detail || pp.name}&rdquo;</div>
+                              {pp.url && <div className="source">— {pp.url}</div>}
+                            </div>
+                          ))}
+
+                          {/* Watch Points */}
+                          {initiatorProfile?.collaboration_aspects?.struggle_with?.length > 0 && (
+                            <div className="aspect-detailed">
+                              <div className="aspect-detailed-header">
+                                <h4>Watch Points</h4>
+                                <div className="aspect-score-badge warning">&#x26A0; Risk</div>
+                              </div>
+                              <div className="aspect-description">
+                                {initiatorProfile.collaboration_aspects.struggle_with.join(', ')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Person B Profile */}
+                        <div className="side-right">
+                          <div className="side-label">Person B&apos;s Profile</div>
+
+                          {/* Working Style Dimensions */}
+                          {recipientProfile?.role_aspects?.core_dimensions && (
+                            <>
+                              {Object.entries(recipientProfile.role_aspects.core_dimensions).map(([key, dim]: [string, any]) => (
+                                <div key={key} className="aspect-detailed">
+                                  <div className="aspect-detailed-header">
+                                    <h4>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                                    <div className="aspect-score-badge">{dim.score}/100</div>
+                                  </div>
+                                  {dim.evidence && (
+                                    <div className="aspect-description">{dim.evidence}</div>
+                                  )}
+                                </div>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Proof Points as Evidence */}
+                          {recipientProfile?.proof_points?.slice(0, 2).map((pp: any, i: number) => (
+                            <div key={i} className="evidence-box">
+                              <div className="label">Proof Point</div>
+                              <div className="quote">&ldquo;{pp.description || pp.detail || pp.name}&rdquo;</div>
+                              {pp.url && <div className="source">— {pp.url}</div>}
+                            </div>
+                          ))}
+
+                          {/* Watch Points */}
+                          {recipientProfile?.collaboration_aspects?.struggle_with?.length > 0 && (
+                            <div className="aspect-detailed">
+                              <div className="aspect-detailed-header">
+                                <h4>Watch Points</h4>
+                                <div className="aspect-score-badge warning">&#x26A0; Risk</div>
+                              </div>
+                              <div className="aspect-description">
+                                {recipientProfile.collaboration_aspects.struggle_with.join(', ')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Repeat Conversation Starters for Stage 2 */}
+                    {getConversationStarters().length > 0 && (
+                      <div className="powerful-question">
+                        <div className="label">&#x26A1; Your First Conversation Question</div>
+                        <div className="space-y-4">
+                          {getConversationStarters().slice(0, 1).map((starter, i) => (
+                            <div key={i} className="question-text">
+                              &ldquo;{starter}&rdquo;
+                            </div>
+                          ))}
+                        </div>
+                        <div className="explanation mt-4">
+                          <strong style={{ color: 'var(--mm-cyan)' }}>Now that you can contact each other:</strong><br />
+                          &bull; Schedule a 30-minute call to discuss your answers<br />
+                          &bull; Share specific examples from your work<br />
+                          &bull; See if the answers reveal a concrete project you could collaborate on<br />
+                          &bull; If yes → move to a working session. If no → still a valuable connection.
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
