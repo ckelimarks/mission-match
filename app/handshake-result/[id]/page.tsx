@@ -1015,8 +1015,10 @@ export default function HandshakeResultPage() {
                                       </div>
                                       <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
                                         {prioritizationData.initiator.answers[i]}
-                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] && (
+                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] ? (
                                           <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                        ) : (
+                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>❓</span>
                                         )}
                                       </div>
                                     </div>
@@ -1034,8 +1036,10 @@ export default function HandshakeResultPage() {
                                       </div>
                                       <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
                                         {prioritizationData.recipient.answers[i]}
-                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] && (
+                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] ? (
                                           <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                        ) : (
+                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>❓</span>
                                         )}
                                       </div>
                                     </div>
