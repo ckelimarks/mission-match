@@ -28,21 +28,8 @@ function repairJson(input: string): string {
     .replace(/\r\n/g, '\n')  // Normalize line endings
     .replace(/\r/g, '\n');
 
-  // Step 3: Fix missing quotes around string values
-  // Pattern: "key": value" or "key": value, or "key": value}
-  // Where value doesn't start with ", {, [, true, false, null, or a number
-  text = text.replace(
-    /("[\w_]+")\s*:\s*(?!")(?!\{)(?!\[)(?!true)(?!false)(?!null)(?!-?\d)([^,}\]\n]+?)([,}\]])/g,
-    (match, key, value, ending) => {
-      // Don't double-quote if it ends with a quote already
-      const trimmedValue = value.trim();
-      if (trimmedValue.endsWith('"')) {
-        // Missing opening quote
-        return `${key}: "${trimmedValue}${ending}`;
-      }
-      return match;
-    }
-  );
+  // Step 3: REMOVED - was incorrectly modifying already-valid JSON
+  // The line-by-line Step 4 handles the missing quote case correctly
 
   // Step 4: More aggressive fix - find lines with "key": unquotedValue" pattern (missing opening quote)
   const lines = text.split('\n');
