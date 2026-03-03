@@ -109,10 +109,10 @@ Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY v
       throw new Error(`Database update failed: ${updateError.message}`);
     }
 
-    // Update handshake status
+    // Update handshake status - Stage 1 complete, ready for viewing
     await supabase
       .from('handshakes')
-      .update({ status: 'awaiting_consent' })
+      .update({ status: 'stage1_complete' })
       .eq('id', handshakeId);
 
     return NextResponse.json({
