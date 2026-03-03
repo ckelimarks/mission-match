@@ -185,34 +185,47 @@ Return ONLY valid JSON:
       hook_alignment: analysisResult.hook_alignment || null,
     };
 
-    const { data: updatedRows, error: updateError } = await supabase
+    // First, find the existing analysis record by its ID
+    const { data: existingAnalysis, error: fetchError } = await supabase
       .from('analyses')
-      .update({
-        overlap: overlapData,
-        conversation_starters: analysisResult.conversation_starters,
-        analysis_status: 'completed',
-        completed_at: new Date().toISOString(),
-      })
+      .select('id')
       .eq('handshake_id', handshakeId)
       .eq('stage', 1)
-      .select();
+      .single();
 
-    console.log('[ANALYZE-STAGE1] Update result:', {
-      updatedCount: updatedRows?.length || 0,
-      error: updateError?.message,
+    console.log('[ANALYZE-STAGE1] Existing analysis:', {
+      id: existingAnalysis?.id,
+      fetchError: fetchError?.message,
     });
 
-    if (updateError) {
-      console.error('[ANALYZE-STAGE1] Failed to update analysis:', updateError);
-      throw new Error(`Database update failed: ${updateError.message}`);
-    }
+    if (existingAnalysis?.id) {
+      // Update by ID directly
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('analyses')
+        .update({
+          overlap: overlapData,
+          conversation_starters: analysisResult.conversation_starters,
+          analysis_status: 'completed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', existingAnalysis.id)
+        .select();
 
-    if (!updatedRows || updatedRows.length === 0) {
-      // No rows matched - try upsert instead
-      console.log('[ANALYZE-STAGE1] No rows updated, trying insert...');
+      console.log('[ANALYZE-STAGE1] Update by ID result:', {
+        updatedCount: updatedRows?.length || 0,
+        error: updateError?.message,
+        firstRow: updatedRows?.[0] ? 'has data' : 'no data',
+      });
+
+      if (updateError) {
+        throw new Error(`Database update failed: ${updateError.message}`);
+      }
+    } else {
+      // No existing record - insert new
+      console.log('[ANALYZE-STAGE1] No existing record, inserting...');
       const { error: insertError } = await supabase
         .from('analyses')
-        .upsert({
+        .insert({
           handshake_id: handshakeId,
           stage: 1,
           overlap: overlapData,
@@ -222,7 +235,7 @@ Return ONLY valid JSON:
         });
 
       if (insertError) {
-        console.error('[ANALYZE-STAGE1] Insert also failed:', insertError);
+        console.error('[ANALYZE-STAGE1] Insert failed:', insertError);
         throw new Error(`Database insert failed: ${insertError.message}`);
       }
     }
