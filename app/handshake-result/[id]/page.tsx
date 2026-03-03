@@ -270,12 +270,37 @@ export default function HandshakeResultPage() {
                       <p className="text-text-secondary">
                         Claude is analyzing your overlap areas and complementarity...
                       </p>
-                      <button
-                        onClick={fetchHandshake}
-                        className="mt-6 px-8 py-3 bg-grid-line text-text-primary font-bold uppercase tracking-wider hover:bg-accent-cyan hover:text-black transition-colors"
-                      >
-                        Refresh
-                      </button>
+                      <div className="flex gap-4 justify-center mt-6">
+                        <button
+                          onClick={fetchHandshake}
+                          className="px-8 py-3 bg-grid-line text-text-primary font-bold uppercase tracking-wider hover:bg-accent-cyan hover:text-black transition-colors"
+                        >
+                          Refresh
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await fetch('/api/analyze-stage1', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ handshakeId }),
+                              });
+                              const data = await res.json();
+                              if (!res.ok) {
+                                alert(`Analysis failed: ${data.error}\n${data.details || ''}`);
+                              } else {
+                                alert('Analysis triggered! Refreshing...');
+                                fetchHandshake();
+                              }
+                            } catch (err) {
+                              alert(`Error: ${err}`);
+                            }
+                          }}
+                          className="px-8 py-3 bg-accent-orange text-white font-bold uppercase tracking-wider hover:shadow-glow-orange transition-all"
+                        >
+                          Retry Analysis
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -12,10 +12,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     handshakeId = body.handshakeId;
 
+    console.log('[ANALYZE-STAGE1] Starting analysis for:', handshakeId);
+
     if (!handshakeId) {
       return NextResponse.json(
         { error: 'handshakeId is required' },
         { status: 400 }
+      );
+    }
+
+    // Check for Anthropic API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('[ANALYZE-STAGE1] ANTHROPIC_API_KEY not set!');
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'ANTHROPIC_API_KEY not configured' },
+        { status: 500 }
       );
     }
 
@@ -40,14 +51,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (handshakeError || !handshake) {
+      console.error('[ANALYZE-STAGE1] Handshake not found:', handshakeError);
       return NextResponse.json(
-        { error: 'Handshake not found' },
+        { error: 'Handshake not found', details: handshakeError?.message },
         { status: 404 }
       );
     }
 
     const initiator = handshake.initiator as any;
     const recipient = handshake.recipient as any;
+
+    console.log('[ANALYZE-STAGE1] Profiles loaded:', {
+      initiatorHook: initiator?.hook?.slice(0, 50),
+      recipientHook: recipient?.hook?.slice(0, 50),
+    });
 
     // Build a rich prompt using all available profile data
     const formatProfile = (p: any, label: string) => {
@@ -125,6 +142,8 @@ Return ONLY valid JSON:
 }
 \`\`\``;
 
+    console.log('[ANALYZE-STAGE1] Calling Claude API...');
+
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2048,
@@ -136,6 +155,7 @@ Return ONLY valid JSON:
       ],
     });
 
+    console.log('[ANALYZE-STAGE1] Claude responded, parsing...');
     const content = message.content[0];
     if (content.type !== 'text') {
       throw new Error('Unexpected response type from Claude');
@@ -145,7 +165,10 @@ Return ONLY valid JSON:
     const jsonMatch = content.text.match(/```json\n([\s\S]*?)\n```/) ||
                       content.text.match(/```\n([\s\S]*?)\n```/);
     const jsonText = jsonMatch ? jsonMatch[1] : content.text;
+
+    console.log('[ANALYZE-STAGE1] Parsing JSON response...');
     const analysis = JSON.parse(jsonText);
+    console.log('[ANALYZE-STAGE1] Parsed successfully, updating database...');
 
     // Update analysis in database with new fields
     const { error: updateError } = await supabase
@@ -162,9 +185,11 @@ Return ONLY valid JSON:
       .eq('stage', 1);
 
     if (updateError) {
-      console.error('Failed to update analysis:', updateError);
+      console.error('[ANALYZE-STAGE1] Failed to update analysis:', updateError);
       throw new Error(`Database update failed: ${updateError.message}`);
     }
+
+    console.log('[ANALYZE-STAGE1] Analysis completed successfully!');
 
     // Note: handshake status stays 'pending' until consent is granted
     // The analysis_status field in analyses table tracks Stage 1 completion
