@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractProfile } from '@/lib/anthropic';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,12 +31,17 @@ export async function POST(request: NextRequest) {
     // Get device ID from client (would come from header in production)
     // For now, generate a new one server-side for testing
     const deviceId = crypto.randomUUID();
+    const claimToken = crypto.randomUUID();
+
+    // Use service role to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Insert profile into Supabase
     const { data: profile, error: insertError } = await supabase
       .from('profiles')
       .insert({
         device_id: deviceId,
+        claim_token: claimToken,
         display_name: null, // User can set this later
         role: extractedData.role,
         mission: extractedData.mission,
@@ -60,6 +68,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       profileId: profile.id,
+      deviceId,
+      claimToken,
       profile,
       message: 'Profile created successfully',
     });

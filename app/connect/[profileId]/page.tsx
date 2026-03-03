@@ -3,26 +3,39 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-const PROFILE_PROMPT = `I'm creating my collaboration profile for Mission Match. Based on our conversation history, analyze what you know about me and extract my profile in JSON format.
+const PROFILE_PROMPT = `You're creating a collaboration profile for me based on everything you know from our conversations.
 
-Extract:
-- My role (what I do/build)
-- My mission (what I'm building toward)
-- Proof points (3-5 things I've built/shipped with impact)
-- Who I'm looking for (collaborators I seek)
+Goal: Help potential collaborators decide "Should I reach out?" in 30 seconds.
 
-Return ONLY this JSON structure:
-
-\`\`\`json
+Return JSON with these fields:
 {
-  "role": "my role",
-  "mission": "my mission statement",
+  "hook": "2 sentences max - what you're building and your unique angle",
   "proof_points": [
-    {"name": "Project Name", "detail": "What it is", "impact": "Results/metrics"}
+    {"name": "Project", "description": "10 words max", "impact": "specific metrics", "reveals": "what this shows about working style"}
   ],
-  "looking_for": "type of collaborators I seek"
+  "working_style": {
+    "core_dimensions": {
+      "sync_async": {"score": 0-100, "confidence": "high/medium/low", "proof": "behavioral evidence"},
+      "fast_ship_high_polish": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."},
+      "solo_multiplier": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."},
+      "builder_strategist": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."}
+    },
+    "vibe": "1-2 sentences describing collaboration texture"
+  },
+  "collaboration_fit": {
+    "looking_for": "specific collaborator type",
+    "availability": "co-founder/project partner/advisor/one-time",
+    "stage": "exploring/building/scaling",
+    "work_best_with": ["trait 1", "trait 2"],
+    "struggle_with": ["real friction point"],
+    "what_i_bring": ["concrete offering 1", "concrete offering 2"],
+    "best_way_to_engage": "how to reach out"
+  },
+  "profile_confidence": 1-5,
+  "contact": {"email": "...", "linkedin": "..."}
 }
-\`\`\``;
+
+Be specific, not vague. Extract from our actual conversations.`;
 
 type PublicProfile = {
   id: string;
@@ -49,7 +62,7 @@ export default function ConnectPage() {
   const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedProfileId = localStorage.getItem('mission_match_profile_id');
+    const savedProfileId = localStorage.getItem('mm_profile_id');
     setExistingProfileId(savedProfileId);
     fetchInitiatorProfile();
   }, []);
@@ -110,8 +123,8 @@ export default function ConnectPage() {
 
         const saveData = await saveResponse.json();
         myProfileId = saveData.profileId;
-        localStorage.setItem('mission_match_profile_id', myProfileId!);
-        localStorage.setItem('mission_match_device_id', saveData.deviceId);
+        localStorage.setItem('mm_profile_id', myProfileId!);
+        localStorage.setItem('mm_device_id', saveData.deviceId);
       }
 
       const handshakeResponse = await fetch('/api/create-handshake', {

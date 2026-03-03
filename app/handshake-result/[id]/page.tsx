@@ -20,7 +20,7 @@ export default function HandshakeResultPage() {
   const [showDebug, setShowDebug] = useState(true);
 
   useEffect(() => {
-    const profileId = localStorage.getItem('mission_match_profile_id');
+    const profileId = localStorage.getItem('mm_profile_id');
     setMyProfileId(profileId);
     fetchHandshake();
   }, []);
@@ -282,6 +282,22 @@ export default function HandshakeResultPage() {
 
                 {analysis.analysis_status === 'completed' && analysis.stage === 1 && (
                   <div className="section mb-8" data-section="OVERLAP_ANALYSIS">
+                    {/* Hook Alignment */}
+                    {analysis.hook_alignment && (
+                      <div className="mb-8">
+                        <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
+                          <span className="text-accent-cyan text-xl">//</span>
+                          Mission Alignment
+                        </h2>
+                        <div className="bg-forge-black border-l-4 border-accent-cyan p-6">
+                          <p className="text-text-primary text-lg italic">
+                            "{analysis.hook_alignment}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Overlap Areas */}
                     <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
                       <span className="text-accent-cyan text-xl">//</span>
                       Overlap Analysis
@@ -310,6 +326,33 @@ export default function HandshakeResultPage() {
                     ) : (
                       <div className="bg-forge-black border-l-4 border-grid-line p-6">
                         <p className="text-text-secondary">No overlap analysis available yet.</p>
+                      </div>
+                    )}
+
+                    {/* Working Style Preview */}
+                    {analysis.working_style_preview && (analysis.working_style_preview as any[]).length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-3">
+                          <span className="text-accent-cyan">//</span>
+                          Working Style Compatibility
+                        </h3>
+                        <div className="grid gap-3">
+                          {(analysis.working_style_preview as any[]).map((ws, i) => (
+                            <div key={i} className="bg-forge-black p-4 border-l-2 border-accent-orange">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="font-bold text-text-primary">{ws.dimension}</span>
+                                <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${
+                                  ws.alignment === 'aligned' ? 'bg-accent-cyan/20 text-accent-cyan' :
+                                  ws.alignment === 'complementary' ? 'bg-accent-orange/20 text-accent-orange' :
+                                  'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {ws.alignment}
+                                </span>
+                              </div>
+                              <p className="text-text-secondary text-sm">{ws.insight}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 

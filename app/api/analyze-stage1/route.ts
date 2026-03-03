@@ -22,13 +22,19 @@ export async function POST(request: NextRequest) {
     // Use service role key to bypass RLS for analysis
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get handshake with both profiles
+    // Get handshake with both profiles - fetch all fields for rich analysis
     const { data: handshake, error: handshakeError } = await supabase
       .from('handshakes')
       .select(`
         id,
-        initiator:initiator_id(id, role, mission, proof_points, looking_for),
-        recipient:recipient_id(id, role, mission, proof_points, looking_for)
+        initiator:initiator_id(
+          id, hook, role, mission, proof_points, looking_for,
+          working_style, collaboration_fit, profile_confidence
+        ),
+        recipient:recipient_id(
+          id, hook, role, mission, proof_points, looking_for,
+          working_style, collaboration_fit, profile_confidence
+        )
       `)
       .eq('id', handshakeId)
       .single();
@@ -40,33 +46,82 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const initiator = handshake.initiator as any;
+    const recipient = handshake.recipient as any;
+
+    // Build a rich prompt using all available profile data
+    const formatProfile = (p: any, label: string) => {
+      const parts = [`**${label}:**`];
+      if (p.hook) parts.push(`Hook: ${p.hook}`);
+      if (p.role) parts.push(`Role: ${p.role}`);
+      if (p.mission) parts.push(`Mission: ${p.mission}`);
+      if (p.looking_for) parts.push(`Looking for: ${p.looking_for}`);
+
+      // Add working style if available
+      if (p.working_style?.core_dimensions) {
+        const dims = p.working_style.core_dimensions;
+        parts.push(`Working Style:`);
+        if (dims.sync_async) parts.push(`  - Sync↔Async: ${dims.sync_async.score}/100`);
+        if (dims.fast_ship_high_polish) parts.push(`  - Ship↔Polish: ${dims.fast_ship_high_polish.score}/100`);
+        if (dims.solo_multiplier) parts.push(`  - Solo↔Multiplier: ${dims.solo_multiplier.score}/100`);
+        if (dims.builder_strategist) parts.push(`  - Builder↔Strategist: ${dims.builder_strategist.score}/100`);
+      }
+      if (p.working_style?.vibe) parts.push(`Vibe: ${p.working_style.vibe}`);
+
+      // Add collaboration fit
+      if (p.collaboration_fit) {
+        const cf = p.collaboration_fit;
+        if (cf.availability) parts.push(`Availability: ${cf.availability}`);
+        if (cf.stage) parts.push(`Stage: ${cf.stage}`);
+        if (cf.work_best_with?.length) parts.push(`Works best with: ${cf.work_best_with.join(', ')}`);
+        if (cf.what_i_bring?.length) parts.push(`Brings: ${cf.what_i_bring.join(', ')}`);
+      }
+
+      // Add proof points
+      if (p.proof_points?.length) {
+        parts.push(`Proof points:`);
+        p.proof_points.slice(0, 3).forEach((pp: any) => {
+          parts.push(`  - ${pp.name}: ${pp.description || pp.detail || ''}`);
+        });
+      }
+
+      return parts.join('\n');
+    };
+
     // Call Claude for Stage 1 analysis
-    const analysisPrompt = `Analyze these two collaboration profiles and identify overlap areas for a productive first conversation.
+    const analysisPrompt = `Analyze these two collaboration profiles and generate a Stage 1 analysis.
 
-**Person A:**
-Role: ${(handshake.initiator as any).role}
-Mission: ${(handshake.initiator as any).mission}
-Looking for: ${(handshake.initiator as any).looking_for}
+${formatProfile(initiator, 'Person A')}
 
-**Person B:**
-Role: ${(handshake.recipient as any).role}
-Mission: ${(handshake.recipient as any).mission}
-Looking for: ${(handshake.recipient as any).looking_for}
+${formatProfile(recipient, 'Person B')}
 
-Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY valid JSON:
+Generate:
+1. Overlap areas (shared interests, skills, goals)
+2. Working style compatibility preview (based on their scores)
+3. 3-5 conversation starters that reference their specific profiles
+
+Return ONLY valid JSON:
 
 \`\`\`json
 {
   "overlap": [
     {
-      "category": "Shared Interest",
-      "items": ["item1", "item2"],
-      "why_matters": "Brief explanation"
+      "category": "Shared Interest/Skill/Goal",
+      "items": ["specific item 1", "specific item 2"],
+      "why_matters": "Why this overlap could lead to collaboration"
+    }
+  ],
+  "working_style_preview": [
+    {
+      "dimension": "Sync vs Async",
+      "alignment": "aligned|complementary|friction",
+      "insight": "Brief observation about compatibility"
     }
   ],
   "conversation_starters": [
-    "Specific question or topic to discuss"
-  ]
+    "Specific question referencing their actual profiles"
+  ],
+  "hook_alignment": "1-2 sentences on how their missions/hooks connect"
 }
 \`\`\``;
 
@@ -92,12 +147,14 @@ Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY v
     const jsonText = jsonMatch ? jsonMatch[1] : content.text;
     const analysis = JSON.parse(jsonText);
 
-    // Update analysis in database
+    // Update analysis in database with new fields
     const { error: updateError } = await supabase
       .from('analyses')
       .update({
         overlap: analysis.overlap,
         conversation_starters: analysis.conversation_starters,
+        working_style_preview: analysis.working_style_preview || null,
+        hook_alignment: analysis.hook_alignment || null,
         analysis_status: 'completed',
         completed_at: new Date().toISOString(),
       })

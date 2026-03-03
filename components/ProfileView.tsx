@@ -3,6 +3,7 @@
 import type { Profile, AspectScore } from '@/types';
 import { useState, useRef } from 'react';
 import QRCode from 'react-qr-code';
+import PendingConnections from './PendingConnections';
 
 interface ProfileViewProps {
   profile: Profile;
@@ -14,6 +15,9 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
   const [showClaimQR, setShowClaimQR] = useState(false);
   const shareQrRef = useRef<HTMLDivElement>(null);
   const claimQrRef = useRef<HTMLDivElement>(null);
+
+  // Safe defaults for optional fields
+  const profileStrength = profile.profile_strength ?? 3;
 
   const handleConnect = () => {
     // Navigate to handshake flow
@@ -111,6 +115,11 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
           )}
         </header>
 
+        {/* Pending Connections - Owner Only */}
+        {isOwner && (
+          <PendingConnections profileId={profile.id} />
+        )}
+
         {/* QR Code Section */}
         <div className="section mb-8" data-section="QR_CODE">
           <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
@@ -188,8 +197,8 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
               <span className="text-accent-cyan text-xl">//</span>
               Profile Strength
             </h2>
-            <div className={`text-4xl font-bold ${getStrengthColor(profile.profile_strength)}`}>
-              {profile.profile_strength}/5
+            <div className={`text-4xl font-bold ${getStrengthColor(profileStrength)}`}>
+              {profileStrength}/5
             </div>
           </div>
 
@@ -199,10 +208,10 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
               <div
                 key={i}
                 className={`h-3 flex-1 ${
-                  i <= profile.profile_strength
-                    ? profile.profile_strength >= 4
+                  i <= profileStrength
+                    ? profileStrength >= 4
                       ? 'bg-accent-cyan'
-                      : profile.profile_strength >= 3
+                      : profileStrength >= 3
                       ? 'bg-accent-orange'
                       : 'bg-red-400'
                     : 'bg-grid-line'
@@ -211,7 +220,7 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
             ))}
           </div>
 
-          {profile.profile_strength < 3 && (
+          {profileStrength < 3 && (
             <div className="bg-forge-black border-l-4 border-accent-orange p-4">
               <div className="text-accent-orange font-bold uppercase text-sm mb-2">
                 Low Profile Strength
