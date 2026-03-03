@@ -41,27 +41,28 @@ function repairJson(input: string): string {
     }
   );
 
-  // Step 4: More aggressive fix - find lines with "key": unquotedValue pattern
+  // Step 4: More aggressive fix - find lines with "key": unquotedValue" pattern (missing opening quote)
   const lines = text.split('\n');
   const fixedLines = lines.map(line => {
-    // Match "key": followed by text that should be quoted but isn't
-    const match = line.match(/^(\s*"[\w_]+")\s*:\s*([A-Za-z][^,}\]]*)(,?\s*)$/);
-    if (match) {
-      const [, keyPart, valuePart, ending] = match;
-      // Check if value looks like it should be a string (starts with letter, not a keyword)
+    // Match "key": SomeValue" where the opening quote is missing but closing exists
+    const missingOpenQuote = line.match(/^(\s*"[^"]+"\s*:\s*)([A-Za-z][^"]*)(")(\s*,?\s*)$/);
+    if (missingOpenQuote) {
+      const [, keyPart, valuePart, closeQuote, ending] = missingOpenQuote;
+      // Add opening quote before value, keep the closing quote
+      return `${keyPart}"${valuePart}${closeQuote}${ending}`;
+    }
+
+    // Match "key": followed by completely unquoted value (no quotes at all)
+    const fullyUnquoted = line.match(/^(\s*"[^"]+"\s*:\s*)([A-Za-z][^,}\]"]*)(,?\s*)$/);
+    if (fullyUnquoted) {
+      const [, keyPart, valuePart, ending] = fullyUnquoted;
       const trimmedValue = valuePart.trim();
-      if (!['true', 'false', 'null'].includes(trimmedValue) &&
-          !trimmedValue.startsWith('"') &&
-          !trimmedValue.startsWith('{') &&
-          !trimmedValue.startsWith('[')) {
-        // Add quotes, handling case where closing quote exists but opening doesn't
-        if (trimmedValue.endsWith('"')) {
-          return `${keyPart}: "${trimmedValue}${ending}`;
-        } else {
-          return `${keyPart}: "${trimmedValue}"${ending}`;
-        }
+      // Don't quote boolean/null keywords
+      if (!['true', 'false', 'null'].includes(trimmedValue)) {
+        return `${keyPart}"${trimmedValue}"${ending}`;
       }
     }
+
     return line;
   });
   text = fixedLines.join('\n');
