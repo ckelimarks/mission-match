@@ -62,8 +62,10 @@ export default function ConnectPage() {
   const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedProfileId = localStorage.getItem('mm_profile_id');
+    // Check both new and old localStorage keys for backward compatibility
+    const savedProfileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
     setExistingProfileId(savedProfileId);
+    console.log('[CONNECT] Existing profile ID:', savedProfileId);
     fetchInitiatorProfile();
   }, []);
 
@@ -147,7 +149,11 @@ export default function ConnectPage() {
   };
 
   const handleQuickConnect = async () => {
-    if (!existingProfileId) return;
+    console.log('[QUICK-CONNECT] Starting with existingProfileId:', existingProfileId);
+    if (!existingProfileId) {
+      console.log('[QUICK-CONNECT] No existing profile ID, aborting');
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
