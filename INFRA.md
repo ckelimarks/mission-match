@@ -21,6 +21,41 @@
 | `profiles` | User collaboration profiles (hook, working_style, collaboration_fit, proof_points, etc.) |
 | `handshakes` | Connection requests between two profiles |
 | `analyses` | AI-generated Stage 1/2 collaboration analysis |
+| `prioritizations` | User responses to prioritization questions (Quick Pick / Point Allocation) |
+
+### Prioritizations Table Schema
+```sql
+CREATE TABLE prioritizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  handshake_id UUID NOT NULL REFERENCES handshakes(id) ON DELETE CASCADE,
+  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  method TEXT NOT NULL CHECK (method IN ('quick-pick', 'point-allocation', 'forced-choice')),
+  answers JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(handshake_id, profile_id)
+);
+```
+
+**Quick Pick Format:**
+```json
+{
+  "0": "Building a product together",
+  "1": "Technical co-founder (build together)",
+  "2": "Nights & weekends sprint (10-20 hrs/wk)",
+  "3": "Ship a real product to users"
+}
+```
+
+**Point Allocation Format:**
+```json
+{
+  "q0-o0": 5,  // Building a product: 5 points
+  "q0-o1": 3,  // Running experiments: 3 points
+  "q0-o2": 2,  // Strategic advising: 2 points
+  ...
+}
+```
 
 ### Handshake Status Constraint
 Database only allows these status values:
@@ -59,8 +94,9 @@ Database only allows these status values:
 | Quick Connect (existing profile) | ✅ Working | Checks both localStorage keys |
 | Connections query | ✅ Working | Uses separate queries (not `.or()`) |
 | Stage 1 analysis | ✅ Working | Uses DELETE+INSERT for RLS workaround |
-| Stage 2 consent | ❌ Not built | Phase 6 in plan |
-| Prioritization | 🎭 Mock only | Can stay mock for demo |
+| Stage 2 consent | ✅ Working | Manual SQL UPDATE for handshakes (RLS blocks programmatic UPDATE) |
+| Stage 2 display | ✅ Working | Travis Bonnet header, contact cards, deep dive profiles |
+| Prioritization | ✅ Working | Quick Pick + Point Allocation with alignment analysis |
 
 ## Gotchas
 
@@ -162,6 +198,10 @@ const { data: analysis } = await supabase
 | `app/api/create-handshake/route.ts` | Creates handshake + triggers analysis |
 | `app/api/get-pending-connections/route.ts` | Fetches user's connections |
 | `app/api/analyze-stage1/route.ts` | Claude-powered collaboration analysis |
+| `app/api/grant-consent/route.ts` | Stage 2 consent granting (RLS blocking on handshakes) |
+| `app/api/get-handshake/route.ts` | Fetch handshake with cache-busting |
+| `app/api/save-prioritization/route.ts` | Save user's prioritization answers |
+| `app/api/get-prioritization/route.ts` | Fetch both users' answers + alignment |
 | `lib/anthropic.ts` | Anthropic client (lazy init) |
 | `lib/supabase.ts` | Supabase client (lazy init) |
 | `types/index.ts` | TypeScript types for profiles, handshakes, analyses |
