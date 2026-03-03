@@ -185,7 +185,7 @@ Return ONLY valid JSON:
       hook_alignment: analysisResult.hook_alignment || null,
     };
 
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from('analyses')
       .update({
         overlap: overlapData,
@@ -194,11 +194,37 @@ Return ONLY valid JSON:
         completed_at: new Date().toISOString(),
       })
       .eq('handshake_id', handshakeId)
-      .eq('stage', 1);
+      .eq('stage', 1)
+      .select();
+
+    console.log('[ANALYZE-STAGE1] Update result:', {
+      updatedCount: updatedRows?.length || 0,
+      error: updateError?.message,
+    });
 
     if (updateError) {
       console.error('[ANALYZE-STAGE1] Failed to update analysis:', updateError);
       throw new Error(`Database update failed: ${updateError.message}`);
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      // No rows matched - try upsert instead
+      console.log('[ANALYZE-STAGE1] No rows updated, trying insert...');
+      const { error: insertError } = await supabase
+        .from('analyses')
+        .upsert({
+          handshake_id: handshakeId,
+          stage: 1,
+          overlap: overlapData,
+          conversation_starters: analysisResult.conversation_starters,
+          analysis_status: 'completed',
+          completed_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error('[ANALYZE-STAGE1] Insert also failed:', insertError);
+        throw new Error(`Database insert failed: ${insertError.message}`);
+      }
     }
 
     console.log('[ANALYZE-STAGE1] Analysis completed successfully!');
