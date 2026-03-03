@@ -8,11 +8,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 // Robust JSON repair for common AI output issues
 function repairJson(input: string): string {
   let text = input;
+  console.log('[REPAIR] Input length:', input.length);
+  console.log('[REPAIR] First 200 chars:', input.substring(0, 200));
 
   // Step 1: Remove code block wrappers
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (jsonMatch) {
     text = jsonMatch[1];
+    console.log('[REPAIR] Removed code block wrapper');
   }
 
   // Step 2: Replace smart quotes and special characters
@@ -43,13 +46,15 @@ function repairJson(input: string): string {
 
   // Step 4: More aggressive fix - find lines with "key": unquotedValue" pattern (missing opening quote)
   const lines = text.split('\n');
-  const fixedLines = lines.map(line => {
+  console.log('[REPAIR] Processing', lines.length, 'lines');
+  const fixedLines = lines.map((line, idx) => {
     // Match "key": SomeValue" where the opening quote is missing but closing exists
     const missingOpenQuote = line.match(/^(\s*"[^"]+"\s*:\s*)([A-Za-z][^"]*)(")(\s*,?\s*)$/);
     if (missingOpenQuote) {
       const [, keyPart, valuePart, closeQuote, ending] = missingOpenQuote;
-      // Add opening quote before value, keep the closing quote
-      return `${keyPart}"${valuePart}${closeQuote}${ending}`;
+      const fixed = `${keyPart}"${valuePart}${closeQuote}${ending}`;
+      console.log('[REPAIR] Line', idx, 'FIXED missing open quote:', fixed.substring(0, 80));
+      return fixed;
     }
 
     // Match "key": followed by completely unquoted value (no quotes at all)
@@ -59,7 +64,9 @@ function repairJson(input: string): string {
       const trimmedValue = valuePart.trim();
       // Don't quote boolean/null keywords
       if (!['true', 'false', 'null'].includes(trimmedValue)) {
-        return `${keyPart}"${trimmedValue}"${ending}`;
+        const fixed = `${keyPart}"${trimmedValue}"${ending}`;
+        console.log('[REPAIR] Line', idx, 'FIXED fully unquoted:', fixed.substring(0, 80));
+        return fixed;
       }
     }
 
