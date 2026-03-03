@@ -37,6 +37,8 @@ export default function HandshakeResultPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [pointsRemaining, setPointsRemaining] = useState(10);
   const [pointAllocation, setPointAllocation] = useState<Record<string, number>>({});
+  const [prioritizationData, setPrioritizationData] = useState<any>(null);
+  const [savingPrioritization, setSavingPrioritization] = useState(false);
 
   useEffect(() => {
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
@@ -275,6 +277,59 @@ export default function HandshakeResultPage() {
       setPointsRemaining(prev => prev - pointDiff);
     }
   };
+
+  const savePrioritization = async (method: 'quick-pick' | 'point-allocation') => {
+    if (!myProfileId) {
+      alert('No profile ID found');
+      return;
+    }
+
+    try {
+      setSavingPrioritization(true);
+
+      const answers = method === 'quick-pick' ? quickPickAnswers : pointAllocation;
+
+      const response = await fetch('/api/save-prioritization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          handshakeId,
+          profileId: myProfileId,
+          method,
+          answers,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to save');
+
+      alert('Priorities saved!');
+      fetchPrioritizations();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save priorities');
+    } finally {
+      setSavingPrioritization(false);
+    }
+  };
+
+  const fetchPrioritizations = async () => {
+    try {
+      const response = await fetch(`/api/get-prioritization?handshakeId=${handshakeId}`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setPrioritizationData(data);
+    } catch (err) {
+      console.error('Failed to fetch prioritizations:', err);
+    }
+  };
+
+  // Fetch prioritizations when mutual consent is achieved
+  useEffect(() => {
+    if (mutualConsent) {
+      fetchPrioritizations();
+    }
+  }, [mutualConsent]);
 
   return (
     <>
@@ -885,10 +940,11 @@ export default function HandshakeResultPage() {
                           {/* Submit Button */}
                           {Object.keys(quickPickAnswers).length === quickPickQuestions.length && (
                             <button
-                              onClick={() => {/* TODO: Save answers */}}
+                              onClick={() => savePrioritization('quick-pick')}
+                              disabled={savingPrioritization}
                               className="mm-btn-primary w-full mt-6"
                             >
-                              Save My Priorities
+                              {savingPrioritization ? 'Saving...' : 'Save My Priorities'}
                             </button>
                           )}
                         </div>
@@ -997,16 +1053,108 @@ export default function HandshakeResultPage() {
 
                           {/* Submit Button */}
                           <button
-                            onClick={() => {/* TODO: Save points */}}
-                            disabled={pointsRemaining !== 0}
+                            onClick={() => savePrioritization('point-allocation')}
+                            disabled={pointsRemaining !== 0 || savingPrioritization}
                             className="mm-btn-primary w-full mt-6"
                             style={{
-                              opacity: pointsRemaining !== 0 ? 0.5 : 1,
-                              cursor: pointsRemaining !== 0 ? 'not-allowed' : 'pointer'
+                              opacity: pointsRemaining !== 0 || savingPrioritization ? 0.5 : 1,
+                              cursor: pointsRemaining !== 0 || savingPrioritization ? 'not-allowed' : 'pointer'
                             }}
                           >
-                            {pointsRemaining !== 0 ? `Allocate ${pointsRemaining} more points` : 'Save My Priorities'}
+                            {savingPrioritization ? 'Saving...' : pointsRemaining !== 0 ? `Allocate ${pointsRemaining} more points` : 'Save My Priorities'}
                           </button>
+                        </div>
+                      )}
+
+                      {/* Results Display */}
+                      {prioritizationData?.bothCompleted && (
+                        <div style={{
+                          background: 'rgba(78, 205, 196, 0.08)',
+                          border: '2px solid var(--mm-cyan)',
+                          borderRadius: '8px',
+                          padding: '30px',
+                          marginTop: '30px'
+                        }}>
+                          <h3 style={{ color: 'var(--mm-cyan)', marginBottom: '25px', textAlign: 'center', fontSize: '20px' }}>
+                            &#x1F3AF; Collaboration Alignment
+                          </h3>
+
+                          {prioritizationData.initiator.method === 'quick-pick' && (
+                            <>
+                              <div className="two-sided-section" style={{ marginBottom: '30px' }}>
+                                <div className="side-left">
+                                  <div className="side-label" style={{ marginBottom: '20px', color: 'var(--mm-cyan)', fontWeight: 600 }}>
+                                    Person A&apos;s Choices
+                                  </div>
+                                  {quickPickQuestions.map((q, i) => (
+                                    <div key={i} style={{ marginBottom: '16px' }}>
+                                      <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>
+                                        {q.question}
+                                      </div>
+                                      <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
+                                        {prioritizationData.initiator.answers[i]}
+                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] && (
+                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="side-right">
+                                  <div className="side-label" style={{ marginBottom: '20px', color: 'var(--mm-red)', fontWeight: 600 }}>
+                                    Person B&apos;s Choices
+                                  </div>
+                                  {quickPickQuestions.map((q, i) => (
+                                    <div key={i} style={{ marginBottom: '16px' }}>
+                                      <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>
+                                        {q.question}
+                                      </div>
+                                      <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
+                                        {prioritizationData.recipient.answers[i]}
+                                        {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] && (
+                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                borderRadius: '8px',
+                                padding: '25px'
+                              }}>
+                                <div style={{ fontWeight: 600, color: 'var(--mm-cyan)', marginBottom: '12px', fontSize: '16px' }}>
+                                  🎯 {prioritizationData.alignment?.summary}
+                                </div>
+                                <div style={{ fontSize: '15px', lineHeight: 1.7, marginBottom: '15px' }}>
+                                  <strong style={{ color: 'var(--mm-cyan)' }}>
+                                    ✓ Matched on {prioritizationData.alignment?.matchedCount}/{prioritizationData.alignment?.totalQuestions}:
+                                  </strong>{' '}
+                                  You both agree on {prioritizationData.alignment?.matchedCount} priorities.
+                                </div>
+                                {prioritizationData.alignment?.divergences.length > 0 && (
+                                  <div style={{ fontSize: '14px', color: 'var(--mm-red)', marginBottom: '15px' }}>
+                                    <strong>⚠️ Divergence on {prioritizationData.alignment?.divergences.length}/{prioritizationData.alignment?.totalQuestions}:</strong>{' '}
+                                    Different views on {prioritizationData.alignment?.divergences.length} priorities.
+                                  </div>
+                                )}
+                                <div style={{
+                                  fontSize: '14px',
+                                  color: '#fff',
+                                  background: 'rgba(78, 205, 196, 0.1)',
+                                  padding: '12px',
+                                  borderRadius: '6px',
+                                  marginTop: '15px',
+                                  borderLeft: '3px solid var(--mm-cyan)'
+                                }}>
+                                  <strong>→ First conversation topic:</strong> &quot;We {prioritizationData.alignment?.matchedCount > 2 ? 'mostly align' : 'have different priorities'}. Let&apos;s discuss how to make this work.&quot;
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
