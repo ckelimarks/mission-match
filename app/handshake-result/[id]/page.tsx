@@ -318,6 +318,8 @@ export default function HandshakeResultPage() {
       if (!response.ok) return;
 
       const data = await response.json();
+      console.log('[PRIORITIZATION] Fetched data:', data);
+      console.log('[PRIORITIZATION] Both completed?', data.bothCompleted);
       setPrioritizationData(data);
     } catch (err) {
       console.error('Failed to fetch prioritizations:', err);
@@ -1067,6 +1069,8 @@ export default function HandshakeResultPage() {
                       )}
 
                       {/* Results Display */}
+                      {console.log('[RENDER] prioritizationData:', prioritizationData)}
+                      {console.log('[RENDER] bothCompleted:', prioritizationData?.bothCompleted)}
                       {prioritizationData?.bothCompleted && (
                         <div style={{
                           background: 'rgba(78, 205, 196, 0.08)',
