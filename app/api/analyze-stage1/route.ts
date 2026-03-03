@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { anthropic } from '@/lib/anthropic';
+import { getAnthropic } from '@/lib/anthropic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -70,7 +70,7 @@ Identify 3-5 overlap areas and generate 3-5 conversation starters. Return ONLY v
 }
 \`\`\``;
 
-    const message = await anthropic.messages.create({
+    const message = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2048,
       messages: [

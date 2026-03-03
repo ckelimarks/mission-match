@@ -20,12 +20,7 @@ export function getAnthropic(): Anthropic {
   return _anthropic;
 }
 
-// Backwards compatibility export (lazy getter)
-export const anthropic = {
-  get messages() {
-    return getAnthropic().messages;
-  },
-};
+// Export the lazy getter function - use getAnthropic() instead of anthropic
 
 /**
  * Extract collaboration profile from conversation history
