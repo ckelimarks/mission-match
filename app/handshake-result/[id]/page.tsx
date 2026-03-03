@@ -847,24 +847,14 @@ export default function HandshakeResultPage() {
                         Choose how you want to reveal your priorities:
                       </p>
 
-                      {/* Tab Switcher */}
-                      <div className="prioritization-tabs">
-                        <button
-                          className={`priority-tab ${priorityMethod === 'quick-pick' ? 'active' : ''}`}
-                          onClick={() => setPriorityMethod('quick-pick')}
-                        >
-                          &#x2713; Quick Pick (4 clicks)
-                        </button>
-                        <button
-                          className={`priority-tab ${priorityMethod === 'point-allocation' ? 'active' : ''}`}
-                          onClick={() => setPriorityMethod('point-allocation')}
-                        >
-                          &#x1F3AE; Point Allocation (RPG)
-                        </button>
-                      </div>
+                      {/* No tab switcher - just Quick Pick */}
 
-                      {/* Quick Pick Method */}
-                      {priorityMethod === 'quick-pick' && (
+                      {/* Check if current user has completed prioritization */}
+                      {(() => {
+                        const isInit = handshake?.initiator_id === myProfileId;
+                        const myPrioritization = isInit ? prioritizationData?.initiator : prioritizationData?.recipient;
+                        return !myPrioritization;
+                      })() && (
                         <div className="priority-method active" style={{
                           background: 'rgba(78, 205, 196, 0.05)',
                           border: '1px solid rgba(78, 205, 196, 0.2)',
@@ -953,119 +943,33 @@ export default function HandshakeResultPage() {
                         </div>
                       )}
 
-                      {/* Point Allocation Method */}
-                      {priorityMethod === 'point-allocation' && (
-                        <div className="priority-method active" style={{
-                          background: 'rgba(78, 205, 196, 0.05)',
-                          border: '1px solid rgba(78, 205, 196, 0.2)',
+                      {/* Already Completed Message */}
+                      {(() => {
+                        const isInit = handshake?.initiator_id === myProfileId;
+                        const myPrioritization = isInit ? prioritizationData?.initiator : prioritizationData?.recipient;
+                        return myPrioritization && !prioritizationData?.bothCompleted;
+                      })() && (
+                        <div style={{
+                          background: 'rgba(78, 205, 196, 0.08)',
+                          border: '2px solid var(--mm-cyan)',
                           borderRadius: '8px',
                           padding: '30px',
-                          marginTop: '20px'
+                          marginTop: '20px',
+                          textAlign: 'center'
                         }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                            <div style={{ fontSize: '14px', color: 'var(--mm-cyan)', fontWeight: 600 }}>
-                              YOUR ALLOCATION
-                            </div>
-                            <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Space Mono, monospace' }}>
-                              <span style={{ color: pointsRemaining === 0 ? 'var(--mm-cyan)' : '#ff6b6b' }}>
-                                {pointsRemaining}
-                              </span>
-                              <span style={{ color: '#888', fontSize: '14px', marginLeft: '6px' }}>
-                                POINTS LEFT
-                              </span>
-                            </div>
+                          <div style={{ fontSize: '15px', color: 'var(--mm-cyan)', fontWeight: 600, marginBottom: '12px' }}>
+                            ✓ YOU'VE COMPLETED YOUR PRIORITIES
                           </div>
-
-                          <p style={{ fontSize: '14px', color: '#888', marginBottom: '20px' }}>
-                            Allocate 10 points across options. Higher points = stronger preference.
+                          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '16px', overflow: 'hidden' }}>
+                            <div style={{
+                              width: '100%',
+                              height: '100%',
+                              background: 'linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%)'
+                            }}></div>
+                          </div>
+                          <p style={{ fontSize: '14px', color: '#888', marginBottom: '0' }}>
+                            Waiting for other person to complete their priorities...
                           </p>
-
-                          {/* Point Allocation Questions */}
-                          {quickPickQuestions.map((q, qIndex) => (
-                            <div key={qIndex} style={{ marginBottom: '30px' }}>
-                              <div style={{ fontSize: '16px', fontWeight: 600, color: '#fff', marginBottom: '15px' }}>
-                                {q.question}
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {q.options.map((option, oIndex) => {
-                                  const optionId = `q${qIndex}-o${oIndex}`;
-                                  const points = pointAllocation[optionId] || 0;
-                                  return (
-                                    <div key={oIndex} style={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      background: 'rgba(255, 255, 255, 0.02)',
-                                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                                      borderRadius: '6px',
-                                      padding: '12px 16px'
-                                    }}>
-                                      <span style={{ fontSize: '14px', color: '#fff', flex: 1 }}>
-                                        {option}
-                                      </span>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <button
-                                          onClick={() => adjustPoints(optionId, -1)}
-                                          disabled={points === 0}
-                                          style={{
-                                            background: points === 0 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(78, 205, 196, 0.1)',
-                                            border: '1px solid rgba(78, 205, 196, 0.3)',
-                                            borderRadius: '4px',
-                                            width: '32px',
-                                            height: '32px',
-                                            cursor: points === 0 ? 'not-allowed' : 'pointer',
-                                            color: points === 0 ? '#444' : 'var(--mm-cyan)',
-                                            fontSize: '16px'
-                                          }}
-                                        >
-                                          ◀
-                                        </button>
-                                        <span style={{
-                                          fontFamily: 'Space Mono, monospace',
-                                          fontSize: '18px',
-                                          fontWeight: 700,
-                                          color: 'var(--mm-cyan)',
-                                          minWidth: '24px',
-                                          textAlign: 'center'
-                                        }}>
-                                          {points}
-                                        </span>
-                                        <button
-                                          onClick={() => adjustPoints(optionId, 1)}
-                                          disabled={pointsRemaining === 0}
-                                          style={{
-                                            background: pointsRemaining === 0 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(78, 205, 196, 0.1)',
-                                            border: '1px solid rgba(78, 205, 196, 0.3)',
-                                            borderRadius: '4px',
-                                            width: '32px',
-                                            height: '32px',
-                                            cursor: pointsRemaining === 0 ? 'not-allowed' : 'pointer',
-                                            color: pointsRemaining === 0 ? '#444' : 'var(--mm-cyan)',
-                                            fontSize: '16px'
-                                          }}
-                                        >
-                                          ▶
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Submit Button */}
-                          <button
-                            onClick={() => savePrioritization('point-allocation')}
-                            disabled={pointsRemaining !== 0 || savingPrioritization}
-                            className="mm-btn-primary w-full mt-6"
-                            style={{
-                              opacity: pointsRemaining !== 0 || savingPrioritization ? 0.5 : 1,
-                              cursor: pointsRemaining !== 0 || savingPrioritization ? 'not-allowed' : 'pointer'
-                            }}
-                          >
-                            {savingPrioritization ? 'Saving...' : pointsRemaining !== 0 ? `Allocate ${pointsRemaining} more points` : 'Save My Priorities'}
-                          </button>
                         </div>
                       )}
 
@@ -1080,6 +984,19 @@ export default function HandshakeResultPage() {
                           padding: '30px',
                           marginTop: '30px'
                         }}>
+                          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                            <div style={{ fontSize: '15px', color: 'var(--mm-cyan)', fontWeight: 600, marginBottom: '12px' }}>
+                              ✓ BOTH COMPLETED
+                            </div>
+                            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '20px', overflow: 'hidden' }}>
+                              <div style={{
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #4ecdc4 0%, #ff6b6b 100%)'
+                              }}></div>
+                            </div>
+                          </div>
+
                           <h3 style={{ color: 'var(--mm-cyan)', marginBottom: '25px', textAlign: 'center', fontSize: '20px' }}>
                             &#x1F3AF; Collaboration Alignment
                           </h3>
