@@ -18,13 +18,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Create fresh client to avoid caching issues
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+      global: { headers: { 'Cache-Control': 'no-cache' } }
+    });
 
     const { data: handshake, error } = await supabase
       .from('handshakes')
       .select('*')
       .eq('id', handshakeId)
-      .single();
+      .maybeSingle(); // Use maybeSingle to avoid cache
+
+    console.log('[GET-HANDSHAKE] Handshake data:', {
+      id: handshake?.id,
+      status: handshake?.status,
+      initiatorConsented: handshake?.initiator_consented,
+      recipientConsented: handshake?.recipient_consented,
+    });
 
     if (error || !handshake) {
       return NextResponse.json(
