@@ -72,17 +72,37 @@ export default function HandshakeResultPage() {
 
   const fetchProfiles = async (initiatorId: string, recipientId: string) => {
     try {
+      console.log('[FETCH-PROFILES] Fetching profiles:', { initiatorId, recipientId });
+
+      if (!initiatorId || !recipientId) {
+        console.error('[FETCH-PROFILES] Missing profile IDs', { initiatorId, recipientId });
+        return;
+      }
+
       const [initRes, recRes] = await Promise.all([
         fetch(`/api/get-profile?id=${initiatorId}`),
         fetch(`/api/get-profile?id=${recipientId}`),
       ]);
+
+      console.log('[FETCH-PROFILES] Response status:', {
+        initiator: initRes.status,
+        recipient: recRes.status
+      });
+
       if (initRes.ok) {
         const initData = await initRes.json();
+        console.log('[FETCH-PROFILES] Initiator profile:', initData.profile?.id);
         setInitiatorProfile(initData.profile);
+      } else {
+        console.error('[FETCH-PROFILES] Initiator fetch failed:', await initRes.text());
       }
+
       if (recRes.ok) {
         const recData = await recRes.json();
+        console.log('[FETCH-PROFILES] Recipient profile:', recData.profile?.id);
         setRecipientProfile(recData.profile);
+      } else {
+        console.error('[FETCH-PROFILES] Recipient fetch failed:', await recRes.text());
       }
     } catch (err) {
       console.error('Failed to fetch profiles:', err);
@@ -570,15 +590,15 @@ export default function HandshakeResultPage() {
                           <div className="side-label">Person A&apos;s Profile</div>
 
                           {/* Working Style Dimensions */}
-                          {initiatorProfile?.role_aspects?.core_dimensions && (
+                          {initiatorProfile?.role_aspects?.core_dimensions && typeof initiatorProfile.role_aspects.core_dimensions === 'object' && (
                             <>
                               {Object.entries(initiatorProfile.role_aspects.core_dimensions).map(([key, dim]: [string, any]) => (
                                 <div key={key} className="aspect-detailed">
                                   <div className="aspect-detailed-header">
                                     <h4>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
-                                    <div className="aspect-score-badge">{dim.score}/100</div>
+                                    <div className="aspect-score-badge">{dim?.score || 0}/100</div>
                                   </div>
-                                  {dim.evidence && (
+                                  {dim?.evidence && (
                                     <div className="aspect-description">{dim.evidence}</div>
                                   )}
                                 </div>
@@ -587,16 +607,16 @@ export default function HandshakeResultPage() {
                           )}
 
                           {/* Proof Points as Evidence */}
-                          {initiatorProfile?.proof_points?.slice(0, 2).map((pp: any, i: number) => (
+                          {Array.isArray(initiatorProfile?.proof_points) && initiatorProfile.proof_points.slice(0, 2).map((pp: any, i: number) => (
                             <div key={i} className="evidence-box">
                               <div className="label">Proof Point</div>
-                              <div className="quote">&ldquo;{pp.description || pp.detail || pp.name}&rdquo;</div>
-                              {pp.url && <div className="source">— {pp.url}</div>}
+                              <div className="quote">&ldquo;{pp?.description || pp?.detail || pp?.name || 'No description'}&rdquo;</div>
+                              {pp?.url && <div className="source">— {pp.url}</div>}
                             </div>
                           ))}
 
                           {/* Watch Points */}
-                          {initiatorProfile?.collaboration_aspects?.struggle_with?.length > 0 && (
+                          {Array.isArray(initiatorProfile?.collaboration_aspects?.struggle_with) && initiatorProfile.collaboration_aspects.struggle_with.length > 0 && (
                             <div className="aspect-detailed">
                               <div className="aspect-detailed-header">
                                 <h4>Watch Points</h4>
@@ -614,15 +634,15 @@ export default function HandshakeResultPage() {
                           <div className="side-label">Person B&apos;s Profile</div>
 
                           {/* Working Style Dimensions */}
-                          {recipientProfile?.role_aspects?.core_dimensions && (
+                          {recipientProfile?.role_aspects?.core_dimensions && typeof recipientProfile.role_aspects.core_dimensions === 'object' && (
                             <>
                               {Object.entries(recipientProfile.role_aspects.core_dimensions).map(([key, dim]: [string, any]) => (
                                 <div key={key} className="aspect-detailed">
                                   <div className="aspect-detailed-header">
                                     <h4>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
-                                    <div className="aspect-score-badge">{dim.score}/100</div>
+                                    <div className="aspect-score-badge">{dim?.score || 0}/100</div>
                                   </div>
-                                  {dim.evidence && (
+                                  {dim?.evidence && (
                                     <div className="aspect-description">{dim.evidence}</div>
                                   )}
                                 </div>
@@ -631,16 +651,16 @@ export default function HandshakeResultPage() {
                           )}
 
                           {/* Proof Points as Evidence */}
-                          {recipientProfile?.proof_points?.slice(0, 2).map((pp: any, i: number) => (
+                          {Array.isArray(recipientProfile?.proof_points) && recipientProfile.proof_points.slice(0, 2).map((pp: any, i: number) => (
                             <div key={i} className="evidence-box">
                               <div className="label">Proof Point</div>
-                              <div className="quote">&ldquo;{pp.description || pp.detail || pp.name}&rdquo;</div>
-                              {pp.url && <div className="source">— {pp.url}</div>}
+                              <div className="quote">&ldquo;{pp?.description || pp?.detail || pp?.name || 'No description'}&rdquo;</div>
+                              {pp?.url && <div className="source">— {pp.url}</div>}
                             </div>
                           ))}
 
                           {/* Watch Points */}
-                          {recipientProfile?.collaboration_aspects?.struggle_with?.length > 0 && (
+                          {Array.isArray(recipientProfile?.collaboration_aspects?.struggle_with) && recipientProfile.collaboration_aspects.struggle_with.length > 0 && (
                             <div className="aspect-detailed">
                               <div className="aspect-detailed-header">
                                 <h4>Watch Points</h4>
