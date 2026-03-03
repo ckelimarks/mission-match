@@ -92,6 +92,9 @@ export default function HandshakeResultPage() {
       if (initRes.ok) {
         const initData = await initRes.json();
         console.log('[FETCH-PROFILES] Initiator profile:', initData.profile?.id);
+        console.log('[FETCH-PROFILES] Initiator profile keys:', Object.keys(initData.profile || {}));
+        console.log('[FETCH-PROFILES] Initiator has communication_aspects:', !!initData.profile?.communication_aspects);
+        console.log('[FETCH-PROFILES] Initiator has role_aspects:', !!initData.profile?.role_aspects);
         setInitiatorProfile(initData.profile);
       } else {
         console.error('[FETCH-PROFILES] Initiator fetch failed:', await initRes.text());
@@ -100,6 +103,9 @@ export default function HandshakeResultPage() {
       if (recRes.ok) {
         const recData = await recRes.json();
         console.log('[FETCH-PROFILES] Recipient profile:', recData.profile?.id);
+        console.log('[FETCH-PROFILES] Recipient profile keys:', Object.keys(recData.profile || {}));
+        console.log('[FETCH-PROFILES] Recipient has communication_aspects:', !!recData.profile?.communication_aspects);
+        console.log('[FETCH-PROFILES] Recipient has role_aspects:', !!recData.profile?.role_aspects);
         setRecipientProfile(recData.profile);
       } else {
         console.error('[FETCH-PROFILES] Recipient fetch failed:', await recRes.text());
@@ -112,6 +118,18 @@ export default function HandshakeResultPage() {
   const isInitiator = handshake?.initiator_id === myProfileId;
   const hasConsented = isInitiator ? handshake?.initiator_consented : handshake?.recipient_consented;
   const mutualConsent = handshake?.status === 'approved';
+
+  // Debug mutual consent
+  useEffect(() => {
+    if (handshake) {
+      console.log('[MUTUAL-CONSENT] Status:', {
+        handshakeStatus: handshake.status,
+        mutualConsent,
+        initiatorConsented: handshake.initiator_consented,
+        recipientConsented: handshake.recipient_consented,
+      });
+    }
+  }, [handshake, mutualConsent]);
 
   const handleGrantConsent = async () => {
     if (!myProfileId) {
@@ -422,11 +440,15 @@ export default function HandshakeResultPage() {
                 {/* STAGE 2: Mutual Consent Achieved - Full Profile Access */}
                 {mutualConsent && (
                   <>
+                    {console.log('[STAGE2] Rendering Stage 2 content', { initiatorProfile: !!initiatorProfile, recipientProfile: !!recipientProfile })}
                     {/* Consent Badge */}
                     <div className="text-center mt-10 mb-8">
                       <div className="consent-badge">
                         <span>&#x2713;</span> Full Profile Access Enabled
                       </div>
+                      <p className="text-[var(--mm-text-muted)] text-sm mt-4">
+                        Debug: Profiles loaded - Initiator: {initiatorProfile ? 'Yes' : 'No'}, Recipient: {recipientProfile ? 'Yes' : 'No'}
+                      </p>
                     </div>
 
                     {/* Contact Cards */}
