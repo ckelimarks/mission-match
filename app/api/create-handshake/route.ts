@@ -8,7 +8,10 @@ export async function POST(request: NextRequest) {
   try {
     const { initiatorId, recipientId } = await request.json();
 
+    console.log('[CREATE-HANDSHAKE] Request:', { initiatorId, recipientId });
+
     if (!initiatorId || !recipientId) {
+      console.log('[CREATE-HANDSHAKE] Missing IDs');
       return NextResponse.json(
         { error: 'Both initiatorId and recipientId are required' },
         { status: 400 }
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingHandshake) {
-      // Handshake already exists, return it
+      console.log('[CREATE-HANDSHAKE] Already exists:', existingHandshake.id);
       return NextResponse.json({
         handshakeId: existingHandshake.id,
         existing: true,
@@ -87,6 +90,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ handshakeId: handshake.id }),
     }).catch(err => console.error('Failed to trigger analysis:', err));
 
+    console.log('[CREATE-HANDSHAKE] Created successfully:', handshake.id);
     return NextResponse.json({
       handshakeId: handshake.id,
       message: 'Handshake created successfully',
