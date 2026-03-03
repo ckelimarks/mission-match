@@ -58,7 +58,7 @@ Database only allows these status values:
 | Two-phone QR scan | ✅ Working | Person B lands on connect page |
 | Quick Connect (existing profile) | ✅ Working | Checks both localStorage keys |
 | Connections query | ✅ Working | Uses separate queries (not `.or()`) |
-| Stage 1 analysis | ⚠️ Stuck | Likely `ANTHROPIC_API_KEY` not set in Vercel |
+| Stage 1 analysis | ✅ Working | Uses DELETE+INSERT for RLS workaround |
 | Stage 2 consent | ❌ Not built | Phase 6 in plan |
 | Prioritization | 🎭 Mock only | Can stay mock for demo |
 
@@ -113,7 +113,17 @@ New rich profile format is mapped to existing DB columns to avoid migrations:
 
 **When querying:** Select actual column names, not the new field names.
 
-### 8. Analyses Table Schema
+### 8. RLS Blocks UPDATE Even With Service Key
+Supabase RLS silently blocks UPDATE operations on analyses table.
+**Solution:** Use DELETE existing record + INSERT new one:
+```typescript
+// DELETE first
+await supabase.from('analyses').delete().eq('id', existingId);
+// Then INSERT
+await supabase.from('analyses').insert({ ... });
+```
+
+### 9. Analyses Table Schema
 The `analyses` table only has basic columns. Extra analysis fields are packed into `overlap` JSONB:
 
 ```typescript
@@ -126,6 +136,20 @@ The `analyses` table only has basic columns. Extra analysis fields are packed in
 ```
 
 **Frontend must handle both formats:** Old (overlap is array) vs new (overlap is object with items).
+
+### 10. Query Completed Analyses First
+Multiple analysis records may exist for the same handshake. Always filter by status:
+```typescript
+// Prioritize completed analyses
+const { data: analysis } = await supabase
+  .from('analyses')
+  .select('*')
+  .eq('handshake_id', handshakeId)
+  .eq('analysis_status', 'completed')
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .single();
+```
 
 ## Key Files
 
