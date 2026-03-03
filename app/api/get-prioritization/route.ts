@@ -18,14 +18,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[GET-PRIORITIZATION] Query params:', { handshakeId, supabaseUrl });
-    console.log('[GET-PRIORITIZATION] Service key exists:', !!supabaseServiceKey);
-    console.log('[GET-PRIORITIZATION] Service key length:', supabaseServiceKey?.length);
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false },
-      global: { headers: { 'Cache-Control': 'no-cache' } }
-    });
+    // Create Supabase client WITHOUT options (options were breaking queries)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // First, test if we can query at all
     const { data: testCount, error: testError } = await supabase
