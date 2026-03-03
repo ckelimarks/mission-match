@@ -201,43 +201,40 @@ Return ONLY valid JSON:
     });
 
     if (existingAnalysis?.id) {
-      // First try minimal update - just status
-      console.log('[ANALYZE-STAGE1] Trying minimal update first...');
-      const { data: minimalUpdate, error: minimalError } = await supabase
+      // DELETE and re-INSERT instead of UPDATE (workaround for RLS issues)
+      console.log('[ANALYZE-STAGE1] Deleting existing record:', existingAnalysis.id);
+      const { error: deleteError } = await supabase
         .from('analyses')
-        .update({ analysis_status: 'completed' })
-        .eq('id', existingAnalysis.id)
-        .select();
+        .delete()
+        .eq('id', existingAnalysis.id);
 
-      console.log('[ANALYZE-STAGE1] Minimal update result:', {
-        success: minimalUpdate?.length || 0,
-        error: minimalError?.message,
-      });
-
-      if (minimalError) {
-        console.error('[ANALYZE-STAGE1] Minimal update failed:', minimalError);
+      if (deleteError) {
+        console.error('[ANALYZE-STAGE1] Delete failed:', deleteError);
+        // Continue anyway and try insert
       }
 
-      // Now try full update with JSONB
-      const { data: updatedRows, error: updateError } = await supabase
+      console.log('[ANALYZE-STAGE1] Inserting new record with analysis data...');
+      const { data: insertedRow, error: insertError } = await supabase
         .from('analyses')
-        .update({
+        .insert({
+          handshake_id: handshakeId,
+          stage: 1,
           overlap: overlapData,
           conversation_starters: analysisResult.conversation_starters,
           analysis_status: 'completed',
           completed_at: new Date().toISOString(),
         })
-        .eq('id', existingAnalysis.id)
-        .select();
+        .select()
+        .single();
 
-      console.log('[ANALYZE-STAGE1] Full update result:', {
-        updatedCount: updatedRows?.length || 0,
-        error: updateError?.message,
-        overlapSaved: updatedRows?.[0]?.overlap ? 'yes' : 'no',
+      console.log('[ANALYZE-STAGE1] Insert result:', {
+        success: !!insertedRow,
+        id: insertedRow?.id,
+        error: insertError?.message,
       });
 
-      if (updateError) {
-        throw new Error(`Database update failed: ${updateError.message}`);
+      if (insertError) {
+        throw new Error(`Database insert failed: ${insertError.message}`);
       }
     } else {
       // No existing record - insert new
