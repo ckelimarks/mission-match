@@ -18,10 +18,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('[GET-PRIORITIZATION] Query params:', { handshakeId, supabaseUrl });
+    console.log('[GET-PRIORITIZATION] Service key exists:', !!supabaseServiceKey);
+    console.log('[GET-PRIORITIZATION] Service key length:', supabaseServiceKey?.length);
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false },
       global: { headers: { 'Cache-Control': 'no-cache' } }
     });
+
+    // First, test if we can query at all
+    const { data: testCount, error: testError } = await supabase
+      .from('prioritizations')
+      .select('*', { count: 'exact', head: true });
+
+    console.log('[GET-PRIORITIZATION] Test count query:', { count: testCount, error: testError });
 
     // Fetch all prioritizations for this handshake
     const { data: prioritizations, error } = await supabase
@@ -29,8 +40,12 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('handshake_id', handshakeId);
 
-    console.log('[GET-PRIORITIZATION] Raw query result:', { prioritizations, error, handshakeId });
-    console.log('[GET-PRIORITIZATION] Using service key:', !!supabaseServiceKey);
+    console.log('[GET-PRIORITIZATION] Raw query result:', {
+      prioritizations,
+      error,
+      handshakeId,
+      resultCount: prioritizations?.length
+    });
 
     if (error) {
       console.error('Failed to fetch prioritizations:', error);
