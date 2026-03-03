@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('handshake_id', handshakeId);
 
+    console.log('[GET-PRIORITIZATION] Raw query result:', { prioritizations, error, handshakeId });
+    console.log('[GET-PRIORITIZATION] Using service key:', !!supabaseServiceKey);
+
     if (error) {
       console.error('Failed to fetch prioritizations:', error);
       throw new Error(`Database error: ${error.message}`);
