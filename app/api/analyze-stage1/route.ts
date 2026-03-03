@@ -166,11 +166,8 @@ Return ONLY valid JSON:
       throw new Error(`Database update failed: ${updateError.message}`);
     }
 
-    // Update handshake status - Stage 1 complete, ready for viewing
-    await supabase
-      .from('handshakes')
-      .update({ status: 'stage1_complete' })
-      .eq('id', handshakeId);
+    // Note: handshake status stays 'pending' until consent is granted
+    // The analysis_status field in analyses table tracks Stage 1 completion
 
     return NextResponse.json({
       success: true,

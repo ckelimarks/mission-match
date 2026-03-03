@@ -43,13 +43,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create new handshake - Stage 1 consent is implicit (QR scan = consent)
+    // Create new handshake
     const { data: handshake, error: handshakeError } = await supabase
       .from('handshakes')
       .insert({
         initiator_id: initiatorId,
         recipient_id: recipientId,
-        status: 'stage1_complete', // QR scan implies Stage 1 consent
+        status: 'pending',
       })
       .select()
       .single();
