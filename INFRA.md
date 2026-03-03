@@ -99,6 +99,20 @@ Without local env vars, you cannot run the app locally with working APIs.
 ### 6. Anthropic Client Lazy Init
 `lib/anthropic.ts` uses lazy initialization. If `ANTHROPIC_API_KEY` is missing, it throws at runtime, not build time.
 
+### 7. Profile Column Mapping (Schema Mismatch)
+New rich profile format is mapped to existing DB columns to avoid migrations:
+
+| New Field | Stored In Column |
+|-----------|------------------|
+| `hook` | `role` |
+| `working_style` | `role_aspects` (JSONB) |
+| `collaboration_fit` | `collaboration_aspects` (JSONB) |
+| `intellectual_signature` | `shipping_aspects` (JSONB) |
+| `contact` | `communication_aspects` (JSONB) |
+| `profile_confidence` | `decision_aspects.profile_confidence` |
+
+**When querying:** Select actual column names, not the new field names.
+
 ## Key Files
 
 | File | Purpose |

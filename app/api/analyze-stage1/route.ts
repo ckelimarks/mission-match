@@ -34,17 +34,19 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get handshake with both profiles - fetch all fields for rich analysis
+    // Note: New profile fields are mapped to existing columns:
+    //   hook → role, working_style → role_aspects, collaboration_fit → collaboration_aspects
     const { data: handshake, error: handshakeError } = await supabase
       .from('handshakes')
       .select(`
         id,
         initiator:initiator_id(
-          id, hook, role, mission, proof_points, looking_for,
-          working_style, collaboration_fit, profile_confidence
+          id, role, mission, proof_points, looking_for,
+          role_aspects, collaboration_aspects, profile_strength
         ),
         recipient:recipient_id(
-          id, hook, role, mission, proof_points, looking_for,
-          working_style, collaboration_fit, profile_confidence
+          id, role, mission, proof_points, looking_for,
+          role_aspects, collaboration_aspects, profile_strength
         )
       `)
       .eq('id', handshakeId)
@@ -67,31 +69,35 @@ export async function POST(request: NextRequest) {
     });
 
     // Build a rich prompt using all available profile data
+    // Note: Database column mapping:
+    //   role = hook (in new format), role_aspects = working_style, collaboration_aspects = collaboration_fit
     const formatProfile = (p: any, label: string) => {
       const parts = [`**${label}:**`];
-      if (p.hook) parts.push(`Hook: ${p.hook}`);
-      if (p.role) parts.push(`Role: ${p.role}`);
+
+      // role contains the hook in new format
+      if (p.role) parts.push(`Hook/Role: ${p.role}`);
       if (p.mission) parts.push(`Mission: ${p.mission}`);
       if (p.looking_for) parts.push(`Looking for: ${p.looking_for}`);
 
-      // Add working style if available
-      if (p.working_style?.core_dimensions) {
-        const dims = p.working_style.core_dimensions;
+      // role_aspects contains working_style in new format
+      const workingStyle = p.role_aspects;
+      if (workingStyle?.core_dimensions) {
+        const dims = workingStyle.core_dimensions;
         parts.push(`Working Style:`);
         if (dims.sync_async) parts.push(`  - Sync↔Async: ${dims.sync_async.score}/100`);
         if (dims.fast_ship_high_polish) parts.push(`  - Ship↔Polish: ${dims.fast_ship_high_polish.score}/100`);
         if (dims.solo_multiplier) parts.push(`  - Solo↔Multiplier: ${dims.solo_multiplier.score}/100`);
         if (dims.builder_strategist) parts.push(`  - Builder↔Strategist: ${dims.builder_strategist.score}/100`);
       }
-      if (p.working_style?.vibe) parts.push(`Vibe: ${p.working_style.vibe}`);
+      if (workingStyle?.vibe) parts.push(`Vibe: ${workingStyle.vibe}`);
 
-      // Add collaboration fit
-      if (p.collaboration_fit) {
-        const cf = p.collaboration_fit;
-        if (cf.availability) parts.push(`Availability: ${cf.availability}`);
-        if (cf.stage) parts.push(`Stage: ${cf.stage}`);
-        if (cf.work_best_with?.length) parts.push(`Works best with: ${cf.work_best_with.join(', ')}`);
-        if (cf.what_i_bring?.length) parts.push(`Brings: ${cf.what_i_bring.join(', ')}`);
+      // collaboration_aspects contains collaboration_fit in new format
+      const collabFit = p.collaboration_aspects;
+      if (collabFit) {
+        if (collabFit.availability) parts.push(`Availability: ${collabFit.availability}`);
+        if (collabFit.stage) parts.push(`Stage: ${collabFit.stage}`);
+        if (collabFit.work_best_with?.length) parts.push(`Works best with: ${collabFit.work_best_with.join(', ')}`);
+        if (collabFit.what_i_bring?.length) parts.push(`Brings: ${collabFit.what_i_bring.join(', ')}`);
       }
 
       // Add proof points
