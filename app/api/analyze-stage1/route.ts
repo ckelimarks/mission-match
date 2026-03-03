@@ -208,7 +208,7 @@ Return ONLY valid JSON:
 
     return NextResponse.json({
       success: true,
-      analysis,
+      analysis: analysisResult,
     });
   } catch (error) {
     console.error('Stage 1 analysis error:', error);
