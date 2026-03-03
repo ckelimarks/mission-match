@@ -535,7 +535,7 @@ export default function HandshakeResultPage() {
                     </p>
                     <div className="bg-black/30 p-4 rounded-lg font-mono text-xs text-[var(--mm-text-muted)] mb-4">
                       GET /cpx/human/&#123;id&#125;/public → 200 OK<br />
-                      ✓ Aspects, mission, work style visible<br /><br />
+                      &#x2713; Aspects, mission, work style visible<br /><br />
                       GET /cpx/human/&#123;id&#125;/full → 403 Forbidden<br />
                       ✗ Name, contact, LinkedIn require consent
                     </div>
@@ -911,7 +911,7 @@ export default function HandshakeResultPage() {
                                   >
                                     <span>{option}</span>
                                     {quickPickAnswers[qIndex] === option && (
-                                      <span style={{ color: 'var(--mm-cyan)', fontSize: '20px' }}>✓</span>
+                                      <span style={{ color: 'var(--mm-cyan)', fontSize: '20px' }}>&#x2713;</span>
                                     )}
                                   </button>
                                 ))}
@@ -958,7 +958,7 @@ export default function HandshakeResultPage() {
                           textAlign: 'center'
                         }}>
                           <div style={{ fontSize: '15px', color: 'var(--mm-cyan)', fontWeight: 600, marginBottom: '12px' }}>
-                            ✓ YOU'VE COMPLETED YOUR PRIORITIES
+                            &#x2713; YOU'VE COMPLETED YOUR PRIORITIES
                           </div>
                           <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '16px', overflow: 'hidden' }}>
                             <div style={{
@@ -986,7 +986,7 @@ export default function HandshakeResultPage() {
                         }}>
                           <div style={{ textAlign: 'center', marginBottom: '25px' }}>
                             <div style={{ fontSize: '15px', color: 'var(--mm-cyan)', fontWeight: 600, marginBottom: '12px' }}>
-                              ✓ BOTH COMPLETED
+                              &#x2713; BOTH COMPLETED
                             </div>
                             <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '20px', overflow: 'hidden' }}>
                               <div style={{
@@ -1016,9 +1016,9 @@ export default function HandshakeResultPage() {
                                       <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
                                         {prioritizationData.initiator.answers[i]}
                                         {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] ? (
-                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>&#x2713;</span>
                                         ) : (
-                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>❓</span>
+                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>&#x26A0;</span>
                                         )}
                                       </div>
                                     </div>
@@ -1037,9 +1037,9 @@ export default function HandshakeResultPage() {
                                       <div style={{ fontSize: '14px', color: '#fff', fontWeight: 500 }}>
                                         {prioritizationData.recipient.answers[i]}
                                         {prioritizationData.initiator.answers[i] === prioritizationData.recipient.answers[i] ? (
-                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>✓</span>
+                                          <span style={{ color: 'var(--mm-cyan)', marginLeft: '8px' }}>&#x2713;</span>
                                         ) : (
-                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>❓</span>
+                                          <span style={{ color: 'var(--mm-red)', marginLeft: '8px' }}>&#x26A0;</span>
                                         )}
                                       </div>
                                     </div>
@@ -1053,11 +1053,11 @@ export default function HandshakeResultPage() {
                                 padding: '25px'
                               }}>
                                 <div style={{ fontWeight: 600, color: 'var(--mm-cyan)', marginBottom: '12px', fontSize: '16px' }}>
-                                  🎯 {prioritizationData.alignment?.summary}
+                                  &#x1F3AF; {prioritizationData.alignment?.summary}
                                 </div>
                                 <div style={{ fontSize: '15px', lineHeight: 1.7, marginBottom: '15px' }}>
                                   <strong style={{ color: 'var(--mm-cyan)' }}>
-                                    ✓ Matched on {prioritizationData.alignment?.matchedCount}/{prioritizationData.alignment?.totalQuestions}:
+                                    &#x2713; Matched on {prioritizationData.alignment?.matchedCount}/{prioritizationData.alignment?.totalQuestions}:
                                   </strong>{' '}
                                   You both agree on {prioritizationData.alignment?.matchedCount} priorities.
                                 </div>
