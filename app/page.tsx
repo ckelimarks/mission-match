@@ -96,39 +96,107 @@ const ASPECT_EVIDENCE = [
 type Screen = 'home' | 'create-profile' | 'my-profile' | 'scanned-qr' | 'my-connections' | 'stage1' | 'stage2' | 'prioritization';
 
 // The extraction prompt for users to copy
-const EXTRACTION_PROMPT = `You're creating a collaboration profile for me based on everything you know from our conversations.
+const EXTRACTION_PROMPT = `You're creating a collaboration profile for [User] based on everything you know from our conversations, memory, and interaction patterns.
 
-Goal: Help potential collaborators decide "Should I reach out?" in 30 seconds.
+Goal: Help potential collaborators decide "Should I reach out?" in 30 seconds, with enough depth to start a meaningful conversation.
 
-Return JSON with these fields:
+---
+
+## LAYER 1: THE HOOK (2 sentences max)
+
+Sentence 1: What you're building + your unique angle. Sentence 2: The outcome you're racing toward.
+
+No throat-clearing. Lead with the most interesting thing.
+
+---
+
+## LAYER 2: PROOF OF WORK (3-4 projects)
+
+For each:
+- Name
+- Description (10 words max)
+- Impact (specific metrics with timeframe—e.g., "80% reply rate over 3 months")
+- Reveals (what this shows about working style)
+
+Prioritize shipped products over ideas.
+
+---
+
+## LAYER 3: WORKING STYLE
+
+### Core Dimensions (required)
+Score all 4 on 0-100. Include confidence and behavioral proof:
+
+- Sync ↔ Async
+- Fast-ship ↔ High-polish
+- Solo ↔ Multiplier
+- Builder ↔ Strategist
+
+### Distinctive Edges (optional)
+Only include if score < 30 or > 70. Choose from:
+- Depth ↔ Breadth
+- Reactive ↔ Proactive
+- Structured ↔ Emergent
+- Public ↔ Private
+- Process ↔ Outcome
+- Intuition ↔ Data
+
+### The Vibe (1-2 sentences)
+What does it *feel like* to collaborate with this person?
+
+---
+
+## LAYER 4: COLLABORATION FIT
+
+- **Looking for:** Specific type (not "smart people who ship")
+- **Availability:** Co-founder/project partner/advisor/one-time
+- **Stage:** Exploring/building/scaling
+- **Work best with:** 2-3 specific traits
+- **Struggle with:** YOUR patterns that create friction, not others' flaws. Complete: "Past collaborators have told me I..."
+- **What I bring:** Concrete actions with timeframes, not credentials. Complete: "If we collaborate, I will..." (e.g., "build the first prototype within a week")
+- **Best way to engage:** Specific format + expected response time
+
+---
+
+## LAYER 5: INTELLECTUAL SIGNATURE (optional, skip if not distinctive)
+
+- **Core thesis:** One sentence—what do you believe that most don't?
+- **Frameworks:** 2-3 actual mental models you use
+- **Open questions:** What you're actively figuring out
+
+---
+
+## OUTPUT: JSON
+
 {
-  "hook": "2 sentences max - what you're building and your unique angle",
-  "proof_points": [
-    {"name": "Project", "description": "10 words max", "impact": "specific metrics", "reveals": "what this shows about working style"}
-  ],
+  "hook": "string",
+  "proof_points": [{ "name", "description", "impact", "reveals" }],
   "working_style": {
-    "core_dimensions": {
-      "sync_async": {"score": 0-100, "confidence": "high/medium/low", "proof": "behavioral evidence"},
-      "fast_ship_high_polish": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."},
-      "solo_multiplier": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."},
-      "builder_strategist": {"score": 0-100, "confidence": "high/medium/low", "proof": "..."}
-    },
-    "vibe": "1-2 sentences describing collaboration texture"
+    "core_dimensions": { "sync_async": { "score", "confidence", "proof" }, ... },
+    "distinctive_edges": [{ "dimension", "score", "confidence", "proof" }],
+    "vibe": "string"
   },
   "collaboration_fit": {
-    "looking_for": "specific collaborator type",
-    "availability": "co-founder/project partner/advisor/one-time",
-    "stage": "exploring/building/scaling",
-    "work_best_with": ["trait 1", "trait 2"],
-    "struggle_with": ["real friction point"],
-    "what_i_bring": ["concrete offering 1", "concrete offering 2"],
-    "best_way_to_engage": "how to reach out"
+    "looking_for", "availability", "stage", "work_best_with": [],
+    "struggle_with": [], "what_i_bring": [], "best_way_to_engage"
   },
+  "intellectual_signature": { "core_thesis", "frameworks": [], "open_questions": [] },
   "profile_confidence": 1-5,
-  "contact": {"email": "...", "linkedin": "..."}
+  "confidence_notes": "string",
+  "contact": {"email": "...", "linkedin": "...", "twitter": "...", "website": "..."}
 }
 
-Be specific, not vague. Extract from our actual conversations.`;
+---
+
+## RULES
+
+1. Extract, don't invent
+2. Specific over vague (metrics, timeframes, concrete examples)
+3. Skip sections without signal
+4. Honest over flattering
+5. Distinctive over comprehensive
+6. Actions over credentials
+7. Your flaws, not others' flaws`;
 
 // Real connections are fetched from the API via the connections state
 
