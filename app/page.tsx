@@ -816,6 +816,42 @@ export default function DemoPage() {
                   </div>
                 </div>
 
+                {/* VALIDATED OUTPUT - Proof Points FIRST (Portfolio Showcase) */}
+                {myFullProfile?.proof_points && myFullProfile.proof_points.length > 0 && (
+                  <div className="section" style={{ marginTop: '40px' }}>
+                    <h2 className="section-header">
+                      <span className="icon">✓</span> Validated Output
+                    </h2>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', maxWidth: '600px' }}>
+                      Things I've actually shipped. Real projects with measurable impact.
+                    </p>
+                    <div className="proof-grid">
+                      {myFullProfile.proof_points.map((proof: any, i: number) => (
+                        <div key={i} className="proof-callout">
+                          <div className="proof-name">{proof.name}</div>
+                          <div className="proof-desc">
+                            {proof.description || proof.detail}
+                            {proof.impact && (
+                              <>
+                                {' → '}
+                                <span style={{ color: '#4ecdc4' }}>{proof.impact}</span>
+                              </>
+                            )}
+                            {proof.reveals && (
+                              <>
+                                {' → '}
+                                <span style={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>
+                                  {proof.reveals}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Pending Connections */}
                 {connections.length > 0 && (
                   <div className="section">
@@ -854,12 +890,15 @@ export default function DemoPage() {
                   </div>
                 )}
 
-                {/* Working Style Dimensions */}
+                {/* Working Style Dimensions - NOW WITH CONTEXT */}
                 {myProfile?.aspects && (
                   <div className="section">
                     <h2 className="section-header">
-                      <span className="icon">◈</span> Your Working Style
+                      <span className="icon">◈</span> How I Work
                     </h2>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', maxWidth: '600px' }}>
+                      Core collaboration dimensions based on actual behavior patterns.
+                    </p>
                     <div className="aspects-grid">
                       {myProfile.aspects.map((aspect, i) => (
                         <div key={i} className="aspect-detailed">
@@ -870,24 +909,6 @@ export default function DemoPage() {
                           <div className="aspect-bar">
                             <div className="aspect-bar-fill" style={{ width: `${aspect.score}%` }}></div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Proof Points */}
-                {myFullProfile?.proof_points && myFullProfile.proof_points.length > 0 && (
-                  <div className="section">
-                    <h2 className="section-header">
-                      <span className="icon">✓</span> Proof Points
-                    </h2>
-                    <div className="proof-points-list">
-                      {myFullProfile.proof_points.map((proof: any, i: number) => (
-                        <div key={i} className="proof-point-card">
-                          <div className="proof-name">{proof.name}</div>
-                          <div className="proof-description">{proof.description || proof.detail}</div>
-                          {proof.impact && <div className="proof-impact">{proof.impact}</div>}
                         </div>
                       ))}
                     </div>
@@ -3291,35 +3312,39 @@ footer {
   transition: width 0.3s ease;
 }
 
-/* Proof Points */
-.proof-points-list {
+/* Validated Output - Proof Points Grid */
+.proof-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.proof-point-card {
-  padding: 20px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
+.proof-callout {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(78,205,196,0.08) 0%, rgba(255,107,107,0.05) 100%);
+  border: 1px solid rgba(78,205,196,0.2);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.proof-callout:hover {
+  background: linear-gradient(135deg, rgba(78,205,196,0.12) 0%, rgba(255,107,107,0.08) 100%);
+  border-color: rgba(78,205,196,0.3);
+  transform: translateY(-2px);
 }
 
 .proof-name {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 18px;
   color: #4ecdc4;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
 }
 
-.proof-description {
-  color: rgba(255,255,255,0.8);
+.proof-desc {
+  color: rgba(255,255,255,0.85);
   font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.proof-impact {
-  font-size: 13px;
-  color: rgba(255,255,255,0.5);
-  font-style: italic;
+  line-height: 1.6;
 }
 `;
