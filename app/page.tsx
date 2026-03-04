@@ -349,7 +349,10 @@ export default function DemoPage() {
       <div className="container">
         {/* Navigation */}
         <nav>
-          <div className="logo">Mission Match</div>
+          <div className="logo">
+            <img src="/mm2-logo.png" alt="MM" style={{ width: '40px', height: 'auto' }} />
+            <span>Mission Match</span>
+          </div>
           <div className="nav-links">
             <button onClick={() => setScreen('home')} className={screen === 'home' ? 'active' : ''}>
               Home
@@ -1513,8 +1516,14 @@ nav {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 20px;
   font-weight: 700;
+}
+
+.logo span {
   background: linear-gradient(90deg, #ffffff 0%, #4ecdc4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
