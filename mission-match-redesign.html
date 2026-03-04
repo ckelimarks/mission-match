@@ -97,8 +97,19 @@
     }
 
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       font-size: 20px;
       font-weight: 700;
+    }
+
+    .logo img {
+      width: 40px;
+      height: auto;
+    }
+
+    .logo span {
       background: linear-gradient(90deg, #ffffff 0%, #4ecdc4 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -1623,8 +1634,8 @@
 
   <div class="container">
     <nav>
-      <div class="logo" style="display: flex; align-items: center; gap: 16px;">
-        <img src="public/mm2-logo.png" alt="MM" style="width: 80px; height: auto;" />
+      <div class="logo">
+        <img src="public/mm2-logo.png" alt="MM" />
         <span>MISSION MATCH</span>
       </div>
       <div class="nav-links">
