@@ -735,6 +735,27 @@ export default function HandshakeResultPage() {
                       </div>
                     </div>
 
+                    {/* Radar Chart Comparison */}
+                    {initiatorProfile?.role_aspects?.core_dimensions && recipientProfile?.role_aspects?.core_dimensions && (
+                      <div className="mb-10">
+                        <h2 className="mm-section-header">
+                          <span className="icon">&#x25C8;</span>
+                          Collaboration Style Comparison
+                        </h2>
+                        <p className="text-[var(--mm-text-muted)] text-sm mb-6">
+                          Visual comparison across key working dimensions. Based on actual behavior patterns, not personality tests.
+                        </p>
+                        <RadarChart
+                          initiatorData={initiatorProfile.role_aspects.core_dimensions}
+                          recipientData={recipientProfile.role_aspects.core_dimensions}
+                        />
+                        <p className="text-center mt-4 text-sm">
+                          <span style={{ color: '#4ecdc4' }}>█</span> {getDisplayName(initiatorProfile)} &nbsp;&nbsp;&nbsp;
+                          <span style={{ color: '#ff6b6b' }}>█</span> {getDisplayName(recipientProfile)}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Deep Dive: Evidence-Based Aspects */}
                     <div className="mb-10">
                       <h2 className="mm-section-header">
@@ -1148,4 +1169,87 @@ export default function HandshakeResultPage() {
       />
     </>
   );
+}
+
+// Radar Chart Component
+function RadarChart({ initiatorData, recipientData }: { initiatorData: any; recipientData: any }) {
+  return (
+    <div className="radar-container" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <svg className="radar-svg" viewBox="0 0 500 500" style={{ width: '100%', height: 'auto' }}>
+        {/* Background circles */}
+        <circle cx="250" cy="250" r="200" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+        <circle cx="250" cy="250" r="150" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+        <circle cx="250" cy="250" r="100" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+        <circle cx="250" cy="250" r="50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+
+        {/* Axis lines */}
+        <line x1="250" y1="250" x2="250" y2="50" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <line x1="250" y1="250" x2="423.2" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <line x1="250" y1="250" x2="423.2" y2="350" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <line x1="250" y1="250" x2="250" y2="450" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <line x1="250" y1="250" x2="76.8" y2="350" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+        <line x1="250" y1="250" x2="76.8" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+
+        {/* Recipient polygon (red/behind) */}
+        <polygon
+          points={calculatePolygon(recipientData)}
+          fill="rgba(255,107,107,0.2)"
+          stroke="#ff6b6b"
+          strokeWidth="2"
+        />
+
+        {/* Initiator polygon (cyan/front) */}
+        <polygon
+          points={calculatePolygon(initiatorData)}
+          fill="rgba(78,205,196,0.2)"
+          stroke="#4ecdc4"
+          strokeWidth="2"
+        />
+
+        {/* Axis labels */}
+        <text x="250" y="35" textAnchor="middle" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[0]?.replace(/_/g, ' ') || 'Dimension 1'}
+        </text>
+        <text x="440" y="145" textAnchor="start" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[1]?.replace(/_/g, ' ') || 'Dimension 2'}
+        </text>
+        <text x="440" y="365" textAnchor="start" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[2]?.replace(/_/g, ' ') || 'Dimension 3'}
+        </text>
+        <text x="250" y="485" textAnchor="middle" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[3]?.replace(/_/g, ' ') || 'Dimension 4'}
+        </text>
+        <text x="60" y="365" textAnchor="end" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[4]?.replace(/_/g, ' ') || 'Dimension 5'}
+        </text>
+        <text x="60" y="145" textAnchor="end" fill="#4ecdc4" fontSize="12" fontWeight="600">
+          {Object.keys(initiatorData)[5]?.replace(/_/g, ' ') || 'Dimension 6'}
+        </text>
+
+        <circle cx="250" cy="250" r="3" fill="#666"/>
+      </svg>
+    </div>
+  );
+}
+
+function calculatePolygon(data: any): string {
+  const center = 250;
+  const maxR = 200;
+
+  // Extract scores from core_dimensions object
+  const scores = Object.values(data).map((dim: any) => dim?.score || 50);
+
+  // Take first 6 dimensions (or pad with 50 if fewer)
+  const axes = [...scores.slice(0, 6)];
+  while (axes.length < 6) axes.push(50);
+
+  const points = axes.map((val: any, i: number) => {
+    const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
+    const r = (val / 100) * maxR;
+    const x = center + r * Math.cos(angle);
+    const y = center + r * Math.sin(angle);
+    return `${x},${y}`;
+  });
+
+  return points.join(' ');
 }
