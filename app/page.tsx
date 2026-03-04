@@ -774,44 +774,59 @@ export default function DemoPage() {
               </div>
             ) : (
               <>
-                <div className="results-header">
-                  <div className="results-header-label">
-                    Your Collaboration Profile · ID: {myProfileId.slice(0, 8)}...
+                {/* My Profile Header - Travis-style Left-Aligned */}
+                <div className="profile-hero">
+                  {/* Floating QR Code - Top Right */}
+                  <div className="profile-qr-float">
+                    <div className="qr-code-compact">
+                      <QRCode
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/connect/${myProfileId}` : ''}
+                        size={120}
+                        level="M"
+                      />
+                    </div>
+                    <div className="qr-label">/connect/{myProfileId.slice(0, 8)}...</div>
                   </div>
 
-                  <div className="profile-header-container">
-                    {/* QR Code - Real */}
-                    <div className="profile-qr-card">
-                      <div className="qr-code-box" style={{ background: 'white', padding: '16px', borderRadius: '8px' }}>
-                        <QRCode
-                          value={typeof window !== 'undefined' ? `${window.location.origin}/connect/${myProfileId}` : ''}
-                          size={180}
-                          level="M"
-                        />
-                      </div>
-                      <div className="qr-url">
-                        <span>/connect/{myProfileId.slice(0, 8)}...</span>
-                      </div>
+                  {/* Main Profile Content - Left Aligned */}
+                  <div className="profile-hero-content">
+                    {/* Name */}
+                    <h1 className="profile-name">
+                      {myProfile?.name || myFullProfile?.communication_aspects?.name || 'YOUR PROFILE'}
+                    </h1>
+
+                    {/* Role/Title */}
+                    <div className="profile-title">
+                      {myProfile?.role || myFullProfile?.role || 'Builder'}
                     </div>
 
-                    {/* Profile Info */}
-                    <div className="profile-header-content">
-                      <h1>{myProfile?.name || 'YOUR PROFILE'}</h1>
-                      <p className="role">{myProfile?.role || 'Builder'}</p>
-                      {myFullProfile?.hook && (
-                        <p className="description">{myFullProfile.hook}</p>
-                      )}
-                      <div className="profile-actions">
-                        <button
-                          className="btn-small btn-primary-small"
-                          onClick={() => {
-                            const url = `${window.location.origin}/connect/${myProfileId}`;
-                            navigator.clipboard.writeText(url);
-                          }}
-                        >
-                          📋 Copy Link
-                        </button>
+                    {/* Hook - Mission Statement */}
+                    {myFullProfile?.hook && (
+                      <div className="profile-hook">
+                        "{myFullProfile.hook}"
                       </div>
+                    )}
+
+                    {/* Three Descriptor Words */}
+                    {myFullProfile?.working_style?.vibe && (
+                      <div className="profile-descriptors">
+                        {myFullProfile.working_style.vibe.split(/[,·•]/).slice(0, 3).map((desc: string, i: number) => (
+                          <span key={i} className="descriptor-tag">{desc.trim()}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="profile-actions">
+                      <button
+                        className="btn-compact"
+                        onClick={() => {
+                          const url = `${window.location.origin}/connect/${myProfileId}`;
+                          navigator.clipboard.writeText(url);
+                        }}
+                      >
+                        📋 Copy Profile Link
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1753,75 +1768,104 @@ nav {
 }
 
 /* Profile Header */
-.profile-header-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 30px;
-  margin: 30px 0;
+/* My Profile Hero - Travis-style Left-Aligned */
+.profile-hero {
+  position: relative;
+  padding: 40px 0 60px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.profile-qr-card {
+.profile-qr-float {
+  position: absolute;
+  top: 40px;
+  right: 0;
   text-align: center;
 }
 
-.qr-code-box {
-  width: 212px;
-  height: 212px;
+.qr-code-compact {
   background: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qr-url {
-  margin-top: 12px;
-}
-
-.qr-url span {
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   display: inline-block;
-  padding: 6px 12px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 6px;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.65rem;
-  color: #4ecdc4;
 }
 
-.profile-header-content {
-  text-align: center;
-}
-
-.profile-header-content h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 10px;
-}
-
-.profile-header-content .role {
-  font-size: 1rem;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 20px;
-}
-
-.profile-header-content .description {
-  font-size: 0.9rem;
+.qr-label {
+  margin-top: 8px;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 11px;
   color: rgba(255,255,255,0.5);
-  line-height: 1.6;
-  max-width: 500px;
+}
+
+.profile-hero-content {
+  max-width: 600px;
+}
+
+.profile-name {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.profile-title {
+  font-size: 16px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.profile-hook {
+  font-size: 18px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+  margin-bottom: 24px;
+  font-style: italic;
+  border-left: 3px solid rgba(78,205,196,0.4);
+  padding-left: 16px;
+}
+
+.profile-descriptors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.descriptor-tag {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4ecdc4;
+  border: 1px solid rgba(78,205,196,0.3);
+  border-radius: 20px;
+  background: rgba(78,205,196,0.08);
+  white-space: nowrap;
 }
 
 .profile-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: center;
+  gap: 12px;
+}
+
+.btn-compact {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4ecdc4;
+  background: rgba(78,205,196,0.1);
+  border: 1px solid rgba(78,205,196,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-compact:hover {
+  background: rgba(78,205,196,0.15);
+  border-color: rgba(78,205,196,0.4);
 }
 
 /* Buttons */
