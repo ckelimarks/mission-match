@@ -389,14 +389,13 @@ export default function DemoPage() {
           <div className="screen active">
             <div className="hero">
               <div className="hero-badge">Human Collaboration Protocol</div>
-              <h1>Find your people. Own your data.</h1>
+              <h1>Your AI knows you. Let it find your people.</h1>
               <p className="description">
-                Your AI already knows your work patterns, goals, and collaboration style.
-                Extract that knowledge, make it portable, and find the right collaborators instantly.
+                Extract your collaboration profile from Claude or ChatGPT. Share what you want, when you want. Find better conversations, faster.
               </p>
               <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => setScreen('create-profile')}>
-                  Create My Profile →
+                  Create My Profile (2 min) →
                 </button>
                 {myProfileId && (
                   <button className="btn btn-secondary" onClick={() => setScreen('my-profile')}>
@@ -1735,20 +1734,20 @@ nav {
   justify-content: center;
   gap: 0.75rem;
   padding: 0.875rem 1.5rem;
-  background: transparent;
-  color: rgba(255,255,255,0.7);
+  background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
+  color: #4ecdc4;
   font-weight: 500;
   font-size: 0.9rem;
   border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(78, 205, 196, 0.3);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: 'DM Sans', system-ui, sans-serif;
 }
 
 .btn:hover {
-  background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
-  color: #4ecdc4;
+  background: linear-gradient(135deg, rgba(78,205,196,0.25) 0%, rgba(255,107,107,0.2) 100%);
+  border-color: rgba(78, 205, 196, 0.5);
   transform: translateX(4px);
 }
 
