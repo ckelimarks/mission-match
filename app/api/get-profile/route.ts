@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ profile });
+    // Return profile data directly (not wrapped in { profile })
+    return NextResponse.json(profile);
   } catch (error) {
     console.error('Get profile error:', error);
 
