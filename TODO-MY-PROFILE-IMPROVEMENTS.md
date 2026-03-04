@@ -26,7 +26,24 @@
 [📋 Copy Link]
 ```
 
-### 2. Condense Proof Projects
+### 2. Add "Download as JSON" Button
+**Purpose:** Data portability - let users download their full profile as JSON
+**Placement:** Near Copy Link button or in actions section
+**Behavior:**
+```javascript
+const downloadJSON = () => {
+  const blob = new Blob([JSON.stringify(myFullProfile, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mission-match-profile-${myProfileId.slice(0,8)}.json`;
+  a.click();
+};
+```
+
+**Why:** Aligns with "own your data" mission - true data portability
+
+### 3. Condense Proof Projects
 **Current:** Full-width cards with lots of padding
 **Desired:** Tighter spacing, smaller cards, more scannable
 
