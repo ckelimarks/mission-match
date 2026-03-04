@@ -8,6 +8,13 @@
 - **Deploy method:** Auto-deploy on push to `main` branch
 - **Repo:** https://github.com/ckelimarks/mission-match
 
+### Repository Structure
+**IMPORTANT:** The `web/` directory is a separate git repository nested inside the parent `hackathon/mission-match` directory.
+- **Parent directory** (`hackathon/mission-match/`) → Points to `https://github.com/ckelimarks/agent-chat.git`
+- **This directory** (`hackathon/mission-match/web/`) → Points to `https://github.com/ckelimarks/mission-match.git` (Vercel deploys from here)
+
+To push and trigger deployment, you must be in the `web/` directory, not the parent.
+
 ## Database
 - **Provider:** Supabase
 - **Connection:** Service role key bypasses RLS for API routes
