@@ -395,7 +395,7 @@ export default function DemoPage() {
               </p>
               <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => setScreen('create-profile')}>
-                  Create My Profile (2 min) →
+                  Extract from Claude/ChatGPT →
                 </button>
                 {myProfileId && (
                   <button className="btn btn-secondary" onClick={() => setScreen('my-profile')}>
