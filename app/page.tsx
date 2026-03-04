@@ -350,7 +350,7 @@ export default function DemoPage() {
         {/* Navigation */}
         <nav>
           <div className="logo">
-            <img src="/mm2-logo.png" alt="MM" style={{ width: '40px', height: 'auto' }} />
+            <img src="/mm2-logo.png" alt="MM" style={{ width: '80px', height: 'auto' }} />
             <span>Mission Match</span>
           </div>
           <div className="nav-links">
@@ -389,8 +389,7 @@ export default function DemoPage() {
           <div className="screen active">
             <div className="hero">
               <div className="hero-badge">Human Collaboration Protocol</div>
-              <h1>MISSION MATCH</h1>
-              <div className="tagline">Find your people. Own your data.</div>
+              <h1>Find your people. Own your data.</h1>
               <p className="description">
                 Your AI already knows your work patterns, goals, and collaboration style.
                 Extract that knowledge, make it portable, and find the right collaborators instantly.
