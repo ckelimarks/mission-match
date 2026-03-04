@@ -819,33 +819,41 @@ export default function DemoPage() {
                 {/* VALIDATED OUTPUT - Proof Points FIRST (Portfolio Showcase) */}
                 {myFullProfile?.proof_points && myFullProfile.proof_points.length > 0 && (
                   <div className="section" style={{ marginTop: '40px' }}>
-                    <h2 className="section-header">
-                      <span className="icon">✓</span> Validated Output
+                    <h2 className="section-header" style={{ fontSize: '28px', fontWeight: '600', marginBottom: '8px' }}>
+                      Major Projects
                     </h2>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', maxWidth: '600px' }}>
-                      Things I've actually shipped. Real projects with measurable impact.
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '15px', marginBottom: '32px' }}>
+                      Your active portfolio of connected experiments
                     </p>
-                    <div className="proof-grid">
+                    <div className="projects-list">
                       {myFullProfile.proof_points.map((proof: any, i: number) => (
-                        <div key={i} className="proof-callout">
-                          <div className="proof-name">{proof.name}</div>
-                          <div className="proof-desc">
+                        <div key={i} className="project-card">
+                          <h3 className="project-title">{proof.name}</h3>
+
+                          {proof.category && (
+                            <div className="project-category">{proof.category}</div>
+                          )}
+
+                          <p className="project-description">
                             {proof.description || proof.detail}
-                            {proof.impact && (
-                              <>
-                                {' → '}
-                                <span style={{ color: '#4ecdc4' }}>{proof.impact}</span>
-                              </>
-                            )}
-                            {proof.reveals && (
-                              <>
-                                {' → '}
-                                <span style={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>
-                                  {proof.reveals}
+                          </p>
+
+                          {proof.impact && (
+                            <div className="project-metrics">
+                              {proof.impact.split('→').map((metric: string, idx: number) => (
+                                <span key={idx} className="metric-badge">
+                                  {metric.trim()}
                                 </span>
-                              </>
-                            )}
-                          </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {proof.reveals && (
+                            <div className="project-role-section">
+                              <div className="project-role-label">STRATEGIC ROLE</div>
+                              <div className="project-role-text">{proof.reveals}</div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -3312,39 +3320,83 @@ footer {
   transition: width 0.3s ease;
 }
 
-/* Validated Output - Proof Points Grid */
-.proof-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+/* Major Projects - Portfolio Cards */
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.proof-callout {
-  padding: 24px;
-  background: linear-gradient(135deg, rgba(78,205,196,0.08) 0%, rgba(255,107,107,0.05) 100%);
-  border: 1px solid rgba(78,205,196,0.2);
+.project-card {
+  padding: 32px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
-.proof-callout:hover {
-  background: linear-gradient(135deg, rgba(78,205,196,0.12) 0%, rgba(255,107,107,0.08) 100%);
-  border-color: rgba(78,205,196,0.3);
-  transform: translateY(-2px);
+.project-card:hover {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.12);
 }
 
-.proof-name {
-  font-weight: 700;
-  font-size: 18px;
-  color: #4ecdc4;
+.project-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
-.proof-desc {
-  color: rgba(255,255,255,0.85);
-  font-size: 14px;
+.project-category {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  color: #4ecdc4;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.project-description {
+  color: rgba(255,255,255,0.7);
+  font-size: 15px;
   line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.project-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.metric-badge {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffa726;
+  border: 1px solid rgba(255, 167, 38, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 167, 38, 0.05);
+  white-space: nowrap;
+}
+
+.project-role-section {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.project-role-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 8px;
+}
+
+.project-role-text {
+  color: rgba(255,255,255,0.65);
+  font-size: 14px;
+  line-height: 1.5;
 }
 `;
