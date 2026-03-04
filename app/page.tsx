@@ -407,7 +407,8 @@ export default function DemoPage() {
               </div>
             </div>
 
-            <div className="section">
+            {/* Two-Stage Consent Flow - Commented out (too distracting) */}
+            {/* <div className="section">
               <h2 className="section-header"><span className="icon">◈</span> Two-Stage Consent Flow</h2>
               <div className="flow-diagram">
                 <div className="flow-step">
@@ -450,7 +451,7 @@ export default function DemoPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
 
