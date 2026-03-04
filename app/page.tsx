@@ -389,7 +389,6 @@ export default function DemoPage() {
           <div className="screen active">
             <div className="hero">
               <div className="hero-badge">Human Collaboration Protocol</div>
-              <img src="/mm-logo.png" alt="Mission Match Logo" style={{ width: '120px', height: 'auto', marginBottom: '20px' }} />
               <h1>MISSION MATCH</h1>
               <div className="tagline">Find your people. Own your data.</div>
               <p className="description">
