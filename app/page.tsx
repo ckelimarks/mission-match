@@ -616,7 +616,7 @@ export default function DemoPage() {
                       {conn.status === 'pending' && !conn.theirConsent && <span className="new-badge">NEW</span>}
                     </div>
                     <div className="connection-action">
-                      View Match →
+                      View Connection →
                     </div>
                   </div>
                 ))

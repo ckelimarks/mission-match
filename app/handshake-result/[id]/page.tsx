@@ -202,6 +202,24 @@ export default function HandshakeResultPage() {
     return profile.mission?.split('.')[0]?.slice(0, 60) || 'Collaborator';
   };
 
+  const getDisplayName = (profile: ProfileData | null) => {
+    if (!profile) return 'Anonymous';
+
+    // Try to get name from communication_aspects or role (hook)
+    const fullName = profile.communication_aspects?.name || profile.role || '';
+
+    // Parse to get first name + last initial
+    const nameParts = fullName.trim().split(' ');
+    if (nameParts.length >= 2) {
+      const firstName = nameParts[0];
+      const lastInitial = nameParts[nameParts.length - 1][0];
+      return `${firstName} ${lastInitial}.`;
+    }
+
+    // Fallback: just return first name or hook first sentence
+    return nameParts[0] || fullName.split('.')[0] || 'Anonymous';
+  };
+
   // Parse overlap data
   const getOverlapItems = (): OverlapItem[] => {
     if (!analysis?.overlap) return [];
@@ -386,14 +404,14 @@ export default function HandshakeResultPage() {
 
               <div className="results-header-people">
                 <div className="person-header left">
-                  <div className="person-name">Person A</div>
+                  <div className="person-name">{getDisplayName(initiatorProfile)}</div>
                   <div className="person-role">{getProfileRole(initiatorProfile)}</div>
                 </div>
 
                 <div className="vs-divider">&times;</div>
 
                 <div className="person-header right">
-                  <div className="person-name">Person B</div>
+                  <div className="person-name">{getDisplayName(recipientProfile)}</div>
                   <div className="person-role">{getProfileRole(recipientProfile)}</div>
                 </div>
               </div>
@@ -581,7 +599,7 @@ export default function HandshakeResultPage() {
                       <div className="contact-cards">
                         {/* Person A Contact Card */}
                         <div className="contact-card left">
-                          <h3>PERSON A</h3>
+                          <h3>{getDisplayName(initiatorProfile).toUpperCase()}</h3>
                           <div className="role">{getProfileRole(initiatorProfile)}</div>
                           <div className="contact-info">
                             {initiatorProfile?.communication_aspects?.email && (
@@ -649,7 +667,7 @@ export default function HandshakeResultPage() {
 
                         {/* Person B Contact Card */}
                         <div className="contact-card right">
-                          <h3>PERSON B</h3>
+                          <h3>{getDisplayName(recipientProfile).toUpperCase()}</h3>
                           <div className="role">{getProfileRole(recipientProfile)}</div>
                           <div className="contact-info">
                             {recipientProfile?.communication_aspects?.email && (
