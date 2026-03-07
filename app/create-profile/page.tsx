@@ -119,8 +119,8 @@ export default function CreateProfile() {
         return;
       }
 
-      // Redirect to profile view
-      router.push(`/profile/${data.profileId}`);
+      // Redirect to My Profile
+      router.push('/profile');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid JSON format. Make sure you copied the complete response from your AI.');
       setLoading(false);
