@@ -133,9 +133,12 @@ export default function MyProfilePage() {
     <div className="min-h-screen pb-8">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <span className="text-lg font-bold tracking-tight text-foreground">
-          Mission<span className="text-primary">Match</span>
-        </span>
+        <div className="flex items-center gap-2">
+          <img src="/mm2-logo.png" alt="Mission Match" className="w-8 h-8" />
+          <span className="text-lg font-bold tracking-tight text-foreground">
+            Mission<span className="text-primary">Match</span>
+          </span>
+        </div>
         {connections.length > 0 && (
           <button
             onClick={() => router.push('/connections')}
