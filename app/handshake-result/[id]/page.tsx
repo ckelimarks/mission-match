@@ -425,8 +425,8 @@ export default function HandshakeResultPage() {
               </div>
             </div>
 
-            {/* Analysis Status: Pending */}
-            {(!analysis || analysis.analysis_status === 'pending') && (
+            {/* Analysis Status: Pending (only show if NOT mutual consent) */}
+            {!mutualConsent && (!analysis || analysis.analysis_status === 'pending') && (
               <div className="text-center py-16">
                 <div className="text-[var(--mm-yellow)] text-6xl mb-6 animate-spin">&#x21BB;</div>
                 <h2 className="text-2xl font-bold mb-4">Analyzing Collaboration Potential</h2>
@@ -447,8 +447,8 @@ export default function HandshakeResultPage() {
               </div>
             )}
 
-            {/* Analysis Complete */}
-            {analysis?.analysis_status === 'completed' && (
+            {/* Analysis Complete OR Mutual Consent */}
+            {(mutualConsent || analysis?.analysis_status === 'completed') && (
               <>
                 {/* Hook Alignment / Mission Connection */}
                 {getHookAlignment() && (

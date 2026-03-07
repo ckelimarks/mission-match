@@ -107,27 +107,10 @@ export async function POST(request: NextRequest) {
       console.log('✅ Handshake updated successfully');
     }
 
-    // If mutual consent achieved, trigger Stage 2 analysis
+    // Mutual consent achieved - Stage 2 unlocked
+    // Note: Stage 2 doesn't need AI analysis, just renders full profiles
     if (mutualConsent) {
-      // Create Stage 2 analysis record
-      await supabase
-        .from('analyses')
-        .insert({
-          handshake_id: handshakeId,
-          stage: 2,
-          analysis_status: 'pending',
-        });
-
-      // Trigger Stage 2 analysis in background
-      const protocol = request.headers.get('x-forwarded-proto') || 'http';
-      const host = request.headers.get('host') || 'localhost:3000';
-      const baseUrl = `${protocol}://${host}`;
-
-      fetch(`${baseUrl}/api/analyze-stage2`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ handshakeId }),
-      }).catch(err => console.error('Failed to trigger Stage 2 analysis:', err));
+      console.log('✅ Stage 2 unlocked - full profiles now visible');
     }
 
     console.log('🎉 Consent granted successfully. Mutual consent:', mutualConsent);
