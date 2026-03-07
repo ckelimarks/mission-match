@@ -426,9 +426,14 @@ export default function DemoPage() {
               Home
             </button>
             {myProfileId && (
-              <button onClick={() => setScreen('my-profile')} className={screen === 'my-profile' ? 'active' : ''}>
-                My Profile
-              </button>
+              <>
+                <button onClick={() => setScreen('my-profile')} className={screen === 'my-profile' ? 'active' : ''}>
+                  My Profile
+                </button>
+                <button onClick={() => setScreen('my-connections')} className={screen === 'my-connections' ? 'active' : ''}>
+                  Connections
+                </button>
+              </>
             )}
           </div>
         </nav>

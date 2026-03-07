@@ -249,13 +249,12 @@ export default function ConnectPage() {
 
   return (
     <>
-      <div className="gradient-background">
-        <div className="gradient-sphere sphere-1"></div>
-        <div className="gradient-sphere sphere-2"></div>
-        <div className="gradient-sphere sphere-3"></div>
-        <div className="glow"></div>
-        <div className="grid-overlay"></div>
-        <div className="noise-overlay"></div>
+      {/* Modern gradient background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]">
+        {/* Subtle floating orbs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#4ecdc4] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b6b] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#8338ec] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
