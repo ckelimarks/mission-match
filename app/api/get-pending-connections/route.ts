@@ -20,8 +20,9 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('[GET-CONNECTIONS] Fetching for profileId:', profileId);
-    console.log('[GET-CONNECTIONS] Using service key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY ? 'YES' : 'NO (using anon key)');
+    console.log('[GET-CONNECTIONS] ===== START =====');
+    console.log('[GET-CONNECTIONS] ProfileId:', profileId);
+    console.log('[GET-CONNECTIONS] Service key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     // Get all handshakes where this profile is initiator OR recipient
     // Try two separate queries and combine results
@@ -55,16 +56,28 @@ export async function GET(request: NextRequest) {
       .eq('recipient_id', profileId)
       .order('created_at', { ascending: false });
 
-    console.log('[GET-CONNECTIONS] As initiator:', asInitiator?.length || 0, 'error:', err1?.message, 'data:', JSON.stringify(asInitiator));
-    console.log('[GET-CONNECTIONS] As recipient:', asRecipient?.length || 0, 'error:', err2?.message, 'data:', JSON.stringify(asRecipient));
+    console.log('[GET-CONNECTIONS] INITIATOR query (.eq initiator_id):', {
+      count: asInitiator?.length || 0,
+      error: err1?.message || 'none',
+      hasData: !!asInitiator && asInitiator.length > 0
+    });
+
+    console.log('[GET-CONNECTIONS] RECIPIENT query (.eq recipient_id):', {
+      count: asRecipient?.length || 0,
+      error: err2?.message || 'none',
+      hasData: !!asRecipient && asRecipient.length > 0
+    });
 
     const handshakeError = err1 || err2;
     const handshakes = [...(asInitiator || []), ...(asRecipient || [])];
 
-    console.log('[GET-CONNECTIONS] Query result:', {
-      handshakeCount: handshakes?.length || 0,
-      error: handshakeError?.message
+    console.log('[GET-CONNECTIONS] COMBINED result:', {
+      total: handshakes?.length || 0,
+      fromInitiator: asInitiator?.length || 0,
+      fromRecipient: asRecipient?.length || 0,
+      error: handshakeError?.message || 'none'
     });
+    console.log('[GET-CONNECTIONS] ===== END =====');
 
     if (handshakeError) {
       console.error('Handshake fetch error:', handshakeError);
