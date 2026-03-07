@@ -3,64 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Copy, CheckCircle, ArrowRight, User } from 'lucide-react';
+import { ArrowLeft, Zap, Shield, Trophy, Rocket, Mic, Package, Home, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const PROFILE_PROMPT = `CRITICAL: Return ONLY valid JSON. Do not write code. Do not build a website. Do not explain. Your entire response must be valid JSON that starts with { and ends with }.
-
-Create a collaboration profile based on our conversation history.
-
-EXACT JSON FORMAT REQUIRED:
-{
-  "display_name": "Your Name",
-  "hook": "2 sentences: what you're building and your unique angle",
-  "working_style": {
-    "vibe": "1-2 sentences describing your collaboration texture",
-    "core_dimensions": {
-      "sync_async": {
-        "score": 50,
-        "confidence": "high",
-        "proof": "Specific behavioral evidence from our conversations"
-      },
-      "fast_ship_high_polish": {
-        "score": 50,
-        "confidence": "medium",
-        "proof": "Evidence of shipping speed vs polish preference"
-      },
-      "solo_multiplier": {
-        "score": 50,
-        "confidence": "high",
-        "proof": "Evidence of solo vs team preference"
-      },
-      "builder_strategist": {
-        "score": 50,
-        "confidence": "medium",
-        "proof": "Evidence of execution vs strategy preference"
-      }
-    }
-  },
-  "collaboration_fit": {
-    "looking_for": "Specific type of collaborator",
-    "works_best_with": "Types of people you collaborate well with",
-    "struggles_with": "Real friction points in collaboration",
-    "brings": "What you offer to collaborators"
-  },
-  "proof_points": [
-    {
-      "name": "Project Name",
-      "description": "Brief description (max 15 words)",
-      "impact": "Specific metrics or outcomes",
-      "reveals": "What this shows about your working style"
-    }
-  ]
-}
-
-SCORES: 0=left extreme, 50=balanced, 100=right extreme
-- sync_async: 0=real-time everything, 100=deep async
-- fast_ship_high_polish: 0=high polish, 100=fast ship
-- solo_multiplier: 0=solo contributor, 100=team multiplier
-- builder_strategist: 0=pure execution, 100=pure strategy
-
-Be specific. Use actual examples from our conversations. Return ONLY the JSON object.`;
+const highlightIcons: Record<string, typeof Trophy> = {
+  Shipped: Rocket,
+  Won: Trophy,
+  Built: Package,
+  "Spoke at": Mic,
+};
 
 type PublicProfile = {
   id: string;
@@ -68,36 +19,34 @@ type PublicProfile = {
   role: string | null;
   mission: string | null;
   looking_for: string | null;
+  proof_points?: Array<{
+    name: string;
+    description: string;
+    impact?: string;
+    reveals?: string;
+  }>;
 };
 
 export default function ConnectPage() {
   const params = useParams();
   const router = useRouter();
-  const initiatorProfileId = params.profileId as string;
+  const targetProfileId = params.profileId as string;
 
-  const [initiatorProfile, setInitiatorProfile] = useState<PublicProfile | null>(null);
+  const [targetProfile, setTargetProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [profileData, setProfileData] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
+  const [initiating, setInitiating] = useState(false);
 
   useEffect(() => {
-    const savedProfileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
-    setExistingProfileId(savedProfileId);
-    fetchInitiatorProfile();
+    fetchTargetProfile();
   }, []);
 
-  const fetchInitiatorProfile = async () => {
+  const fetchTargetProfile = async () => {
     try {
-      const response = await fetch(`/api/get-profile?profileId=${initiatorProfileId}`);
+      const response = await fetch(`/api/get-profile?profileId=${targetProfileId}`);
       if (!response.ok) throw new Error('Profile not found');
       const data = await response.json();
-      setInitiatorProfile(data);
+      setTargetProfile(data);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');
@@ -105,54 +54,26 @@ export default function ConnectPage() {
     }
   };
 
-  const copyPrompt = () => {
-    navigator.clipboard.writeText(PROFILE_PROMPT);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const openAIApp = (app: 'chatgpt' | 'claude') => {
-    const urls = { chatgpt: 'https://chat.openai.com/', claude: 'https://claude.ai/' };
-    window.open(urls[app], '_blank');
-  };
-
-  const handleConnect = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profileData.trim()) {
-      setSubmitError('Please paste your profile data from your AI');
-      return;
-    }
-
-    setSubmitting(true);
-    setSubmitError(null);
+  const handleInitiate = async () => {
+    setInitiating(true);
 
     try {
-      let myProfileId = existingProfileId;
+      // Check if user has existing profile
+      const myProfileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
 
       if (!myProfileId) {
-        const saveResponse = await fetch('/api/save-profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profileData: profileData }),
-        });
-
-        if (!saveResponse.ok) {
-          const errorData = await saveResponse.json();
-          throw new Error(errorData.error || 'Failed to create profile');
-        }
-
-        const saveData = await saveResponse.json();
-        myProfileId = saveData.profileId;
-        localStorage.setItem('mm_profile_id', myProfileId!);
-        localStorage.setItem('mm_device_id', saveData.deviceId);
+        // Redirect to create profile first
+        router.push(`/create-profile?connect=${targetProfileId}`);
+        return;
       }
 
+      // Create handshake
       const handshakeResponse = await fetch('/api/create-handshake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          initiatorId: initiatorProfileId,
-          recipientId: myProfileId,
+          initiatorId: myProfileId,
+          recipientId: targetProfileId,
         }),
       });
 
@@ -164,38 +85,9 @@ export default function ConnectPage() {
       const handshakeData = await handshakeResponse.json();
       router.push(`/handshake-result/${handshakeData.handshakeId}`);
     } catch (err) {
-      console.error('Connect error:', err);
-      setSubmitError(err instanceof Error ? err.message : 'Invalid JSON format');
-      setSubmitting(false);
-    }
-  };
-
-  const handleQuickConnect = async () => {
-    if (!existingProfileId) return;
-    setSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      const handshakeResponse = await fetch('/api/create-handshake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          initiatorId: initiatorProfileId,
-          recipientId: existingProfileId,
-        }),
-      });
-
-      if (!handshakeResponse.ok) {
-        const errorData = await handshakeResponse.json();
-        throw new Error(errorData.error || 'Failed to create handshake');
-      }
-
-      const handshakeData = await handshakeResponse.json();
-      router.push(`/handshake-result/${handshakeData.handshakeId}`);
-    } catch (err) {
-      console.error('Quick connect error:', err);
-      setSubmitError(err instanceof Error ? err.message : 'Failed to connect');
-      setSubmitting(false);
+      console.error('Initiate error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initiate handshake');
+      setInitiating(false);
     }
   };
 
@@ -210,216 +102,152 @@ export default function ConnectPage() {
     );
   }
 
-  if (error || !initiatorProfile) {
+  if (error || !targetProfile) {
     return (
       <div className="min-h-screen px-6 py-16 max-w-md mx-auto">
         <div className="card-surface p-6">
           <div className="text-destructive font-bold uppercase text-sm mb-2">Error</div>
           <p className="text-foreground mb-4">{error || 'Profile not found'}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="w-full py-3 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
-          >
+          <Button onClick={() => router.push('/')} className="w-full">
             Go Home
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
-  const displayName = initiatorProfile.display_name || 'Someone';
-  const hook = initiatorProfile.role;
+  const displayName = targetProfile.display_name || 'Someone';
+  const hook = targetProfile.mission || targetProfile.role;
+  const highlights = targetProfile.proof_points?.slice(0, 3) || [];
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="p-4 border-b border-border">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <button onClick={() => router.push('/')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Back
-          </button>
-          <span className="text-xs uppercase tracking-wider font-mono text-primary">Connection Request</span>
-        </div>
+      <header className="flex items-center gap-3 p-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <span className="text-sm font-medium text-muted-foreground">Connect</span>
+        <button
+          onClick={() => router.push('/')}
+          className="ml-auto p-2 rounded-lg hover:bg-muted transition-colors"
+          title="My Profile"
+        >
+          <Home className="w-5 h-5 text-muted-foreground" />
+        </button>
       </header>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-        {/* Profile Card */}
+      <main className="flex-1 flex flex-col px-6 pb-8 pt-4">
         <motion.div
-          className="text-center space-y-4"
+          className="w-full max-w-sm mx-auto space-y-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
-            <User className="w-10 h-10 text-muted-foreground" />
+          {/* Avatar + Identity */}
+          <div className="flex flex-col items-center space-y-3 text-center">
+            <motion.div
+              className="w-20 h-20 rounded-full bg-muted flex items-center justify-center glow-border"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
+              <span className="text-2xl font-bold text-foreground">
+                {displayName.split(" ").map(n => n[0]).join("")}
+              </span>
+            </motion.div>
+            <div>
+              <h1 className="text-xl font-bold uppercase tracking-tight text-foreground">
+                {displayName}
+              </h1>
+              {targetProfile.role && (
+                <p className="text-sm text-primary mt-1">{targetProfile.role}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">{displayName}</h1>
-            {hook && (
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
-                {hook}
-              </p>
-            )}
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-              wants to connect
-            </span>
-          </div>
-        </motion.div>
 
-        {/* Quick Connect */}
-        {existingProfileId && (
-          <motion.div
-            className="card-surface p-6 border-l-4 border-primary"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Profile Found
+          {/* Hook */}
+          {hook && (
+            <div className="card-surface p-4">
+              <p className="text-sm text-foreground leading-relaxed italic">
+                "{hook}"
+              </p>
+            </div>
+          )}
+
+          {/* Highlights / Proof */}
+          {highlights.length > 0 && (
+            <div className="space-y-2.5">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Track Record
+              </h2>
+              <div className="space-y-2">
+                {highlights.map((h, i) => {
+                  const Icon = highlightIcons[h.name?.split(' ')[0]] || Rocket;
+                  return (
+                    <motion.div
+                      key={i}
+                      className="card-surface p-3 flex items-start gap-3"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + i * 0.1 }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-primary">
+                          {h.name}
+                        </span>
+                        <p className="text-sm text-foreground leading-snug">{h.description}</p>
+                        {h.impact && (
+                          <p className="text-xs text-muted-foreground mt-1">{h.impact}</p>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* What happens */}
+          <div className="space-y-2 pt-2">
+            <div className="flex items-start gap-3 text-sm">
+              <Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <span className="text-muted-foreground">
+                AI analyzes your compatibility from evidence-based profiles
               </span>
             </div>
-            <p className="text-sm text-foreground mb-4">
-              Connect instantly using your existing profile.
-            </p>
-            <button
-              onClick={handleQuickConnect}
-              disabled={submitting}
-              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {submitting ? 'Connecting...' : (
-                <>
-                  Quick Connect
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </motion.div>
-        )}
-
-        {/* Instructions */}
-        <motion.div
-          className="space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            {existingProfileId ? 'Or Create New Profile' : 'Create Your Profile'}
-          </h2>
-
-          <div className="card-surface p-6 space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-primary">1</span>
-                </div>
-                <p className="text-sm text-foreground">
-                  Copy the prompt and paste it into <strong>Claude</strong> or <strong>ChatGPT</strong>
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-primary">2</span>
-                </div>
-                <p className="text-sm text-foreground">
-                  Your AI will analyze your conversation history and generate a profile
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-primary">3</span>
-                </div>
-                <p className="text-sm text-foreground">
-                  Paste the JSON response back here to connect
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-border space-y-3">
-              <button
-                onClick={copyPrompt}
-                className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                  copied
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                }`}
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy Prompt
-                  </>
-                )}
-              </button>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => openAIApp('claude')}
-                  className="py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm font-medium transition-colors"
-                >
-                  Open Claude
-                </button>
-                <button
-                  onClick={() => openAIApp('chatgpt')}
-                  className="py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm font-medium transition-colors"
-                >
-                  Open ChatGPT
-                </button>
-              </div>
+            <div className="flex items-start gap-3 text-sm">
+              <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <span className="text-muted-foreground">
+                Full profiles unlock only with mutual consent
+              </span>
             </div>
           </div>
-        </motion.div>
 
-        {/* Paste Profile */}
-        <motion.div
-          className="space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Paste Profile JSON
-          </h2>
-
-          <form onSubmit={handleConnect} className="space-y-4">
-            <textarea
-              value={profileData}
-              onChange={(e) => setProfileData(e.target.value)}
-              placeholder='{"display_name": "Your Name", ...}'
-              className="w-full h-32 card-surface p-4 text-foreground font-mono text-xs focus:border-primary focus:outline-none transition-colors resize-none"
-            />
-
-            {submitError && (
-              <div className="card-surface p-4 border-l-4 border-destructive">
-                <div className="text-destructive font-bold text-sm uppercase mb-1">Error</div>
-                <div className="text-foreground text-sm">{submitError}</div>
-              </div>
+          {/* CTA */}
+          <Button
+            onClick={handleInitiate}
+            disabled={initiating}
+            className="w-full h-12 text-base font-semibold gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {initiating ? 'Initiating...' : (
+              <>
+                Initiate Handshake
+                <Zap className="w-4 h-4" />
+              </>
             )}
+          </Button>
 
-            <button
-              type="submit"
-              disabled={!profileData.trim() || submitting}
-              className="w-full py-4 px-4 bg-primary text-primary-foreground rounded-lg font-bold text-base uppercase tracking-wide transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {submitting ? 'Creating Connection...' : (
-                <>
-                  Connect & See Match
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </form>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Profile ID: <span className="font-mono">{targetProfileId}</span>
+          </p>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }
