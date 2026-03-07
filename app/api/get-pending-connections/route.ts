@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     console.log('[GET-CONNECTIONS] ALL handshakes in DB (max 10):', allHandshakes?.length || 0, allHandshakes);
 
     // Get all handshakes where this profile is initiator OR recipient
-    // Try two separate queries and combine results
-    const { data: asInitiator, error: err1 } = await supabase
+    // WORKAROUND: Fetch all and filter client-side since .eq() is failing
+    const { data: allHandshakesForFilter, error: fetchErr } = await supabase
       .from('handshakes')
       .select(`
         id,
@@ -45,23 +45,15 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       `)
-      .eq('initiator_id', profileId)
       .order('created_at', { ascending: false });
 
-    const { data: asRecipient, error: err2 } = await supabase
-      .from('handshakes')
-      .select(`
-        id,
-        initiator_id,
-        recipient_id,
-        status,
-        initiator_consented,
-        recipient_consented,
-        created_at,
-        updated_at
-      `)
-      .eq('recipient_id', profileId)
-      .order('created_at', { ascending: false });
+    console.log('[GET-CONNECTIONS] Fetched all handshakes for filtering:', allHandshakesForFilter?.length || 0);
+
+    // Filter client-side
+    const asInitiator = allHandshakesForFilter?.filter(h => h.initiator_id === profileId) || [];
+    const asRecipient = allHandshakesForFilter?.filter(h => h.recipient_id === profileId) || [];
+    const err1 = null;
+    const err2 = fetchErr;
 
     console.log('[GET-CONNECTIONS] INITIATOR query (.eq initiator_id):', {
       count: asInitiator?.length || 0,
