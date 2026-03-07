@@ -300,19 +300,33 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
           )}
         </header>
 
-        {/* Trust Badge - Provenance Signal */}
+        {/* Trust Badge - Verifiable Data Lineage */}
         <div className="mb-8 p-4 bg-[var(--mm-bg-dark)] border-l-4 border-[var(--mm-cyan)]">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[var(--mm-cyan)] text-xl">✓</span>
-            <span className="text-sm font-bold uppercase tracking-wider text-[var(--mm-text)]">
-              Verified Profile
-            </span>
+          <div className="mb-3">
+            <div className="text-sm font-bold uppercase tracking-wider text-[var(--mm-cyan)] mb-1">
+              Verifiable Data Lineage
+            </div>
+            <div className="text-xs text-[var(--mm-text-muted)] italic">
+              Trust infrastructure for the agent economy
+            </div>
           </div>
-          <div className="text-xs text-[var(--mm-text-muted)]">
-            Extracted by Claude Sonnet 4.5 • Reviewed by human
-            {(profile.decision_aspects as any)?.provenance?.extracted_at && (
-              <> • Created {new Date((profile.decision_aspects as any).provenance.extracted_at).toLocaleDateString()}</>
-            )}
+          <div className="space-y-1 text-sm text-[var(--mm-text)]">
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--mm-cyan)]">✓</span>
+              <span>Extracted by Claude Sonnet 4.5</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--mm-cyan)]">✓</span>
+              <span>Human-reviewed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--mm-cyan)]">✓</span>
+              <span>
+                Created: {(profile.decision_aspects as any)?.provenance?.extracted_at
+                  ? new Date((profile.decision_aspects as any).provenance.extracted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
           </div>
         </div>
 
