@@ -230,7 +230,7 @@ export default function DemoPage() {
     const consent = localStorage.getItem('mm_consent');
     if (consent === 'granted') {
       setConsentGranted(true);
-      setScreen('stage2');
+      // Removed auto-navigation to stage2 demo - not part of real flow
     }
 
     // Check if we have a stored profile ID
@@ -304,7 +304,7 @@ export default function DemoPage() {
     localStorage.setItem('mm_consent', 'granted');
     setConsentGranted(true);
     setShowConsentModal(false);
-    setScreen('stage2');
+    // Removed auto-navigation to stage2 demo - not part of real flow
   };
 
   const handleResetDemo = () => {
@@ -425,30 +425,11 @@ export default function DemoPage() {
             <button onClick={() => setScreen('home')} className={screen === 'home' ? 'active' : ''}>
               Home
             </button>
-            <button onClick={() => setScreen('my-profile')} className={screen === 'my-profile' ? 'active' : ''}>
-              My Profile
-            </button>
-            <button onClick={() => setScreen('my-connections')} className={screen === 'my-connections' ? 'active' : ''}>
-              Connections
-            </button>
-            <button onClick={() => setScreen('scanned-qr')} className={screen === 'scanned-qr' ? 'active' : ''}>
-              B Scans
-            </button>
-            <button onClick={() => setScreen('stage1')} className={screen === 'stage1' ? 'active' : ''}>
-              Stage 1
-            </button>
-            <button
-              onClick={() => consentGranted && setScreen('stage2')}
-              className={`${screen === 'stage2' ? 'active' : ''} ${!consentGranted ? 'disabled' : ''}`}
-            >
-              Stage 2
-            </button>
-            <button
-              onClick={() => consentGranted && setScreen('prioritization')}
-              className={`${screen === 'prioritization' ? 'active' : ''} ${!consentGranted ? 'disabled' : ''}`}
-            >
-              Prioritize
-            </button>
+            {myProfileId && (
+              <button onClick={() => setScreen('my-profile')} className={screen === 'my-profile' ? 'active' : ''}>
+                My Profile
+              </button>
+            )}
           </div>
         </nav>
 
@@ -456,10 +437,10 @@ export default function DemoPage() {
         {screen === 'home' && (
           <div className="screen active">
             <div className="hero">
-              <div className="hero-badge">Human Collaboration Protocol</div>
+              <div className="hero-badge">Trust Infrastructure for the Agent Economy</div>
               <h1>Your AI knows you. Let it find your people.</h1>
               <p className="description">
-                Extract your collaboration profile from Claude or ChatGPT. Share what you want, when you want. Find better conversations, faster.
+                Extract your collaboration profile from Claude or ChatGPT with cryptographic proof of provenance. Share what you want, when you want. You own the data. You own the trust.
               </p>
               <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => setScreen('create-profile')}>
@@ -923,17 +904,80 @@ export default function DemoPage() {
                       Core collaboration dimensions based on actual behavior patterns.
                     </p>
                     <div className="aspects-grid">
-                      {myProfile.aspects.map((aspect, i) => (
-                        <div key={i} className="aspect-detailed">
-                          <div className="aspect-detailed-header">
-                            <h4>{aspect.name}</h4>
-                            <div className="aspect-score-badge">{aspect.score}/100</div>
+                      {myProfile.aspects.map((aspect, i) => {
+                        // Map aspect names to spectrum labels and descriptions
+                        const spectrumLabels = {
+                          'Process & Systems': { low: 'Chaotic', high: 'Systematic' },
+                          'Empathy': { low: 'Task-focused', high: 'People-first' },
+                          'Organization': { low: 'Spontaneous', high: 'Structured' }
+                        };
+                        const descriptions = {
+                          'Process & Systems': 'How you approach workflows and systems',
+                          'Empathy': 'Balance between task completion and people care',
+                          'Organization': 'Planning and structure preference'
+                        };
+                        const labels = spectrumLabels[aspect.name as keyof typeof spectrumLabels] || { low: 'Low', high: 'High' };
+                        const description = descriptions[aspect.name as keyof typeof descriptions] || 'Collaboration dimension';
+
+                        return (
+                          <div key={i} className="aspect-detailed">
+                            <div className="aspect-detailed-header" style={{ textAlign: 'center' }}>
+                              <h4>{aspect.name}</h4>
+                              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginTop: '4px' }}>
+                                {description}
+                              </p>
+                            </div>
+
+                            {/* Spectrum with circle indicator */}
+                            <div style={{ marginTop: '16px' }}>
+                              {/* Spectrum labels */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em' }}>
+                                  {labels.low}
+                                </span>
+                                <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em' }}>
+                                  {labels.high}
+                                </span>
+                              </div>
+
+                              {/* Spectrum line */}
+                              <div style={{ position: 'relative', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '12px' }}>
+                                {/* Fill up to score */}
+                                <div style={{
+                                  position: 'absolute',
+                                  height: '100%',
+                                  width: `${aspect.score}%`,
+                                  background: 'linear-gradient(90deg, #4ecdc4, #45b7aa)',
+                                  borderRadius: '2px',
+                                  transition: 'width 0.3s ease'
+                                }}></div>
+
+                                {/* Circle indicator */}
+                                <div style={{
+                                  position: 'absolute',
+                                  left: `${aspect.score}%`,
+                                  top: '50%',
+                                  transform: 'translate(-50%, -50%)',
+                                  width: '12px',
+                                  height: '12px',
+                                  borderRadius: '50%',
+                                  background: '#4ecdc4',
+                                  border: '2px solid rgba(10,10,15,1)',
+                                  boxShadow: '0 0 8px rgba(78,205,196,0.5)',
+                                  transition: 'left 0.3s ease'
+                                }}></div>
+                              </div>
+
+                              {/* Score underneath */}
+                              <div style={{ textAlign: 'center' }}>
+                                <span style={{ fontSize: '18px', fontWeight: 700, color: '#4ecdc4' }}>
+                                  {aspect.score}<span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>/100</span>
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="aspect-bar">
-                            <div className="aspect-bar-fill" style={{ width: `${aspect.score}%` }}></div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

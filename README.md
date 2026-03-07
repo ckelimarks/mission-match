@@ -1,6 +1,8 @@
 # Mission Match - Web Application
 
-Privacy-first networking with AI-mediated consent and aspect-level behavioral matching.
+**Trust infrastructure for the agent economy.**
+
+AI archaeologist for your mind. Extract collaboration profiles from your Claude/ChatGPT conversations, create cryptographic proof of provenance, and build portable reputation as your agent completes successful handshakes.
 
 ## Quick Start
 

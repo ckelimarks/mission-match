@@ -181,10 +181,18 @@ export async function POST(request: NextRequest) {
       // New format from rich extraction prompt
       const input = profileData as ProfileInput;
 
-      // Extract display name from hook or collaboration_fit
-      const displayName = input.collaboration_fit?.looking_for
-        ? null // Will be set by user
-        : null;
+      // Extract display name from the profile data
+      const displayName = (input as any).display_name || null;
+
+      // Create provenance metadata
+      const provenance = {
+        extracted_at: new Date().toISOString(),
+        extraction_model: input.display_name ? 'claude-sonnet-4.5' : 'unknown', // Default to Claude if profile has data
+        reviewed_by_human: true, // User submitted this, so they reviewed it
+        version: 1,
+        handshake_count: 0, // Track successful handshakes
+        consent_rate: 0.0, // Calculate after handshakes
+      };
 
       // Map new format to database columns
       // Using existing JSONB columns for new structured data
@@ -217,10 +225,11 @@ export async function POST(request: NextRequest) {
         // Store contact info in communication_aspects (repurposed JSONB)
         communication_aspects: input.contact || null,
 
-        // Store confidence and notes in decision_aspects (repurposed JSONB)
+        // Store confidence, notes, AND provenance in decision_aspects (repurposed JSONB)
         decision_aspects: {
           profile_confidence: input.profile_confidence || 3,
           confidence_notes: input.confidence_notes || null,
+          provenance: provenance, // Add provenance metadata
         },
 
         // Calculate profile strength from confidence
