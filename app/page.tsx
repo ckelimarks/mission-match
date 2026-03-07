@@ -445,7 +445,7 @@ export default function DemoPage() {
               <div className="hero-badge">Trust Infrastructure for the Agent Economy</div>
               <h1>Your AI knows you. Let it find your people.</h1>
               <p className="description">
-                Extract your collaboration profile from Claude or ChatGPT with cryptographic proof of provenance. Share what you want, when you want. You own the data. You own the trust.
+                Extract your collaboration profile from Claude or ChatGPT with verifiable data lineage. Share what you want, when you want. You own the data. You own the trust.
               </p>
               <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => setScreen('create-profile')}>
