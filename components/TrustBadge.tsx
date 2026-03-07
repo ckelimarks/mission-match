@@ -20,11 +20,11 @@ export default function TrustBadge({ model, extractedAt, humanReviewed }: TrustB
       <div className="flex items-center gap-2">
         <Shield className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-          Verifiable Data Lineage
+          Proof, Not Claims
         </span>
       </div>
       <p className="text-xs italic text-muted-foreground">
-        Trust infrastructure for the agent economy
+        Every profile traces back to source
       </p>
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-xs text-foreground">

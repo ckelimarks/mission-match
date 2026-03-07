@@ -218,7 +218,7 @@ export default function ConnectPage() {
             <div className="flex items-start gap-3 text-sm">
               <Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <span className="text-muted-foreground">
-                AI analyzes your compatibility from evidence-based profiles
+                Your AI vouches for you. Their AI vouches for them.
               </span>
             </div>
             <div className="flex items-start gap-3 text-sm">

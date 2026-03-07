@@ -52,20 +52,19 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5">
             <Shield className="w-3 h-3 text-primary" />
             <span className="text-[11px] font-medium text-primary tracking-wide">
-              Evidence-based profiles
+              Trust Infrastructure for the Agent Economy
             </span>
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight leading-[1.1] text-foreground">
-            Know who you're{' '}
-            <span className="text-gradient">really</span>{' '}
-            meeting
+            Your AI knows you.{' '}
+            <span className="text-gradient">Let it find your people.</span>
           </h1>
 
           <p className="text-base text-muted-foreground leading-relaxed">
-            AI-extracted profiles from real conversations.
-            Not resumes. Not personality tests.
-            <span className="text-foreground font-medium"> Verifiable evidence.</span>
+            Extract your collaboration profile from Claude or ChatGPT.
+            Not self-reported. Not edited for LinkedIn.
+            <span className="text-foreground font-medium"> It comes with receipts.</span>
           </p>
 
           <Button
@@ -110,13 +109,14 @@ export default function LandingPage() {
 
         {/* Trust footer */}
         <motion.div
-          className="mt-12 text-center"
+          className="mt-12 text-center max-w-sm mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          <p className="text-xs text-muted-foreground">
-            Powered by <span className="font-mono text-primary">Claude Sonnet 4.5</span> · Human-reviewed · Timestamped
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Every claim traces back to source. Share what you want, when you want.
+            <span className="block mt-1">You own the data. You own the trust.</span>
           </p>
         </motion.div>
       </main>
