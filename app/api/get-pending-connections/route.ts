@@ -24,6 +24,13 @@ export async function GET(request: NextRequest) {
     console.log('[GET-CONNECTIONS] ProfileId:', profileId);
     console.log('[GET-CONNECTIONS] Service key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+    // DEBUG: Check what handshakes exist at all
+    const { data: allHandshakes, error: debugErr } = await supabase
+      .from('handshakes')
+      .select('id, initiator_id, recipient_id, status')
+      .limit(10);
+    console.log('[GET-CONNECTIONS] ALL handshakes in DB (max 10):', allHandshakes?.length || 0, allHandshakes);
+
     // Get all handshakes where this profile is initiator OR recipient
     // Try two separate queries and combine results
     const { data: asInitiator, error: err1 } = await supabase
@@ -89,7 +96,17 @@ export async function GET(request: NextRequest) {
 
     if (!handshakes || handshakes.length === 0) {
       console.log('[GET-CONNECTIONS] No handshakes found for profile');
-      return NextResponse.json({ connections: [] });
+      return NextResponse.json({
+        connections: [],
+        debug: {
+          profileId,
+          asInitiatorCount: asInitiator?.length || 0,
+          asRecipientCount: asRecipient?.length || 0,
+          hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          err1: err1?.message || null,
+          err2: err2?.message || null
+        }
+      });
     }
 
     // Get all unique profile IDs we need to fetch (the other party in each handshake)
