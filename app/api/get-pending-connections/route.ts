@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('[GET-CONNECTIONS] Fetching for profileId:', profileId);
+    console.log('[GET-CONNECTIONS] Using service key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY ? 'YES' : 'NO (using anon key)');
 
     // Get all handshakes where this profile is initiator OR recipient
     // Try two separate queries and combine results
@@ -54,8 +55,8 @@ export async function GET(request: NextRequest) {
       .eq('recipient_id', profileId)
       .order('created_at', { ascending: false });
 
-    console.log('[GET-CONNECTIONS] As initiator:', asInitiator?.length || 0, 'error:', err1?.message);
-    console.log('[GET-CONNECTIONS] As recipient:', asRecipient?.length || 0, 'error:', err2?.message);
+    console.log('[GET-CONNECTIONS] As initiator:', asInitiator?.length || 0, 'error:', err1?.message, 'data:', JSON.stringify(asInitiator));
+    console.log('[GET-CONNECTIONS] As recipient:', asRecipient?.length || 0, 'error:', err2?.message, 'data:', JSON.stringify(asRecipient));
 
     const handshakeError = err1 || err2;
     const handshakes = [...(asInitiator || []), ...(asRecipient || [])];
