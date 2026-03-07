@@ -118,8 +118,16 @@ export async function POST(request: NextRequest) {
           analysis_status: 'pending',
         });
 
-      // TODO: Trigger Stage 2 analysis in background
-      // For now, we'll leave it pending and implement later
+      // Trigger Stage 2 analysis in background
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      const host = request.headers.get('host') || 'localhost:3000';
+      const baseUrl = `${protocol}://${host}`;
+
+      fetch(`${baseUrl}/api/analyze-stage2`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handshakeId }),
+      }).catch(err => console.error('Failed to trigger Stage 2 analysis:', err));
     }
 
     console.log('🎉 Consent granted successfully. Mutual consent:', mutualConsent);
