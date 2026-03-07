@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Home, Copy, Check, Sparkles, User, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const PROFILE_PROMPT = `I'm creating my collaboration profile for Mission Match. Based on our conversation history, analyze what you know about me and extract my profile in JSON format.
 
@@ -65,6 +69,7 @@ export default function CreateProfile() {
   const copyPrompt = () => {
     navigator.clipboard.writeText(PROFILE_PROMPT);
     setCopied(true);
+    toast.success('Prompt copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -123,144 +128,182 @@ export default function CreateProfile() {
   };
 
   return (
-    <>
-      {/* Animated gradient background */}
-      <div className="gradient-background">
-        <div className="gradient-sphere sphere-1"></div>
-        <div className="gradient-sphere sphere-2"></div>
-        <div className="gradient-sphere sphere-3"></div>
-        <div className="glow"></div>
-        <div className="grid-overlay"></div>
-        <div className="noise-overlay"></div>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="flex items-center gap-3 p-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <span className="text-sm font-medium text-muted-foreground">Create Profile</span>
+        <button
+          onClick={() => router.push('/')}
+          className="ml-auto p-2 rounded-lg hover:bg-muted transition-colors"
+          title="Home"
+        >
+          <Home className="w-5 h-5 text-muted-foreground" />
+        </button>
+      </header>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
-        {/* Header */}
-        <header className="relative mb-16 py-10 border-t-2 border-b-2 border-accent-orange text-center">
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-forge-black px-3 text-xs font-bold tracking-widest text-accent-orange">
-            PROFILE_CREATION
+      <main className="flex-1 px-6 pb-8 max-w-sm mx-auto w-full space-y-8">
+        {/* Page Title */}
+        <motion.div
+          className="text-center space-y-2"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <User className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight mb-3">
+          <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">
             Create Your Profile
           </h1>
-          <p className="text-text-secondary uppercase tracking-[0.3em] text-sm font-medium">
-            60 Seconds with Your AI
+          <p className="text-sm text-muted-foreground">
+            60 seconds with your AI assistant
           </p>
-        </header>
+        </motion.div>
 
         {/* Instructions */}
-        <div className="section mb-8" data-section="INSTRUCTIONS">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-            <span className="text-accent-cyan text-xl">//</span>
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             How It Works
           </h2>
 
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 pl-6 border-l-3 border-accent-cyan relative">
-              <span className="absolute -left-2.5 text-accent-cyan font-bold">&gt;</span>
+          <div className="space-y-3">
+            <div className="card-surface p-4 flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 text-sm font-bold">
+                1
+              </div>
               <div>
-                <div className="text-accent-orange font-bold uppercase text-sm mb-1">Step 1: Copy Prompt</div>
-                <div className="text-text-primary">
-                  Copy the prompt below (click the button)
+                <div className="text-sm font-medium text-foreground mb-1">Copy Prompt</div>
+                <div className="text-xs text-muted-foreground">
+                  Copy the prompt below using the button
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3 pl-6 border-l-3 border-accent-cyan relative">
-              <span className="absolute -left-2.5 text-accent-cyan font-bold">&gt;</span>
+            <div className="card-surface p-4 flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 text-sm font-bold">
+                2
+              </div>
               <div>
-                <div className="text-accent-orange font-bold uppercase text-sm mb-1">Step 2: Paste in AI</div>
-                <div className="text-text-primary">
-                  Open Claude, ChatGPT, or any AI on your phone. Paste the prompt. Answer the questions.
+                <div className="text-sm font-medium text-foreground mb-1">Paste in AI</div>
+                <div className="text-xs text-muted-foreground">
+                  Open Claude, ChatGPT, or any AI. Paste the prompt and answer questions
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3 pl-6 border-l-3 border-accent-cyan relative">
-              <span className="absolute -left-2.5 text-accent-cyan font-bold">&gt;</span>
+            <div className="card-surface p-4 flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 text-sm font-bold">
+                3
+              </div>
               <div>
-                <div className="text-accent-orange font-bold uppercase text-sm mb-1">Step 3: Paste Back Here</div>
-                <div className="text-text-primary">
-                  Copy the JSON response from your AI and paste it below. Done!
+                <div className="text-sm font-medium text-foreground mb-1">Paste Back Here</div>
+                <div className="text-xs text-muted-foreground">
+                  Copy the JSON response and paste it below
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Prompt to Copy */}
-        <div className="section mb-8" data-section="PROMPT">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-            <span className="text-accent-cyan text-xl">//</span>
+        <motion.div
+          className="space-y-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Step 1: Copy This Prompt
           </h2>
 
-          <div className="bg-black border-2 border-accent-cyan mb-4 shadow-glow-cyan">
-            <div className="bg-accent-cyan px-6 py-3 flex justify-between items-center">
-              <span className="text-black font-bold text-sm tracking-widest">PROFILE_GENERATOR.TXT</span>
-              <div className="flex gap-2">
-                <span className="w-3 h-3 bg-black rounded-full"></span>
-                <span className="w-3 h-3 bg-black rounded-full"></span>
-                <span className="w-3 h-3 bg-black rounded-full"></span>
+          <div className="card-surface overflow-hidden">
+            <div className="bg-muted px-4 py-2 flex items-center justify-between border-b">
+              <div className="flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-foreground">Profile Generator</span>
               </div>
             </div>
-            <div className="p-6 max-h-96 overflow-y-auto">
-              <pre className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap font-mono">
+            <div className="p-4 max-h-64 overflow-y-auto">
+              <pre className="text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono">
                 {PROFILE_PROMPT}
               </pre>
             </div>
           </div>
 
-          <button
+          <Button
             onClick={copyPrompt}
-            className={`w-full py-5 font-display font-bold text-lg uppercase tracking-widest transition-all ${
-              copied
-                ? 'bg-gradient-to-r from-accent-cyan to-blue-600 shadow-glow-cyan'
-                : 'bg-gradient-to-r from-accent-orange to-red-600 hover:shadow-glow-orange hover:translate-y-[-2px]'
-            } text-white`}
+            className="w-full gap-2"
+            variant={copied ? "secondary" : "default"}
           >
-            {copied ? '✓ Copied!' : 'Copy Prompt'}
-          </button>
-        </div>
+            {copied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Prompt
+              </>
+            )}
+          </Button>
+        </motion.div>
 
         {/* Paste Profile Data */}
-        <div className="section" data-section="PASTE">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-            <span className="text-accent-cyan text-xl">//</span>
+        <motion.div
+          className="space-y-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Step 3: Paste Your Profile
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <textarea
               value={profileData}
               onChange={(e) => setProfileData(e.target.value)}
               placeholder="Paste the JSON response from your AI here..."
-              className="w-full h-64 bg-forge-black border-2 border-grid-line p-6 text-text-primary font-mono text-sm focus:border-accent-cyan focus:outline-none transition-colors resize-none"
+              className="w-full h-48 card-surface p-4 text-foreground font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow resize-none rounded-md"
             />
 
             {error && (
-              <div className="bg-forge-black border-l-4 border-red-500 p-4">
-                <div className="text-red-400 font-bold text-sm uppercase mb-1">Error</div>
-                <div className="text-text-primary">{error}</div>
+              <div className="card-surface border-l-4 border-destructive p-3">
+                <div className="text-destructive font-semibold text-xs mb-1">Error</div>
+                <div className="text-foreground text-xs">{error}</div>
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={!profileData.trim() || loading}
-              className="w-full py-6 bg-gradient-to-r from-accent-orange to-red-600 text-white font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-orange hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full h-12 text-base font-semibold gap-2"
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-3">
-                  <span className="animate-spin">⟳</span>
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
                   Saving Profile...
-                </span>
+                </>
               ) : (
-                'Create Profile →'
+                <>
+                  Create Profile
+                  <Sparkles className="w-4 h-4" />
+                </>
               )}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
-    </>
+        </motion.div>
+      </main>
+    </div>
   );
 }

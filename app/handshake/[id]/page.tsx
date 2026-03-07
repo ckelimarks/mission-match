@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Home, User, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function HandshakePage() {
   const router = useRouter();
@@ -65,94 +68,121 @@ export default function HandshakePage() {
   };
 
   return (
-    <>
-      {/* Animated gradient background */}
-      <div className="gradient-background">
-        <div className="gradient-sphere sphere-1"></div>
-        <div className="gradient-sphere sphere-2"></div>
-        <div className="gradient-sphere sphere-3"></div>
-        <div className="glow"></div>
-        <div className="grid-overlay"></div>
-        <div className="noise-overlay"></div>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="flex items-center gap-3 p-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <span className="text-sm font-medium text-muted-foreground">Handshake</span>
+        <button
+          onClick={() => router.push('/')}
+          className="ml-auto p-2 rounded-lg hover:bg-muted transition-colors"
+          title="Home"
+        >
+          <Home className="w-5 h-5 text-muted-foreground" />
+        </button>
+      </header>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 min-h-screen flex items-center justify-center">
-        <div className="w-full">
-          {status === 'loading' && (
-            <div className="section" data-section="LOADING">
-              <div className="text-center">
-                <div className="text-[var(--mm-cyan)] text-6xl mb-6 animate-spin">⟳</div>
-                <h2 className="font-display text-3xl font-bold uppercase mb-4">
-                  Initiating Handshake
-                </h2>
-                <p className="text-[var(--mm-text-muted)]">
-                  Connecting profiles...
-                </p>
-              </div>
-            </div>
-          )}
+      <main className="flex-1 flex items-center justify-center px-6 pb-8 max-w-sm mx-auto w-full">
+        {status === 'loading' && (
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="w-16 h-16 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              Initiating Handshake
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Connecting profiles...
+            </p>
+          </motion.div>
+        )}
 
-          {status === 'no-profile' && (
-            <div className="section" data-section="NO_PROFILE">
-              <h2 className="font-display text-3xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-                <span className="text-[var(--mm-red)] text-2xl">//</span>
+        {status === 'no-profile' && (
+          <motion.div
+            className="w-full space-y-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <User className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold uppercase tracking-tight text-foreground mb-3">
                 Create Your Profile First
               </h2>
-
-              <div className="mb-8">
-                <p className="text-[var(--mm-text)] text-lg mb-4">
-                  Before you can connect with others, you need to create your own collaboration profile.
-                </p>
-                <p className="text-[var(--mm-text-muted)]">
-                  It only takes 60 seconds - just answer a few questions with your AI assistant.
-                </p>
-              </div>
-
-              <button
-                onClick={goToCreateProfile}
-                className="w-full py-6 bg-gradient-to-r from-[var(--mm-red)] to-red-600 text-white font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-orange hover:translate-y-[-2px]"
-              >
-                Create Profile →
-              </button>
             </div>
-          )}
 
-          {status === 'creating' && (
-            <div className="section" data-section="CREATING">
-              <div className="text-center">
-                <div className="text-[var(--mm-red)] text-6xl mb-6 animate-spin">⟳</div>
-                <h2 className="font-display text-3xl font-bold uppercase mb-4">
-                  Creating Handshake
-                </h2>
-                <p className="text-[var(--mm-text-muted)]">
-                  Analyzing collaboration potential...
-                </p>
-              </div>
+            <div className="card-surface p-5 space-y-3">
+              <p className="text-sm text-foreground leading-relaxed">
+                Before you can connect with others, you need to create your own collaboration profile.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                It only takes 60 seconds - just answer a few questions with your AI assistant.
+              </p>
             </div>
-          )}
 
-          {status === 'error' && (
-            <div className="section" data-section="ERROR">
-              <h2 className="font-display text-3xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-                <span className="text-red-500 text-2xl">//</span>
+            <Button
+              onClick={goToCreateProfile}
+              className="w-full h-12 text-base font-semibold"
+            >
+              Create Profile
+            </Button>
+          </motion.div>
+        )}
+
+        {status === 'creating' && (
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="w-16 h-16 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              Creating Handshake
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Analyzing collaboration potential...
+            </p>
+          </motion.div>
+        )}
+
+        {status === 'error' && (
+          <motion.div
+            className="w-full space-y-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-destructive" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-3">
                 Error
               </h2>
-
-              <div className="bg-[var(--mm-bg-dark)] border-l-4 border-red-500 p-6 mb-6">
-                <p className="text-[var(--mm-text)]">{error}</p>
-              </div>
-
-              <button
-                onClick={() => router.push('/')}
-                className="w-full py-4 bg-gray-800 text-[var(--mm-text)] font-display font-bold uppercase tracking-widest hover:bg-[var(--mm-cyan)] hover:text-black transition-colors"
-              >
-                Go Home
-              </button>
             </div>
-          )}
-        </div>
-      </div>
-    </>
+
+            <div className="card-surface border-l-4 border-destructive p-4">
+              <p className="text-foreground text-sm">{error}</p>
+            </div>
+
+            <Button
+              onClick={() => router.push('/')}
+              variant="outline"
+              className="w-full"
+            >
+              Go Home
+            </Button>
+          </motion.div>
+        )}
+      </main>
+    </div>
   );
 }

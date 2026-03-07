@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Home, Upload, Key, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 function ClaimPageContent() {
   const router = useRouter();
@@ -170,51 +174,67 @@ function ClaimPageContent() {
   };
 
   return (
-    <>
-      {/* Animated gradient background */}
-      <div className="gradient-background">
-        <div className="gradient-sphere sphere-1"></div>
-        <div className="gradient-sphere sphere-2"></div>
-        <div className="gradient-sphere sphere-3"></div>
-        <div className="glow"></div>
-        <div className="grid-overlay"></div>
-        <div className="noise-overlay"></div>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="flex items-center gap-3 p-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <span className="text-sm font-medium text-muted-foreground">Claim Profile</span>
+        <button
+          onClick={() => router.push('/')}
+          className="ml-auto p-2 rounded-lg hover:bg-muted transition-colors"
+          title="Home"
+        >
+          <Home className="w-5 h-5 text-muted-foreground" />
+        </button>
+      </header>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 min-h-screen">
-        {/* Header */}
-        <header className="relative mb-16 py-10 border-t-2 border-b-2 border-accent-orange text-center">
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-forge-black px-3 text-xs font-bold tracking-widest text-accent-orange">
-            PROFILE_RECOVERY
+      <main className="flex-1 px-6 pb-8 max-w-sm mx-auto w-full">
+        {/* Page Title */}
+        <motion.div
+          className="text-center space-y-2 mb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <Key className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight mb-3">
+          <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">
             Claim Your Profile
           </h1>
-          <p className="text-text-secondary uppercase tracking-[0.3em] text-sm font-medium">
-            Scan or Upload Your Recovery QR
+          <p className="text-sm text-muted-foreground">
+            Upload your recovery QR or enter token
           </p>
-        </header>
+        </motion.div>
 
         {/* Idle / Upload State */}
         {(status === 'idle' || status === 'error') && (
-          <div className="space-y-8">
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             {/* Upload QR Section */}
-            <div className="section" data-section="UPLOAD_QR">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-                <span className="text-accent-cyan text-xl">//</span>
-                Upload Your Claim QR
+            <div className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Upload Recovery QR
               </h2>
 
               <div
-                className="border-2 border-dashed border-grid-line hover:border-accent-cyan p-12 text-center cursor-pointer transition-colors"
+                className="card-surface border-2 border-dashed hover:border-primary/50 p-10 text-center cursor-pointer transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="text-6xl mb-4">📷</div>
-                <p className="text-text-primary text-lg mb-2">
+                <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-foreground mb-1">
                   Click to upload your Claim QR screenshot
                 </p>
-                <p className="text-text-secondary text-sm">
+                <p className="text-xs text-muted-foreground">
                   Or drag and drop an image file
                 </p>
               </div>
@@ -229,176 +249,185 @@ function ClaimPageContent() {
             </div>
 
             {/* Manual Entry Section */}
-            <div className="section" data-section="MANUAL_ENTRY">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-                <span className="text-accent-cyan text-xl">//</span>
+            <div className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Or Enter Token Manually
               </h2>
 
-              <form onSubmit={handleManualSubmit} className="space-y-4">
+              <form onSubmit={handleManualSubmit} className="space-y-3">
                 <input
                   type="text"
                   value={manualToken}
                   onChange={(e) => setManualToken(e.target.value)}
                   placeholder="Paste your claim token here..."
-                  className="w-full bg-forge-black border-2 border-grid-line p-4 text-text-primary font-mono text-sm focus:border-accent-cyan focus:outline-none transition-colors"
+                  className="w-full card-surface p-3 text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow rounded-md"
                 />
 
-                <button
+                <Button
                   type="submit"
                   disabled={!manualToken.trim()}
-                  className="w-full py-4 bg-gradient-to-r from-accent-orange to-red-600 text-white font-display font-bold uppercase tracking-widest transition-all hover:shadow-glow-orange disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full"
                 >
                   Verify Token
-                </button>
+                </Button>
               </form>
             </div>
 
             {/* Error Display */}
             {error && (
-              <div className="bg-forge-black border-l-4 border-red-500 p-6">
-                <div className="text-red-400 font-bold uppercase text-sm mb-2">Error</div>
-                <p className="text-text-primary">{error}</p>
+              <div className="card-surface border-l-4 border-destructive p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                  <div className="text-destructive font-semibold text-sm">Error</div>
+                </div>
+                <p className="text-foreground text-sm">{error}</p>
               </div>
             )}
 
             {/* Help Text */}
-            <div className="section" data-section="HELP">
-              <h2 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-4">
-                <span className="text-accent-cyan text-xl">//</span>
+            <div className="space-y-3 pt-2">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 How to Find Your Claim QR
               </h2>
 
-              <div className="space-y-3 text-text-secondary">
+              <div className="card-surface p-4 space-y-2 text-xs text-muted-foreground leading-relaxed">
                 <p>Your Claim QR is shown on your profile page after you create it.</p>
                 <p>Look for the section labeled "Your Recovery QR" - this is different from your Share QR.</p>
                 <p>If you saved a screenshot of this QR, upload it here to reclaim your profile on this device.</p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Verifying State */}
         {status === 'verifying' && (
-          <div className="section" data-section="VERIFYING">
-            <div className="text-center py-16">
-              <div className="text-accent-cyan text-6xl mb-6 animate-spin">⟳</div>
-              <h2 className="font-display text-3xl font-bold uppercase mb-4">
-                Verifying Token
-              </h2>
-              <p className="text-text-secondary">
-                Checking your claim token...
-              </p>
-            </div>
-          </div>
+          <motion.div
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="w-16 h-16 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              Verifying Token
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Checking your claim token...
+            </p>
+          </motion.div>
         )}
 
         {/* Confirming State */}
         {status === 'confirming' && profileInfo && (
-          <div className="section" data-section="CONFIRMING">
-            <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-              <span className="text-accent-cyan text-xl">//</span>
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Confirm Profile Claim
             </h2>
 
-            <div className="bg-forge-black border-2 border-accent-cyan p-6 mb-8 shadow-glow-cyan">
-              <div className="text-accent-cyan font-bold uppercase text-sm mb-4">
-                Profile Found
+            <div className="card-surface p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <div className="text-primary font-semibold text-sm">Profile Found</div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <div className="text-accent-orange font-bold uppercase text-xs mb-1">Name</div>
-                  <div className="text-text-primary text-lg">{profileInfo.displayName || 'Not set'}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Name</div>
+                  <div className="text-foreground font-medium">{profileInfo.displayName || 'Not set'}</div>
                 </div>
                 <div>
-                  <div className="text-accent-orange font-bold uppercase text-xs mb-1">Role</div>
-                  <div className="text-text-primary text-lg">{profileInfo.role || 'Not set'}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Role</div>
+                  <div className="text-foreground font-medium">{profileInfo.role || 'Not set'}</div>
                 </div>
                 <div>
-                  <div className="text-accent-orange font-bold uppercase text-xs mb-1">Mission</div>
-                  <div className="text-text-primary">{profileInfo.mission || 'Not set'}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Mission</div>
+                  <div className="text-foreground text-sm">{profileInfo.mission || 'Not set'}</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-forge-black border-l-4 border-accent-orange p-4 mb-8">
-              <div className="text-accent-orange font-bold uppercase text-sm mb-2">Warning</div>
-              <p className="text-text-primary">
+            <div className="card-surface border-l-4 border-amber-500 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+                <div className="text-amber-500 font-semibold text-sm">Warning</div>
+              </div>
+              <p className="text-foreground text-xs leading-relaxed">
                 Claiming this profile will transfer ownership to this device. The previous device will lose access.
               </p>
             </div>
 
-            <div className="flex gap-4">
-              <button
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
                 onClick={() => {
                   setStatus('idle');
                   setProfileInfo(null);
                   setManualToken('');
                 }}
-                className="flex-1 py-4 bg-grid-line text-text-primary font-display font-bold uppercase tracking-widest hover:bg-gray-700 transition-colors"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={claimProfile}
-                className="flex-1 py-4 bg-gradient-to-r from-accent-orange to-red-600 text-white font-display font-bold uppercase tracking-widest transition-all hover:shadow-glow-orange"
+                className="flex-1"
               >
                 Claim Profile
-              </button>
+              </Button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Claiming State */}
         {status === 'claiming' && (
-          <div className="section" data-section="CLAIMING">
-            <div className="text-center py-16">
-              <div className="text-accent-orange text-6xl mb-6 animate-spin">⟳</div>
-              <h2 className="font-display text-3xl font-bold uppercase mb-4">
-                Claiming Profile
-              </h2>
-              <p className="text-text-secondary">
-                Transferring ownership to this device...
-              </p>
-            </div>
-          </div>
+          <motion.div
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="w-16 h-16 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              Claiming Profile
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Transferring ownership to this device...
+            </p>
+          </motion.div>
         )}
 
         {/* Success State */}
         {status === 'success' && (
-          <div className="section" data-section="SUCCESS">
-            <div className="text-center py-16">
-              <div className="text-accent-cyan text-6xl mb-6">✓</div>
-              <h2 className="font-display text-3xl font-bold uppercase mb-4">
-                Profile Claimed!
-              </h2>
-              <p className="text-text-secondary mb-4">
-                Redirecting to your profile...
-              </p>
+          <motion.div
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
-          </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              Profile Claimed!
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Redirecting to your profile...
+            </p>
+          </motion.div>
         )}
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
 
 export default function ClaimPage() {
   return (
     <Suspense fallback={
-      <div className="gradient-background">
-        <div className="gradient-sphere sphere-1"></div>
-        <div className="gradient-sphere sphere-2"></div>
-        <div className="gradient-sphere sphere-3"></div>
-        <div className="glow"></div>
-        <div className="grid-overlay"></div>
-        <div className="noise-overlay"></div>
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-accent-cyan text-6xl mb-6 animate-spin">⟳</div>
-            <h2 className="font-display text-3xl font-bold uppercase mb-4">Loading...</h2>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     }>
