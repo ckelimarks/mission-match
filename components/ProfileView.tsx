@@ -157,11 +157,11 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
         {/* Spectrum visualization with circle indicator */}
         <div className="mb-4">
           {/* Spectrum labels on sides */}
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--mm-text-muted)]">
+          <div className="flex justify-between items-center mb-3 gap-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--mm-text-muted)] text-left flex-1 break-words">
               {scaleLabels.low}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--mm-text-muted)]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--mm-text-muted)] text-right flex-1 break-words">
               {scaleLabels.high}
             </span>
           </div>
@@ -274,19 +274,84 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
       {/* Main content */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16 font-sans">
         {/* Header */}
-        <header className="relative mb-16 py-10 border-t-2 border-b-2 border-[var(--mm-red)] text-center">
+        <header className="relative mb-16 py-10 border-t-2 border-b-2 border-[var(--mm-red)]">
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[var(--mm-bg-dark)] px-3 text-xs font-bold tracking-widest text-[var(--mm-red)]">
             COLLABORATION_PROFILE
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight mb-3">
-            {profile.display_name || 'Your Profile'}
-          </h1>
-          <p className="text-[var(--mm-text-muted)] uppercase tracking-[0.3em] text-sm font-medium">
-            ID: {profile.id.slice(0, 8)}...
-          </p>
+
+          {/* Profile Header Container - QR on left, Info on right */}
+          <div className="profile-header-container">
+            {/* QR Code Card */}
+            <div className="profile-qr-card flex-shrink-0">
+              <div className="bg-white p-3 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)]" style={{ width: '180px', height: '180px' }} ref={shareQrRef}>
+                <QRCode
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`}
+                  size={156}
+                  level="M"
+                />
+              </div>
+              <div className="text-center mt-3">
+                <div className="inline-block px-3 py-1.5 bg-[rgba(0,0,0,0.3)] rounded-md font-mono text-[0.65rem] text-[var(--mm-cyan)]">
+                  mission-match.app/u/{profile.id.slice(0, 8)}
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Header Content */}
+            <div className="profile-header-content">
+              <h1 className="font-display font-bold uppercase tracking-tight mb-2.5 text-white" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: '1.1', margin: '0 0 10px 0' }}>
+                {profile.display_name || 'Your Profile'}
+              </h1>
+              <p className="text-base text-[rgba(255,255,255,0.6)] uppercase tracking-wider mb-5">
+                {profile.role || 'Role not specified'}
+              </p>
+              <p className="text-sm text-[rgba(255,255,255,0.5)] leading-relaxed max-w-[500px]">
+                Profile extracted from AI conversation history. Evidence-based, not personality tests.
+              </p>
+              <div className="flex gap-2.5 mt-5 justify-center md:justify-start">
+                <button
+                  onClick={() => {
+                    const qrElement = shareQrRef.current;
+                    if (qrElement) {
+                      // Simple download using canvas
+                      const canvas = qrElement.querySelector('canvas');
+                      if (canvas) {
+                        const url = canvas.toDataURL('image/png');
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `mission-match-qr-${profile.id.slice(0, 8)}.png`;
+                        a.click();
+                      }
+                    }
+                  }}
+                  className="btn-small btn-primary-small inline-flex items-center gap-1.5"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download QR
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`;
+                    navigator.clipboard.writeText(url);
+                  }}
+                  className="btn-small btn-outline-small inline-flex items-center gap-1.5"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  Copy Link
+                </button>
+              </div>
+            </div>
+          </div>
 
           {!isOwner && (
-            <div className="mt-6">
+            <div className="mt-6 text-center">
               <button
                 onClick={handleConnect}
                 className="px-8 py-4 bg-gradient-to-r from-[var(--mm-cyan)] to-blue-500 text-black font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-cyan hover:translate-y-[-2px]"
@@ -335,75 +400,33 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
           <PendingConnections profileId={profile.id} />
         )}
 
-        {/* QR Code Section */}
-        <div className="section mb-8" data-section="QR_CODE">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
-            <span className="text-[var(--mm-cyan)] text-xl">//</span>
-            {isOwner ? 'Your QR Codes' : 'Share QR Code'}
-          </h2>
+        {/* Recovery QR Code Section - Owner Only */}
+        {isOwner && (
+          <div className="section mb-8" data-section="RECOVERY_QR">
+            <h2 className="font-display text-2xl font-bold uppercase tracking-wide mb-6 flex items-center gap-4">
+              <span className="text-[var(--mm-red)] text-xl">//</span>
+              Recovery QR Code
+            </h2>
 
-          {isOwner ? (
-            /* Owner view: Show both Share and Claim QRs */
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Connect QR - Links to /connect for handshake flow */}
-              <div className="flex flex-col items-center">
-                <div className="bg-white p-6 rounded-lg mb-4" ref={shareQrRef}>
-                  <QRCode
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`}
-                    size={200}
-                    level="M"
-                  />
-                </div>
-                <div className="text-center max-w-md">
-                  <p className="text-[var(--mm-text)] mb-2 font-bold uppercase text-sm tracking-wider">
-                    Connect QR
-                  </p>
-                  <p className="text-[var(--mm-text-muted)] text-sm">
-                    Others scan this to create their profile and connect with you.
-                  </p>
-                </div>
-              </div>
-
-              {/* Claim QR */}
-              <div className="flex flex-col items-center">
-                <div className="bg-white p-6 rounded-lg mb-4" ref={claimQrRef}>
-                  <QRCode
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/claim?token=${profile.claim_token}`}
-                    size={200}
-                    level="M"
-                  />
-                </div>
-                <div className="text-center max-w-md">
-                  <p className="text-[var(--mm-red)] mb-2 font-bold uppercase text-sm tracking-wider">
-                    Recovery QR
-                  </p>
-                  <p className="text-[var(--mm-text-muted)] text-sm">
-                    Save this QR to reclaim your profile on another device. Keep it private!
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Visitor view: Show connect QR */
             <div className="flex flex-col items-center">
-              <div className="bg-white p-6 rounded-lg mb-4">
+              <div className="bg-white p-6 rounded-lg mb-4" ref={claimQrRef}>
                 <QRCode
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/connect/${profile.id}`}
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/claim?token=${profile.claim_token}`}
                   size={200}
                   level="M"
                 />
               </div>
               <div className="text-center max-w-md">
-                <p className="text-[var(--mm-text)] mb-2 font-bold uppercase text-sm tracking-wider">
-                  Connect With This Person
+                <p className="text-[var(--mm-red)] mb-2 font-bold uppercase text-sm tracking-wider">
+                  Keep This Private
                 </p>
                 <p className="text-[var(--mm-text-muted)] text-sm">
-                  Scan this code to create your profile and start a collaboration.
+                  Save this QR to reclaim your profile on another device. Anyone with this code can claim your profile.
                 </p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Data Portability - View as JSON */}
         <div className="section mb-8" data-section="DATA_PORTABILITY">
