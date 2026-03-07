@@ -202,16 +202,26 @@ export default function MyProfilePage() {
 
         {/* Profile Info */}
         <motion.div
-          className="space-y-2"
+          className="space-y-3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">
-            {displayName}
-          </h1>
-          <p className="text-sm font-medium text-primary">{role}</p>
-          <p className="text-sm text-muted-foreground leading-relaxed">{hook}</p>
+          <div>
+            <h1 className="text-2xl font-bold uppercase tracking-tight text-foreground">
+              {displayName}
+            </h1>
+            <p className="text-sm font-medium text-primary mt-1">{role}</p>
+          </div>
+
+          {profile.mission && (
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+                Mission
+              </h2>
+              <p className="text-sm text-foreground leading-relaxed">{hook}</p>
+            </div>
+          )}
         </motion.div>
 
         {/* Connections */}
