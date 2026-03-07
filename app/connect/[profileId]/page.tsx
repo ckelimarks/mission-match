@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Copy, CheckCircle, ArrowRight, User } from 'lucide-react';
 
 const PROFILE_PROMPT = `CRITICAL: Return ONLY valid JSON. Do not write code. Do not build a website. Do not explain. Your entire response must be valid JSON that starts with { and ends with }.
 
@@ -85,10 +87,8 @@ export default function ConnectPage() {
   const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check both new and old localStorage keys for backward compatibility
     const savedProfileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
     setExistingProfileId(savedProfileId);
-    console.log('[CONNECT] Existing profile ID:', savedProfileId);
     fetchInitiatorProfile();
   }, []);
 
@@ -130,7 +130,6 @@ export default function ConnectPage() {
       let myProfileId = existingProfileId;
 
       if (!myProfileId) {
-        // Send raw text to API - server handles sanitization and parsing
         const saveResponse = await fetch('/api/save-profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -172,11 +171,7 @@ export default function ConnectPage() {
   };
 
   const handleQuickConnect = async () => {
-    console.log('[QUICK-CONNECT] Starting with existingProfileId:', existingProfileId);
-    if (!existingProfileId) {
-      console.log('[QUICK-CONNECT] No existing profile ID, aborting');
-      return;
-    }
+    if (!existingProfileId) return;
     setSubmitting(true);
     setSubmitError(null);
 
@@ -206,191 +201,225 @@ export default function ConnectPage() {
 
   if (loading) {
     return (
-      <>
-        <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#4ecdc4] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b6b] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#8338ec] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading profile...</p>
         </div>
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="text-[var(--mm-cyan)] text-6xl mb-6 animate-pulse">...</div>
-          <h2 className="font-display text-2xl font-bold uppercase">Loading</h2>
-        </div>
-      </>
+      </div>
     );
   }
 
   if (error || !initiatorProfile) {
     return (
-      <>
-        <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#4ecdc4] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b6b] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#8338ec] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
-        </div>
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
-          <div className="bg-[var(--mm-bg-dark)] border-l-4 border-red-500 p-6">
-            <div className="text-red-400 font-bold uppercase text-sm mb-2">Error</div>
-            <p className="text-[var(--mm-text)]">{error || 'Profile not found'}</p>
-          </div>
+      <div className="min-h-screen px-6 py-16 max-w-md mx-auto">
+        <div className="card-surface p-6">
+          <div className="text-destructive font-bold uppercase text-sm mb-2">Error</div>
+          <p className="text-foreground mb-4">{error || 'Profile not found'}</p>
           <button
             onClick={() => router.push('/')}
-            className="mt-6 w-full py-4 bg-gray-800 text-[var(--mm-text)] font-display font-bold uppercase tracking-widest hover:bg-[var(--mm-cyan)] hover:text-black transition-colors"
+            className="w-full py-3 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
           >
             Go Home
           </button>
         </div>
-      </>
+      </div>
     );
   }
 
   const displayName = initiatorProfile.display_name || 'Someone';
-  const hook = initiatorProfile.role; // The "role" field contains the hook
+  const hook = initiatorProfile.role;
 
   return (
-    <>
-      {/* Modern gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f]">
-        {/* Subtle floating orbs */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-[#4ecdc4] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b6b] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#8338ec] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen pb-8">
+      {/* Header */}
+      <header className="p-4 border-b border-border">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <button onClick={() => router.push('/')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Back
+          </button>
+          <span className="text-xs uppercase tracking-wider font-mono text-primary">Connection Request</span>
+        </div>
+      </header>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
-        <header className="relative mb-12 py-10 border-t-2 border-b-2 border-[var(--mm-cyan)] text-center">
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[var(--mm-bg-dark)] px-3 text-xs font-bold tracking-widest text-[var(--mm-cyan)]">
-            HANDSHAKE_INITIATED
+      <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
+        {/* Profile Card */}
+        <motion.div
+          className="text-center space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <User className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight mb-4">
-            {displayName}
-          </h1>
-          {hook && (
-            <p className="text-[var(--mm-text)] text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-              {hook}
-            </p>
-          )}
-        </header>
-
-        {initiatorProfile.mission && (
-          <div className="section mb-8" data-section="THEIR_MISSION">
-            <h2 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-4">
-              <span className="text-[var(--mm-cyan)] text-xl">//</span>
-              Their Mission
-            </h2>
-            <div className="bg-[var(--mm-bg-dark)] border-l-4 border-[var(--mm-cyan)] p-6">
-              <p className="text-[var(--mm-text)] italic">"{initiatorProfile.mission}"</p>
-            </div>
-          </div>
-        )}
-
-        {existingProfileId && (
-          <div className="section mb-8" data-section="QUICK_CONNECT">
-            <div className="bg-[var(--mm-bg-dark)] border-2 border-[var(--mm-red)] p-6">
-              <div className="text-[var(--mm-red)] font-bold uppercase text-sm mb-3">
-                You Already Have a Profile
-              </div>
-              <p className="text-[var(--mm-text)] mb-4">
-                Connect instantly using your existing profile.
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{displayName}</h1>
+            {hook && (
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
+                {hook}
               </p>
-              <button
-                onClick={handleQuickConnect}
-                disabled={submitting}
-                className="w-full py-4 bg-[var(--mm-red)] text-white font-display font-bold uppercase tracking-widest hover:shadow-glow-orange transition-all disabled:opacity-50"
-              >
-                {submitting ? 'Connecting...' : 'Quick Connect'}
-              </button>
-            </div>
+            )}
           </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+              wants to connect
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Quick Connect */}
+        {existingProfileId && (
+          <motion.div
+            className="card-surface p-6 border-l-4 border-primary"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Profile Found
+              </span>
+            </div>
+            <p className="text-sm text-foreground mb-4">
+              Connect instantly using your existing profile.
+            </p>
+            <button
+              onClick={handleQuickConnect}
+              disabled={submitting}
+              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {submitting ? 'Connecting...' : (
+                <>
+                  Quick Connect
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </motion.div>
         )}
 
-        <div className="section mb-8" data-section="INSTRUCTIONS">
-          <h2 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-4">
-            <span className="text-[var(--mm-cyan)] text-xl">//</span>
+        {/* Instructions */}
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             {existingProfileId ? 'Or Create New Profile' : 'Create Your Profile'}
           </h2>
 
-          <div className="space-y-3 mb-6">
-            <div className="flex items-start gap-3 pl-6 border-l-2 border-[var(--mm-cyan)] relative">
-              <span className="absolute -left-2 text-[var(--mm-cyan)] font-bold text-sm">1</span>
-              <div className="text-[var(--mm-text)]">
-                <strong className="text-[var(--mm-red)]">Copy</strong> the prompt below
+          <div className="card-surface p-6 space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">1</span>
+                </div>
+                <p className="text-sm text-foreground">
+                  Copy the prompt and paste it into <strong>Claude</strong> or <strong>ChatGPT</strong>
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">2</span>
+                </div>
+                <p className="text-sm text-foreground">
+                  Your AI will analyze your conversation history and generate a profile
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">3</span>
+                </div>
+                <p className="text-sm text-foreground">
+                  Paste the JSON response back here to connect
+                </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 pl-6 border-l-2 border-[var(--mm-cyan)] relative">
-              <span className="absolute -left-2 text-[var(--mm-cyan)] font-bold text-sm">2</span>
-              <div className="text-[var(--mm-text)]">
-                <strong className="text-[var(--mm-red)]">Open</strong> your AI and paste it
-              </div>
-            </div>
-            <div className="flex items-start gap-3 pl-6 border-l-2 border-[var(--mm-cyan)] relative">
-              <span className="absolute -left-2 text-[var(--mm-cyan)] font-bold text-sm">3</span>
-              <div className="text-[var(--mm-text)]">
-                <strong className="text-[var(--mm-red)]">Paste</strong> the JSON response back here
+
+            <div className="pt-4 border-t border-border space-y-3">
+              <button
+                onClick={copyPrompt}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                  copied
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Prompt
+                  </>
+                )}
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => openAIApp('claude')}
+                  className="py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm font-medium transition-colors"
+                >
+                  Open Claude
+                </button>
+                <button
+                  onClick={() => openAIApp('chatgpt')}
+                  className="py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm font-medium transition-colors"
+                >
+                  Open ChatGPT
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="section mb-8" data-section="PROMPT">
-          <div className="flex gap-3 mb-4">
-            <button
-              onClick={copyPrompt}
-              className={`flex-1 py-4 font-display font-bold uppercase tracking-widest transition-all ${
-                copied ? 'bg-[var(--mm-cyan)] text-black' : 'bg-[var(--mm-red)] text-white hover:shadow-glow-orange'
-              }`}
-            >
-              {copied ? '✓ Copied!' : 'Copy Prompt'}
-            </button>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => openAIApp('chatgpt')}
-              className="flex-1 py-3 bg-gray-800 text-[var(--mm-text)] font-display font-bold uppercase text-sm tracking-wider hover:bg-[var(--mm-cyan)] hover:text-black transition-colors"
-            >
-              Open ChatGPT
-            </button>
-            <button
-              onClick={() => openAIApp('claude')}
-              className="flex-1 py-3 bg-gray-800 text-[var(--mm-text)] font-display font-bold uppercase text-sm tracking-wider hover:bg-[var(--mm-cyan)] hover:text-black transition-colors"
-            >
-              Open Claude
-            </button>
-          </div>
-        </div>
-
-        <div className="section" data-section="PASTE">
-          <h2 className="font-display text-xl font-bold uppercase tracking-wide mb-4 flex items-center gap-4">
-            <span className="text-[var(--mm-cyan)] text-xl">//</span>
-            Paste Your Profile JSON
+        {/* Paste Profile */}
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Paste Profile JSON
           </h2>
 
-          <form onSubmit={handleConnect} className="space-y-6">
+          <form onSubmit={handleConnect} className="space-y-4">
             <textarea
               value={profileData}
               onChange={(e) => setProfileData(e.target.value)}
-              placeholder="Paste the JSON response from your AI here..."
-              className="w-full h-48 bg-[var(--mm-bg-dark)] border-2 border-grid-line p-4 text-[var(--mm-text)] font-mono text-sm focus:border-[var(--mm-cyan)] focus:outline-none transition-colors resize-none"
+              placeholder='{"display_name": "Your Name", ...}'
+              className="w-full h-32 card-surface p-4 text-foreground font-mono text-xs focus:border-primary focus:outline-none transition-colors resize-none"
             />
 
             {submitError && (
-              <div className="bg-[var(--mm-bg-dark)] border-l-4 border-red-500 p-4">
-                <div className="text-red-400 font-bold text-sm uppercase mb-1">Error</div>
-                <div className="text-[var(--mm-text)]">{submitError}</div>
+              <div className="card-surface p-4 border-l-4 border-destructive">
+                <div className="text-destructive font-bold text-sm uppercase mb-1">Error</div>
+                <div className="text-foreground text-sm">{submitError}</div>
               </div>
             )}
 
             <button
               type="submit"
               disabled={!profileData.trim() || submitting}
-              className="w-full py-5 bg-gradient-to-r from-[var(--mm-cyan)] to-blue-600 text-white font-display font-bold text-lg uppercase tracking-widest transition-all hover:shadow-glow-cyan disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-4 bg-primary text-primary-foreground rounded-lg font-bold text-base uppercase tracking-wide transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {submitting ? 'Creating Connection...' : 'Connect & See Match'}
+              {submitting ? 'Creating Connection...' : (
+                <>
+                  Connect & See Match
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   );
 }
