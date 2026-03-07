@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
+import ConnectionCard from '@/components/ConnectionCard';
+import { motion } from 'framer-motion';
 
 // ============================================================================
 // DATA MODELS (Will map to API calls later)
@@ -760,11 +762,17 @@ export default function DemoPage() {
               </div>
             ) : (
               <>
-                {/* My Profile Header - Horizontal Layout */}
+                {/* My Profile Header - Horizontal Layout with Lovable animations */}
                 <div className="profile-header-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', margin: '30px 0' }}>
                   {/* QR Code Card - LEFT */}
-                  <div className="profile-qr-card" style={{ flexShrink: 0 }}>
-                    <div style={{ width: '180px', height: '180px', background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+                  <motion.div
+                    className="profile-qr-card"
+                    style={{ flexShrink: 0 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="glow-primary" style={{ width: '180px', height: '180px', background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
                       <QRCode
                         value={typeof window !== 'undefined' ? `${window.location.origin}/connect/${myProfileId}` : ''}
                         size={156}
@@ -776,7 +784,7 @@ export default function DemoPage() {
                         mission-match.app/u/{myProfileId.slice(0, 8)}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Profile Info - RIGHT */}
                   <div className="profile-header-content" style={{ textAlign: 'center' }}>
@@ -881,42 +889,34 @@ export default function DemoPage() {
                   </div>
                 )}
 
-                {/* Pending Connections */}
+                {/* Pending Connections - Lovable Design */}
                 {connections.length > 0 && (
-                  <div className="section">
-                    <h2 className="section-header">
-                      <span className="icon">🔔</span> Incoming Connections ({connections.length})
-                    </h2>
-                    <div className="connections-list">
-                      {connections.map((conn) => (
-                        <div key={conn.handshakeId} className="connection-card" onClick={() => {
-                          // Navigate to handshake result
-                          window.location.href = `/handshake-result/${conn.handshakeId}`;
-                        }}>
-                          <div className="connection-info">
-                            <div className="connection-name">
-                              {conn.otherParty?.displayName || conn.otherParty?.role || 'Anonymous'}
-                            </div>
-                            <div className="connection-role">{conn.otherParty?.role || 'Builder'}</div>
-                            <div className="connection-time">
-                              {new Date(conn.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className="connection-status">
-                            {conn.status === 'pending' && !conn.theirConsent && (
-                              <span className="badge badge-new">NEW</span>
-                            )}
-                            {conn.status === 'stage1_complete' && (
-                              <span className="badge badge-stage1">Stage 1</span>
-                            )}
-                            {(conn.myConsent && conn.theirConsent) && (
-                              <span className="badge badge-connected">Connected</span>
-                            )}
-                          </div>
-                        </div>
+                  <motion.div
+                    className="section"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        Recent Connections
+                      </h2>
+                      <span className="text-xs text-primary font-mono">{connections.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {connections.slice(0, 5).map((conn) => (
+                        <ConnectionCard
+                          key={conn.handshakeId}
+                          handshakeId={conn.handshakeId}
+                          name={conn.otherParty?.displayName || conn.otherParty?.role || 'Anonymous'}
+                          role={conn.otherParty?.role || 'Builder'}
+                          status={conn.status === 'approved' || (conn.myConsent && conn.theirConsent) ? 'approved' : 'pending'}
+                          score={conn.compatibilityScore}
+                          createdAt={conn.createdAt}
+                        />
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Working Style Dimensions - NOW WITH CONTEXT */}

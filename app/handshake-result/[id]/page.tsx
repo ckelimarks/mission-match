@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Handshake, Analysis, OverlapItem } from '@/types';
 import ConsentModal from '@/components/ConsentModal';
+import CompatibilityRing from '@/components/CompatibilityRing';
+import TrustBadge from '@/components/TrustBadge';
 
 interface ProfileData {
   id: string;
@@ -408,7 +410,13 @@ export default function HandshakeResultPage() {
                   <div className="person-role">{getProfileRole(initiatorProfile)}</div>
                 </div>
 
-                <div className="vs-divider">&times;</div>
+                {/* Compatibility Ring */}
+                {analysis?.compatibility_score !== undefined && (
+                  <CompatibilityRing score={analysis.compatibility_score} size={100} />
+                )}
+                {!analysis?.compatibility_score && (
+                  <div className="vs-divider">&times;</div>
+                )}
 
                 <div className="person-header right">
                   <div className="person-name">{getDisplayName(recipientProfile)}</div>

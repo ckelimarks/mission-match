@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -1069,4 +1069,120 @@ body {
   background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(255,107,107,0.1) 100%);
   color: #4ecdc4;
   transform: translateX(4px);
+}
+
+/* ============================================
+   LOVABLE DESIGN SYSTEM INTEGRATION
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Lovable HSL color system */
+    --background: 222 47% 7%;
+    --foreground: 216 33% 91%;
+
+    --card: 222 55% 5%;
+    --card-foreground: 216 33% 91%;
+
+    --popover: 222 55% 5%;
+    --popover-foreground: 216 33% 91%;
+
+    --primary: 174 55% 55%;
+    --primary-foreground: 222 47% 7%;
+
+    --secondary: 0 72% 71%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 218 18% 59%;
+
+    --accent: 174 55% 55%;
+    --accent-foreground: 222 47% 7%;
+
+    --destructive: 0 72% 71%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 174 55% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom Mission Match tokens (Lovable style) */
+    --mm-glow: 174 55% 55%;
+    --mm-danger: 0 72% 71%;
+    --mm-surface: 222 40% 10%;
+  }
+
+  body {
+    font-family: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  }
+
+  code, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  /* Lovable utility classes */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(174 55% 55% / 0.15), 0 0 60px hsl(174 55% 55% / 0.05);
+  }
+
+  .glow-border {
+    border: 1px solid hsl(174 55% 55% / 0.2);
+    box-shadow: inset 0 0 20px hsl(174 55% 55% / 0.03);
+  }
+
+  .card-surface {
+    background: hsl(var(--card));
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .trust-border {
+    border-left: 3px solid hsl(174 55% 55%);
+  }
+
+  .confidence-high {
+    color: hsl(var(--primary));
+  }
+
+  .confidence-medium {
+    color: hsl(var(--secondary));
+  }
+
+  .confidence-low {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Animate pulse glow */
+  @keyframes animate-pulse-glow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: animate-pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+/* Scrollbar styling (Lovable) */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(222 20% 18%);
+  border-radius: 4px;
 }
