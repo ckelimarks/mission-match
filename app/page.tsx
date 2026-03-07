@@ -760,62 +760,82 @@ export default function DemoPage() {
               </div>
             ) : (
               <>
-                {/* My Profile Header - Travis-style Left-Aligned */}
-                <div className="profile-hero">
-                  {/* Floating QR Code - Top Right */}
-                  <div className="profile-qr-float">
-                    <div className="qr-code-compact">
+                {/* My Profile Header - Horizontal Layout */}
+                <div className="profile-header-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', margin: '30px 0' }}>
+                  {/* QR Code Card - LEFT */}
+                  <div className="profile-qr-card" style={{ flexShrink: 0 }}>
+                    <div style={{ width: '180px', height: '180px', background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
                       <QRCode
                         value={typeof window !== 'undefined' ? `${window.location.origin}/connect/${myProfileId}` : ''}
-                        size={120}
+                        size={156}
                         level="M"
                       />
                     </div>
-                    <div className="qr-label">/connect/{myProfileId.slice(0, 8)}...</div>
+                    <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                      <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.65rem', color: '#4ecdc4' }}>
+                        mission-match.app/u/{myProfileId.slice(0, 8)}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Main Profile Content - Left Aligned */}
-                  <div className="profile-hero-content">
-                    {/* Name */}
-                    <h1 className="profile-name">
-                      {myProfile?.name || myFullProfile?.communication_aspects?.name || 'YOUR PROFILE'}
+                  {/* Profile Info - RIGHT */}
+                  <div className="profile-header-content" style={{ textAlign: 'center' }}>
+                    <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, margin: '0 0 10px 0', color: '#fff', textTransform: 'uppercase' }}>
+                      {myProfile?.name || myFullProfile?.communication_aspects?.name || myFullProfile?.display_name || 'YOUR PROFILE'}
                     </h1>
-
-                    {/* Role/Title */}
-                    <div className="profile-title">
+                    <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 20px 0' }}>
                       {myProfile?.role || myFullProfile?.role || 'Builder'}
-                    </div>
+                    </p>
+                    <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto 20px' }}>
+                      {myFullProfile?.hook || 'Profile extracted from AI conversation history. Evidence-based, not personality tests.'}
+                    </p>
 
-                    {/* Hook - Mission Statement */}
-                    {myFullProfile?.hook && (
-                      <div className="profile-hook">
-                        "{myFullProfile.hook}"
-                      </div>
-                    )}
-
-                    {/* Three Descriptor Words */}
-                    {myFullProfile?.working_style?.vibe && (
-                      <div className="profile-descriptors">
-                        {myFullProfile.working_style.vibe.split(/[,·•]/).slice(0, 3).map((desc: string, i: number) => (
-                          <span key={i} className="descriptor-tag">{desc.trim()}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="profile-actions">
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
-                        className="btn-compact"
+                        className="btn-small btn-primary-small"
+                        onClick={() => {
+                          // Download QR as PNG
+                          const canvas = document.querySelector('.profile-qr-card canvas') as HTMLCanvasElement;
+                          if (canvas) {
+                            const url = canvas.toDataURL('image/png');
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `mission-match-qr-${myProfileId.slice(0, 8)}.png`;
+                            a.click();
+                          }
+                        }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <span>⬇</span> Download QR
+                      </button>
+                      <button
+                        className="btn-small btn-outline-small"
                         onClick={() => {
                           const url = `${window.location.origin}/connect/${myProfileId}`;
                           navigator.clipboard.writeText(url);
                         }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        📋 Copy Profile Link
+                        <span>📋</span> Copy Link
                       </button>
                     </div>
                   </div>
                 </div>
+
+                <style dangerouslySetInnerHTML={{ __html: `
+                  @media (min-width: 768px) {
+                    .profile-header-container {
+                      flex-direction: row !important;
+                      justify-content: center !important;
+                      align-items: center !important;
+                      gap: 60px !important;
+                    }
+                    .profile-header-content {
+                      text-align: left !important;
+                    }
+                  }
+                `}} />
 
                 {/* VALIDATED OUTPUT - Proof Points FIRST (Portfolio Showcase) */}
                 {myFullProfile?.proof_points && myFullProfile.proof_points.length > 0 && (
