@@ -110,7 +110,8 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
     return 'text-red-400';
   };
 
-  const getConfidenceColor = (confidence: string) => {
+  const getConfidenceColor = (confidence: string | null | undefined) => {
+    if (!confidence) return 'text-gray-500';
     if (confidence === 'high') return 'text-[var(--mm-cyan)]';
     if (confidence === 'medium') return 'text-[var(--mm-red)]';
     return 'text-gray-500';
