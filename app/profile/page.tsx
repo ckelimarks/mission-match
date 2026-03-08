@@ -66,7 +66,7 @@ export default function MyProfilePage() {
 
   const fetchConnections = async (profileId: string) => {
     try {
-      const response = await fetch(`/api/get-connections?profileId=${profileId}`);
+      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}`);
       if (!response.ok) return;
       const data = await response.json();
       setConnections(data.connections || []);
