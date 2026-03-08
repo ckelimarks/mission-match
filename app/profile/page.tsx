@@ -314,12 +314,12 @@ export default function MyProfilePage() {
             </div>
             <div className="space-y-2">
               {connections.slice(0, 3)
-                .filter(conn => conn.otherParty && conn.otherParty.displayName)
+                .filter(conn => conn.otherParty)
                 .map((conn) => (
                   <ConnectionCard
                     key={conn.handshakeId}
                     handshakeId={conn.handshakeId}
-                    name={conn.otherParty!.displayName}
+                    name={conn.otherParty!.displayName || conn.otherParty!.role?.split(',')[0] || 'Unknown'}
                     role={conn.otherParty!.role || 'Builder'}
                     status={conn.status}
                     createdAt={conn.createdAt}
