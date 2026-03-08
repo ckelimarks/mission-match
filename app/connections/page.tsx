@@ -42,7 +42,8 @@ export default function ConnectionsPage() {
 
   const fetchConnections = async (profileId: string) => {
     try {
-      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}`);
+      // Add cache-busting timestamp
+      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch connections');
       }
