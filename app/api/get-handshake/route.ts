@@ -18,10 +18,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Create fresh client to avoid caching issues
+    // Create fresh client with aggressive cache bypass
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false },
-      global: { headers: { 'Cache-Control': 'no-cache' } }
+      global: {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     });
 
     const { data: handshake, error } = await supabase
