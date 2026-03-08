@@ -17,14 +17,19 @@ interface Profile {
 }
 
 interface Connection {
-  handshake_id: string;
-  other_profile: {
-    name: string;
+  handshakeId: string;
+  otherParty: {
+    id: string;
+    displayName: string;
     role: string;
-  };
+    mission?: string;
+  } | null;
   status: 'pending' | 'approved';
-  compatibility_score?: number;
-  created_at: string;
+  isInitiator: boolean;
+  myConsent: boolean;
+  theirConsent: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function MyProfilePage() {
@@ -34,6 +39,7 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
   const [baseUrl, setBaseUrl] = useState<string>('');
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     // Set base URL for QR code (works in dev and prod)
@@ -49,6 +55,19 @@ export default function MyProfilePage() {
     setMyProfileId(profileId);
     fetchProfile(profileId);
     fetchConnections(profileId);
+
+    // Auto-refresh connections when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden && profileId) {
+        fetchConnections(profileId);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const fetchProfile = async (profileId: string) => {
@@ -143,17 +162,18 @@ export default function MyProfilePage() {
             Mission<span className="text-primary">Match</span>
           </span>
         </div>
-        {connections.length > 0 && (
-          <button
-            onClick={() => router.push('/connections')}
-            className="relative p-2 rounded-lg hover:bg-muted transition-colors"
-          >
-            <Users className="w-5 h-5 text-muted-foreground" />
+        <button
+          onClick={() => router.push('/connections')}
+          className="relative p-2 rounded-lg hover:bg-muted transition-colors"
+          title="View connections"
+        >
+          <Users className="w-5 h-5 text-muted-foreground" />
+          {connections.length > 0 && (
             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
               {connections.length}
             </span>
-          </button>
-        )}
+          )}
+        </button>
       </header>
 
       <div className="px-6 space-y-8 max-w-sm mx-auto">
@@ -235,6 +255,44 @@ export default function MyProfilePage() {
           )}
         </motion.div>
 
+        {/* Debug Panel */}
+        <motion.div
+          className="space-y-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs text-muted-foreground hover:text-primary"
+          >
+            {showDebug ? '▼' : '▶'} Debug Info
+          </button>
+          {showDebug && (
+            <div className="card-surface p-4 space-y-2 text-xs font-mono">
+              <div>
+                <span className="text-primary">Profile ID:</span>
+                <div className="text-foreground break-all">{myProfileId}</div>
+              </div>
+              <div>
+                <span className="text-primary">Connections Count:</span>
+                <div className="text-foreground">{connections.length}</div>
+              </div>
+              <div>
+                <span className="text-primary">Connections Data:</span>
+                <pre className="text-foreground overflow-auto max-h-64 text-[10px] mt-1">
+                  {JSON.stringify(connections, null, 2)}
+                </pre>
+              </div>
+              <button
+                onClick={() => myProfileId && fetchConnections(myProfileId)}
+                className="w-full py-2 px-3 bg-primary text-primary-foreground rounded text-xs"
+              >
+                Refresh Connections
+              </button>
+            </div>
+          )}
+        </motion.div>
+
         {/* Connections */}
         {connections.length > 0 && (
           <motion.div
@@ -255,15 +313,14 @@ export default function MyProfilePage() {
               </button>
             </div>
             <div className="space-y-2">
-              {connections.slice(0, 3).map((conn) => (
+              {connections.slice(0, 3).map((conn) => conn.otherParty && (
                 <ConnectionCard
-                  key={conn.handshake_id}
-                  handshakeId={conn.handshake_id}
-                  name={conn.other_profile.name}
-                  role={conn.other_profile.role}
+                  key={conn.handshakeId}
+                  handshakeId={conn.handshakeId}
+                  name={conn.otherParty.displayName}
+                  role={conn.otherParty.role || 'Builder'}
                   status={conn.status}
-                  score={conn.compatibility_score}
-                  createdAt={conn.created_at}
+                  createdAt={conn.createdAt}
                 />
               ))}
             </div>
