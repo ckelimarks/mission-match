@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     // Filter client-side
     const asInitiator = allHandshakesForFilter?.filter(h => h.initiator_id === profileId) || [];
     const asRecipient = allHandshakesForFilter?.filter(h => h.recipient_id === profileId) || [];
-    const err1 = null;
+    const err1: { message: string } | null = null;
     const err2 = fetchErr;
 
     console.log('[GET-CONNECTIONS] INITIATOR query (.eq initiator_id):', {

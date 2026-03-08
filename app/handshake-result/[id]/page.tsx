@@ -13,6 +13,7 @@ import RadarChart from '@/components/RadarChart';
 
 interface ProfileData {
   id: string;
+  created_at?: string;
   display_name?: string | null;
   role?: string | null;
   mission?: string | null;
@@ -182,6 +183,19 @@ export default function HandshakeResultPage() {
     return profile.display_name || profile.communication_aspects?.name || profile.role?.split('.')[0] || 'User';
   };
 
+  const getWorkingStyle = (profile: ProfileData | null) => {
+    if (!profile) return null;
+    return profile.working_style || profile.role_aspects || null;
+  };
+
+  const getHookAlignment = () => {
+    if (analysis?.hook_alignment) return analysis.hook_alignment;
+    if (analysis?.overlap && !Array.isArray(analysis.overlap) && 'hook_alignment' in analysis.overlap) {
+      return (analysis.overlap as any).hook_alignment || null;
+    }
+    return null;
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2);
   };
@@ -211,21 +225,24 @@ export default function HandshakeResultPage() {
   const myName = getDisplayName(myProfile);
   const otherName = getDisplayName(otherProfile);
   const otherAspects = getAspects(otherProfile);
+  const myWorkingStyle = getWorkingStyle(myProfile);
+  const otherWorkingStyle = getWorkingStyle(otherProfile);
+  const hookAlignment = getHookAlignment();
 
   // Prepare radar chart data if available
-  const hasRadarData = myProfile?.working_style?.core_dimensions && otherProfile?.working_style?.core_dimensions;
+  const hasRadarData = myWorkingStyle?.core_dimensions && otherWorkingStyle?.core_dimensions;
   const radarData = hasRadarData ? {
     personA: {
-      'Sync/Async': myProfile?.working_style?.core_dimensions?.sync_async?.score || 50,
-      'Ship/Polish': myProfile?.working_style?.core_dimensions?.fast_ship_high_polish?.score || 50,
-      'Solo/Team': myProfile?.working_style?.core_dimensions?.solo_multiplier?.score || 50,
-      'Build/Strategy': myProfile?.working_style?.core_dimensions?.builder_strategist?.score || 50,
+      'Sync/Async': myWorkingStyle?.core_dimensions?.sync_async?.score || 50,
+      'Ship/Polish': myWorkingStyle?.core_dimensions?.fast_ship_high_polish?.score || 50,
+      'Solo/Team': myWorkingStyle?.core_dimensions?.solo_multiplier?.score || 50,
+      'Build/Strategy': myWorkingStyle?.core_dimensions?.builder_strategist?.score || 50,
     },
     personB: {
-      'Sync/Async': otherProfile?.working_style?.core_dimensions?.sync_async?.score || 50,
-      'Ship/Polish': otherProfile?.working_style?.core_dimensions?.fast_ship_high_polish?.score || 50,
-      'Solo/Team': otherProfile?.working_style?.core_dimensions?.solo_multiplier?.score || 50,
-      'Build/Strategy': otherProfile?.working_style?.core_dimensions?.builder_strategist?.score || 50,
+      'Sync/Async': otherWorkingStyle?.core_dimensions?.sync_async?.score || 50,
+      'Ship/Polish': otherWorkingStyle?.core_dimensions?.fast_ship_high_polish?.score || 50,
+      'Solo/Team': otherWorkingStyle?.core_dimensions?.solo_multiplier?.score || 50,
+      'Build/Strategy': otherWorkingStyle?.core_dimensions?.builder_strategist?.score || 50,
     }
   } : null;
 
@@ -293,13 +310,13 @@ export default function HandshakeResultPage() {
         ) : (
           <motion.div className="space-y-4" layout>
             {/* Hook Alignment */}
-            {analysis.hook_alignment && (
+            {hookAlignment && (
               <div className="card-surface p-4 space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
                   Mission Alignment
                 </h3>
                 <p className="text-sm text-foreground leading-relaxed">
-                  {analysis.hook_alignment}
+                  {hookAlignment}
                 </p>
               </div>
             )}

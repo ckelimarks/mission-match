@@ -182,12 +182,12 @@ export async function POST(request: NextRequest) {
       const input = profileData as ProfileInput;
 
       // Extract display name from the profile data
-      const displayName = (input as any).display_name || null;
+      const displayName = (input as ProfileInput & { display_name?: string | null }).display_name || null;
 
       // Create provenance metadata
       const provenance = {
         extracted_at: new Date().toISOString(),
-        extraction_model: input.display_name ? 'claude-sonnet-4.5' : 'unknown', // Default to Claude if profile has data
+        extraction_model: displayName ? 'claude-sonnet-4.5' : 'unknown', // Default to Claude if profile has data
         reviewed_by_human: true, // User submitted this, so they reviewed it
         version: 1,
         handshake_count: 0, // Track successful handshakes

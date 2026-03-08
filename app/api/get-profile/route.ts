@@ -16,11 +16,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Profiles are publicly readable per RLS policy
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', profileId)
       .single();
+    const profile = data as Record<string, any> | null;
 
     if (error || !profile) {
       return NextResponse.json(
@@ -29,8 +30,37 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Parse JSON fields that are stored as strings
+    const parsedProfile: Record<string, any> = {
+      ...profile,
+      proof_points: typeof profile.proof_points === 'string'
+        ? JSON.parse(profile.proof_points)
+        : profile.proof_points,
+      role_aspects: typeof profile.role_aspects === 'string'
+        ? JSON.parse(profile.role_aspects)
+        : profile.role_aspects,
+      shipping_aspects: typeof profile.shipping_aspects === 'string'
+        ? JSON.parse(profile.shipping_aspects)
+        : profile.shipping_aspects,
+      communication_aspects: typeof profile.communication_aspects === 'string'
+        ? JSON.parse(profile.communication_aspects)
+        : profile.communication_aspects,
+      decision_aspects: typeof profile.decision_aspects === 'string'
+        ? JSON.parse(profile.decision_aspects)
+        : profile.decision_aspects,
+      energy_aspects: typeof profile.energy_aspects === 'string'
+        ? JSON.parse(profile.energy_aspects)
+        : profile.energy_aspects,
+      collaboration_aspects: typeof profile.collaboration_aspects === 'string'
+        ? JSON.parse(profile.collaboration_aspects)
+        : profile.collaboration_aspects,
+      working_style: typeof profile.working_style === 'string'
+        ? JSON.parse(profile.working_style)
+        : profile.working_style,
+    };
+
     // Return profile data directly (not wrapped in { profile })
-    return NextResponse.json(profile);
+    return NextResponse.json(parsedProfile);
   } catch (error) {
     console.error('Get profile error:', error);
 
