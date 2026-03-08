@@ -132,10 +132,7 @@ export default function HandshakeResultPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to grant consent');
 
-      console.log('✅ Consent API response:', data);
-
-      // Show response before reload
-      alert(`API Response:\n${JSON.stringify(data, null, 2)}\n\nClick OK to reload`);
+      console.log('✅ Consent granted, refreshing page...');
 
       // Force hard reload to ensure fresh data
       window.location.reload();
