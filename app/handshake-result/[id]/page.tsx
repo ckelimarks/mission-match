@@ -77,8 +77,9 @@ export default function HandshakeResultPage() {
 
   const fetchHandshake = async () => {
     try {
-      // Add timestamp to prevent caching
-      const response = await fetch(`/api/get-handshake?id=${handshakeId}&t=${Date.now()}`);
+      // Add timestamp to prevent caching + requesterId for privacy check
+      const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+      const response = await fetch(`/api/get-handshake?id=${handshakeId}&requesterId=${profileId || ''}&t=${Date.now()}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch handshake');
@@ -155,7 +156,7 @@ export default function HandshakeResultPage() {
     );
   }
 
-  if (error || !handshake || !analysis) {
+  if (error || !handshake) {
     return (
       <div className="min-h-screen px-6 py-16 max-w-md mx-auto">
         <div className="card-surface p-6">
@@ -168,6 +169,8 @@ export default function HandshakeResultPage() {
       </div>
     );
   }
+
+  // Analysis is optional - page can render without it (shows loading state)
 
   const isInitiator = handshake.initiator_id === myProfileId;
   const hasConsented = isInitiator ? handshake.initiator_consented : handshake.recipient_consented;

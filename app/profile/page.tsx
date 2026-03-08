@@ -253,15 +253,8 @@ export default function MyProfilePage() {
               Download QR
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/connect/${myProfileId}`)}
-            className="w-full gap-1.5 border-border text-foreground hover:text-primary hover:border-primary/30 mt-2"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Preview My Profile
-          </Button>
+          {/* Removed: Preview button routed to /connect which is for initiating handshakes, not preview */}
+          {/* TODO: Add proper read-only preview route */}
         </motion.div>
 
         {/* Profile Info */}

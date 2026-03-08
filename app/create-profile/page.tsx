@@ -111,7 +111,8 @@ function CreateProfileContent() {
 
       const data = await response.json();
 
-      // Save profile ID and device ID to localStorage
+      // Save profile ID and device ID to localStorage (both keys for compatibility)
+      localStorage.setItem('mm_profile_id', data.profileId);
       localStorage.setItem('mission_match_profile_id', data.profileId);
       localStorage.setItem('mission_match_device_id', data.deviceId);
 

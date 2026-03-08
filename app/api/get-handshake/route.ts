@@ -44,6 +44,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // PRIVACY: Verify requester is part of this handshake
+    const requesterId = searchParams.get('requesterId') || searchParams.get('profileId');
+    if (requesterId) {
+      const isParticipant = handshake.initiator_id === requesterId || handshake.recipient_id === requesterId;
+      if (!isParticipant) {
+        console.warn('[GET-HANDSHAKE] Privacy violation attempt:', {
+          requesterId,
+          handshakeId,
+          actualParties: [handshake.initiator_id, handshake.recipient_id],
+        });
+        return NextResponse.json(
+          { error: 'Access denied - not a participant in this handshake' },
+          { status: 403 }
+        );
+      }
+    } else {
+      console.warn('[GET-HANDSHAKE] No requesterId provided - privacy check bypassed (legacy)');
+    }
+
     // Fetch associated analysis - prioritize completed ones
     // First try to get completed analysis
     let { data: analysis } = await supabase
