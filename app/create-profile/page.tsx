@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 const PROFILE_PROMPT = `I'm creating my collaboration profile for Mission Match. Based on our conversation history, analyze what you know about me and extract my profile in JSON format.
 
 Extract:
+- My display name (REQUIRED: First name + Last initial only, e.g. "Chris M" or "Alex K" - NEVER full last name)
 - My role (what I do/build)
 - My mission (what I'm building toward)
 - Proof points (3-5 things I've built/shipped with impact)
@@ -20,6 +21,7 @@ Return ONLY this JSON structure:
 
 \`\`\`json
 {
+  "display_name": "FirstName L",
   "role": "my role",
   "mission": "my mission statement",
   "proof_points": [
