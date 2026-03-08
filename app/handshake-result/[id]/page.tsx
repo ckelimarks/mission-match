@@ -45,6 +45,9 @@ export default function HandshakeResultPage() {
   useEffect(() => {
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
     setMyProfileId(profileId);
+
+    // Allow viewing handshake even without profile (read-only mode)
+    // User can create profile if they want to consent
     fetchHandshake();
   }, []);
 
@@ -165,6 +168,57 @@ export default function HandshakeResultPage() {
           <Button onClick={() => router.push('/profile')} className="w-full">
             Go to My Profile
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If no profile ID in localStorage, prompt user to identify themselves
+  if (!myProfileId && handshake) {
+    const initiatorName = initiatorProfile?.display_name || initiatorProfile?.role?.split(',')[0] || 'Initiator';
+    const recipientName = recipientProfile?.display_name || recipientProfile?.role?.split(',')[0] || 'Recipient';
+
+    return (
+      <div className="min-h-screen px-6 py-16 max-w-md mx-auto">
+        <div className="card-surface p-6">
+          <div className="text-yellow-500 font-bold uppercase text-sm mb-2">Identity Required</div>
+          <p className="text-foreground mb-4">
+            You're viewing this handshake but we can't tell who you are. Please identify yourself:
+          </p>
+          <div className="space-y-2">
+            {initiatorProfile && (
+              <Button
+                onClick={() => {
+                  localStorage.setItem('mm_profile_id', handshake.initiator_id);
+                  localStorage.setItem('mission_match_profile_id', handshake.initiator_id);
+                  window.location.reload();
+                }}
+                className="w-full"
+                variant="outline"
+              >
+                I'm {initiatorName}
+              </Button>
+            )}
+            {recipientProfile && (
+              <Button
+                onClick={() => {
+                  localStorage.setItem('mm_profile_id', handshake.recipient_id);
+                  localStorage.setItem('mission_match_profile_id', handshake.recipient_id);
+                  window.location.reload();
+                }}
+                className="w-full"
+                variant="outline"
+              >
+                I'm {recipientName}
+              </Button>
+            )}
+            <Button
+              onClick={() => router.push('/create-profile')}
+              className="w-full"
+            >
+              Create New Profile
+            </Button>
+          </div>
         </div>
       </div>
     );
