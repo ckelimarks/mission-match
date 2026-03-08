@@ -57,6 +57,23 @@ export default function HandshakeResultPage() {
     }
   }, [analysis?.analysis_status]);
 
+  // Auto-poll when waiting for mutual consent
+  useEffect(() => {
+    if (handshake && myProfileId) {
+      const isInitiator = handshake.initiator_id === myProfileId;
+      const hasConsented = isInitiator ? handshake.initiator_consented : handshake.recipient_consented;
+      const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
+
+      // Poll every 3 seconds if you've consented but waiting for them
+      if (hasConsented && !mutualConsent) {
+        const interval = setInterval(() => {
+          fetchHandshake();
+        }, 3000);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [handshake?.initiator_consented, handshake?.recipient_consented, myProfileId]);
+
   const fetchHandshake = async () => {
     try {
       // Add timestamp to prevent caching

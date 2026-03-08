@@ -85,19 +85,26 @@ export default function ConnectionsPage() {
       </header>
 
       <div className="px-6 max-w-2xl mx-auto">
-        {/* Debug Info */}
-        <div className="mb-6 p-4 bg-muted/50 rounded-lg text-xs font-mono space-y-2">
-          <div><span className="text-primary">Profile ID:</span> {myProfileId}</div>
-          <div><span className="text-primary">Count:</span> {connections.length}</div>
-          <div><span className="text-primary">Filtered Count:</span> {connections.filter(conn => conn.otherParty).length}</div>
-          {connections.length > 0 && (
-            <details className="mt-2">
-              <summary className="cursor-pointer text-primary">Raw Data</summary>
-              <pre className="mt-2 text-[10px] overflow-auto max-h-48">
-                {JSON.stringify(connections, null, 2)}
-              </pre>
-            </details>
-          )}
+        {/* Status Summary */}
+        <div className="mb-6 grid grid-cols-3 gap-2">
+          <div className="p-3 bg-red-500/10 border border-red-500 rounded-lg text-center">
+            <div className="text-2xl font-bold text-red-400">
+              {connections.filter(c => !c.myConsent).length}
+            </div>
+            <div className="text-[10px] text-red-400 uppercase font-semibold">Need Your Consent</div>
+          </div>
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500 rounded-lg text-center">
+            <div className="text-2xl font-bold text-yellow-400">
+              {connections.filter(c => c.myConsent && !c.theirConsent).length}
+            </div>
+            <div className="text-[10px] text-yellow-400 uppercase font-semibold">Waiting for Them</div>
+          </div>
+          <div className="p-3 bg-green-500/10 border border-green-500 rounded-lg text-center">
+            <div className="text-2xl font-bold text-green-400">
+              {connections.filter(c => c.myConsent && c.theirConsent).length}
+            </div>
+            <div className="text-[10px] text-green-400 uppercase font-semibold">Connected</div>
+          </div>
         </div>
 
         {connections.length === 0 ? (
@@ -129,20 +136,56 @@ export default function ConnectionsPage() {
             </h2>
             {connections
               .filter(conn => conn.otherParty)
+              .sort((a, b) => {
+                // Sort by priority: needs your consent first, then waiting for them, then approved
+                const getPriority = (conn: Connection) => {
+                  if (!conn.myConsent) return 0; // URGENT: needs your action
+                  if (!conn.theirConsent) return 1; // Waiting for them
+                  return 2; // Approved
+                };
+                return getPriority(a) - getPriority(b);
+              })
               .map((conn, index) => {
                 const displayName = conn.otherParty!.displayName || conn.otherParty!.role?.split(',')[0]?.trim() || 'Unknown';
 
-                // Temporary debug: show simple text instead of card
+                // Determine consent status
+                const needsMyConsent = !conn.myConsent;
+                const needsTheirConsent = conn.myConsent && !conn.theirConsent;
+                const mutualConsent = conn.myConsent && conn.theirConsent;
+
+                let statusBadge = '';
+                let statusColor = '';
+                if (needsMyConsent) {
+                  statusBadge = '⚠️ NEEDS YOUR CONSENT';
+                  statusColor = 'bg-red-500/20 text-red-400 border border-red-500';
+                } else if (needsTheirConsent) {
+                  statusBadge = '⏳ Waiting for them';
+                  statusColor = 'bg-yellow-500/20 text-yellow-400 border border-yellow-500';
+                } else if (mutualConsent) {
+                  statusBadge = '✅ Connected';
+                  statusColor = 'bg-green-500/20 text-green-400 border border-green-500';
+                }
+
                 return (
-                  <div key={conn.handshakeId} className="p-4 bg-muted rounded-lg mb-2">
-                    <div className="text-sm font-bold text-foreground">#{index + 1}: {displayName}</div>
-                    <div className="text-xs text-muted-foreground">{conn.otherParty!.role}</div>
-                    <div className="text-xs text-primary mt-1">Status: {conn.status}</div>
+                  <div key={conn.handshakeId} className={`p-4 rounded-lg mb-2 ${needsMyConsent ? 'bg-red-500/10 border-2 border-red-500' : 'bg-muted'}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-foreground">{displayName}</div>
+                        <div className="text-xs text-muted-foreground line-clamp-1">{conn.otherParty!.role}</div>
+                      </div>
+                    </div>
+                    <div className={`text-[10px] font-bold uppercase px-2 py-1 rounded mb-2 inline-block ${statusColor}`}>
+                      {statusBadge}
+                    </div>
                     <button
                       onClick={() => router.push(`/handshake-result/${conn.handshakeId}`)}
-                      className="mt-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded"
+                      className={`w-full px-3 py-2 text-xs rounded font-semibold ${
+                        needsMyConsent
+                          ? 'bg-red-500 text-white animate-pulse'
+                          : 'bg-primary text-primary-foreground'
+                      }`}
                     >
-                      View Handshake
+                      {needsMyConsent ? '⚠️ Grant Consent Now' : 'View Handshake'}
                     </button>
                   </div>
                 );

@@ -168,11 +168,24 @@ export default function MyProfilePage() {
           title="View connections"
         >
           <Users className="w-5 h-5 text-muted-foreground" />
-          {connections.length > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-              {connections.length}
-            </span>
-          )}
+          {(() => {
+            const needsConsent = connections.filter(c => !c.myConsent).length;
+            const total = connections.length;
+            if (needsConsent > 0) {
+              return (
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                  {needsConsent}
+                </span>
+              );
+            } else if (total > 0) {
+              return (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                  {total}
+                </span>
+              );
+            }
+            return null;
+          })()}
         </button>
       </header>
 
