@@ -313,16 +313,18 @@ export default function MyProfilePage() {
               </button>
             </div>
             <div className="space-y-2">
-              {connections.slice(0, 3).map((conn) => conn.otherParty && (
-                <ConnectionCard
-                  key={conn.handshakeId}
-                  handshakeId={conn.handshakeId}
-                  name={conn.otherParty.displayName}
-                  role={conn.otherParty.role || 'Builder'}
-                  status={conn.status}
-                  createdAt={conn.createdAt}
-                />
-              ))}
+              {connections.slice(0, 3)
+                .filter(conn => conn.otherParty && conn.otherParty.displayName)
+                .map((conn) => (
+                  <ConnectionCard
+                    key={conn.handshakeId}
+                    handshakeId={conn.handshakeId}
+                    name={conn.otherParty!.displayName}
+                    role={conn.otherParty!.role || 'Builder'}
+                    status={conn.status}
+                    createdAt={conn.createdAt}
+                  />
+                ))}
             </div>
           </motion.div>
         )}
