@@ -33,8 +33,12 @@ export default function MyProfilePage() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
+  const [baseUrl, setBaseUrl] = useState<string>('');
 
   useEffect(() => {
+    // Set base URL for QR code (works in dev and prod)
+    setBaseUrl(window.location.origin);
+
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
 
     if (!profileId) {
@@ -124,7 +128,7 @@ export default function MyProfilePage() {
     );
   }
 
-  const shareUrl = `mission-match.app/connect/${myProfileId}`;
+  const shareUrl = baseUrl ? `${baseUrl}/connect/${myProfileId}` : '';
   const displayName = profile.display_name || 'My Profile';
   const role = profile.role || 'Builder';
   const hook = profile.mission || 'Evidence-based profile extracted from AI conversations';
@@ -161,15 +165,19 @@ export default function MyProfilePage() {
           transition={{ duration: 0.5 }}
         >
           <div className="qr-container bg-foreground p-4 rounded-2xl glow-primary">
-            <QRCode
-              value={`https://${shareUrl}`}
-              size={160}
-              bgColor="hsl(216, 33%, 91%)"
-              fgColor="hsl(222, 47%, 7%)"
-              level="M"
-            />
+            {shareUrl ? (
+              <QRCode
+                value={shareUrl}
+                size={160}
+                bgColor="hsl(216, 33%, 91%)"
+                fgColor="hsl(222, 47%, 7%)"
+                level="M"
+              />
+            ) : (
+              <div className="w-40 h-40 bg-muted animate-pulse rounded" />
+            )}
           </div>
-          <p className="mt-3 text-xs font-mono text-muted-foreground">{shareUrl}</p>
+          <p className="mt-3 text-xs font-mono text-muted-foreground break-all">{shareUrl}</p>
 
           {/* Action buttons */}
           <div className="flex gap-2 mt-4 w-full">

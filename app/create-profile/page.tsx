@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home, Copy, Check, Sparkles, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,8 @@ Return ONLY this JSON structure:
 
 export default function CreateProfile() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const connectTo = searchParams.get('connect'); // Get the profileId from URL
   const [profileData, setProfileData] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,14 @@ export default function CreateProfile() {
       localStorage.setItem('mission_match_profile_id', data.profileId);
       localStorage.setItem('mission_match_device_id', data.deviceId);
 
-      // Check if there's a pending handshake
+      // Check if user came from scanning someone's QR
+      if (connectTo) {
+        // Redirect back to complete the handshake
+        router.push(`/connect/${connectTo}`);
+        return;
+      }
+
+      // Check if there's a pending handshake in localStorage (legacy)
       const pendingHandshake = localStorage.getItem('pending_handshake');
       if (pendingHandshake) {
         localStorage.removeItem('pending_handshake');
@@ -149,6 +158,19 @@ export default function CreateProfile() {
 
       {/* Main content */}
       <main className="flex-1 px-6 pb-8 max-w-sm mx-auto w-full space-y-8">
+        {/* Pending Connection Banner */}
+        {connectTo && (
+          <motion.div
+            className="card-surface p-4 border-l-4 border-primary"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-sm text-foreground">
+              <span className="font-semibold text-primary">Connection pending:</span> Create your profile to continue the handshake
+            </p>
+          </motion.div>
+        )}
+
         {/* Page Title */}
         <motion.div
           className="text-center space-y-2"

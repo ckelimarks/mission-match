@@ -293,7 +293,7 @@ export default function ProfileView({ profile, isOwner = false }: ProfileViewPro
               </div>
               <div className="text-center mt-3">
                 <div className="inline-block px-3 py-1.5 bg-[rgba(0,0,0,0.3)] rounded-md font-mono text-[0.65rem] text-[var(--mm-cyan)]">
-                  mission-match.app/u/{profile.id.slice(0, 8)}
+                  {typeof window !== 'undefined' ? window.location.host : 'mission-match.app'}/connect/{profile.id.slice(0, 8)}
                 </div>
               </div>
             </div>
