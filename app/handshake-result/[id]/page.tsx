@@ -59,7 +59,8 @@ export default function HandshakeResultPage() {
 
   const fetchHandshake = async () => {
     try {
-      const response = await fetch(`/api/get-handshake?id=${handshakeId}`);
+      // Add timestamp to prevent caching
+      const response = await fetch(`/api/get-handshake?id=${handshakeId}&t=${Date.now()}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch handshake');
