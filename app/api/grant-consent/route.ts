@@ -66,7 +66,45 @@ export async function POST(request: NextRequest) {
     const mutualConsent = newInitiatorConsent && newRecipientConsent;
 
     // RLS blocks UPDATE, so use DELETE + INSERT workaround
+    // RACE MITIGATION: Re-fetch handshake immediately before DELETE to detect concurrent updates
     console.log('🔄 DELETE + INSERT workaround (RLS blocks UPDATE)');
+
+    const { data: currentHandshake } = await supabase
+      .from('handshakes')
+      .select('*')
+      .eq('id', handshakeId)
+      .single();
+
+    if (!currentHandshake) {
+      // Handshake was deleted by concurrent request or doesn't exist
+      console.warn('⚠️ Handshake no longer exists - may have been updated concurrently');
+      // Try to find it by profile pair
+      const { data: recovered } = await supabase
+        .from('handshakes')
+        .select('*')
+        .or(`and(initiator_id.eq.${handshake.initiator_id},recipient_id.eq.${handshake.recipient_id}),and(initiator_id.eq.${handshake.recipient_id},recipient_id.eq.${handshake.initiator_id})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (recovered) {
+        console.log('✅ Recovered handshake:', recovered.id);
+        // Use the recovered handshake and proceed
+        const alreadyConsented = isInitiator ? recovered.initiator_consented : recovered.recipient_consented;
+        if (alreadyConsented) {
+          console.log('✅ Already consented on recovered handshake');
+          return NextResponse.json({
+            success: true,
+            mutualConsent: recovered.initiator_consented && recovered.recipient_consented,
+            message: 'Consent already recorded',
+          });
+        }
+        // Fall through to update the recovered handshake
+        handshakeId = recovered.id;
+      } else {
+        throw new Error('Handshake disappeared and could not be recovered');
+      }
+    }
 
     // Delete old record
     const { error: deleteError } = await supabase
@@ -81,11 +119,12 @@ export async function POST(request: NextRequest) {
 
     // Create new record with updated consent
     const newHandshake = {
-      ...handshake,
+      ...(currentHandshake || handshake),
+      id: handshakeId,  // Preserve ID
       initiator_consented: newInitiatorConsent,
       recipient_consented: newRecipientConsent,
-      status: mutualConsent ? 'approved' : handshake.status,
-      mutual_consent_token: mutualConsent ? crypto.randomUUID() : handshake.mutual_consent_token,
+      status: mutualConsent ? 'approved' : (currentHandshake?.status || handshake.status),
+      mutual_consent_token: mutualConsent ? crypto.randomUUID() : (currentHandshake?.mutual_consent_token || handshake.mutual_consent_token),
       updated_at: new Date().toISOString(),
     };
 
@@ -97,6 +136,26 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('❌ Failed to insert updated handshake:', insertError);
+      // Check if it's a duplicate key error (race condition - other request won)
+      if (insertError.code === '23505') {
+        console.log('⚠️ Duplicate key - concurrent update detected, verifying final state');
+        const { data: final } = await supabase
+          .from('handshakes')
+          .select('*')
+          .eq('id', handshakeId)
+          .single();
+        if (final) {
+          const myConsent = isInitiator ? final.initiator_consented : final.recipient_consented;
+          if (myConsent) {
+            console.log('✅ Consent recorded by concurrent request');
+            return NextResponse.json({
+              success: true,
+              mutualConsent: final.initiator_consented && final.recipient_consented,
+              message: 'Consent granted',
+            });
+          }
+        }
+      }
       throw new Error(`Insert failed: ${insertError.message}`);
     }
 

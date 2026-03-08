@@ -30,17 +30,31 @@ export async function POST(request: NextRequest) {
 
     console.log('Using service key:', supabaseServiceKey ? 'YES (length: ' + supabaseServiceKey.length + ')' : 'NO');
 
-    // Check if handshake already exists
-    const { data: existingHandshake } = await supabase
+    // Check if handshake already exists (symmetric check)
+    const { data: existingHandshakes, error: checkError } = await supabase
       .from('handshakes')
-      .select('id, status')
-      .or(`and(initiator_id.eq.${initiatorId},recipient_id.eq.${recipientId}),and(initiator_id.eq.${recipientId},recipient_id.eq.${initiatorId})`)
-      .single();
+      .select('id, status, created_at')
+      .or(`and(initiator_id.eq.${initiatorId},recipient_id.eq.${recipientId}),and(initiator_id.eq.${recipientId},recipient_id.eq.${initiatorId})`);
 
-    if (existingHandshake) {
-      console.log('[CREATE-HANDSHAKE] Already exists:', existingHandshake.id);
+    if (checkError) {
+      console.error('[CREATE-HANDSHAKE] Check failed:', checkError);
+      return NextResponse.json(
+        { error: 'Failed to check existing handshakes', details: checkError.message },
+        { status: 500 }
+      );
+    }
+
+    if (existingHandshakes && existingHandshakes.length > 0) {
+      // Use most recent if duplicates exist
+      const latest = existingHandshakes.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
+
+      console.log('[CREATE-HANDSHAKE] Already exists:', latest.id,
+        existingHandshakes.length > 1 ? `(WARNING: ${existingHandshakes.length} duplicates found)` : '');
+
       return NextResponse.json({
-        handshakeId: existingHandshake.id,
+        handshakeId: latest.id,
         existing: true,
         message: 'Handshake already exists',
       });
