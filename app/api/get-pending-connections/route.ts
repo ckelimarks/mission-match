@@ -23,7 +23,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Force fresh Supabase client to avoid stale cache
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
+    });
 
     console.log('[GET-CONNECTIONS] ===== START =====');
     console.log('[GET-CONNECTIONS] ProfileId:', profileId);
