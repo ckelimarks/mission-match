@@ -132,11 +132,13 @@ export default function HandshakeResultPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to grant consent');
 
-      await fetchHandshake();
+      console.log('✅ Consent granted, refreshing page...');
+
+      // Force hard reload to ensure fresh data
+      window.location.reload();
     } catch (err) {
       console.error('Consent error:', err);
       setError(err instanceof Error ? err.message : 'Failed to grant consent');
-    } finally {
       setConsenting(false);
     }
   };
