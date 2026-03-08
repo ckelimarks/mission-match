@@ -359,7 +359,7 @@ export default function HandshakeResultPage() {
         </div>
 
         {/* Stage 1 Analysis */}
-        {analysis.analysis_status === 'pending' ? (
+        {analysis?.analysis_status === 'pending' ? (
           <div className="text-center py-8 space-y-3">
             <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto" />
             <p className="text-sm text-muted-foreground">Analyzing compatibility...</p>
