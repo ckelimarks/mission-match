@@ -86,9 +86,18 @@ export default function ConnectionsPage() {
 
       <div className="px-6 max-w-2xl mx-auto">
         {/* Debug Info */}
-        <div className="mb-6 p-4 bg-muted/50 rounded-lg text-xs font-mono">
+        <div className="mb-6 p-4 bg-muted/50 rounded-lg text-xs font-mono space-y-2">
           <div><span className="text-primary">Profile ID:</span> {myProfileId}</div>
           <div><span className="text-primary">Count:</span> {connections.length}</div>
+          <div><span className="text-primary">Filtered Count:</span> {connections.filter(conn => conn.otherParty).length}</div>
+          {connections.length > 0 && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-primary">Raw Data</summary>
+              <pre className="mt-2 text-[10px] overflow-auto max-h-48">
+                {JSON.stringify(connections, null, 2)}
+              </pre>
+            </details>
+          )}
         </div>
 
         {connections.length === 0 ? (
@@ -120,16 +129,24 @@ export default function ConnectionsPage() {
             </h2>
             {connections
               .filter(conn => conn.otherParty)
-              .map((conn) => (
-                <ConnectionCard
-                  key={conn.handshakeId}
-                  handshakeId={conn.handshakeId}
-                  name={conn.otherParty!.displayName || conn.otherParty!.role?.split(',')[0] || 'Unknown'}
-                  role={conn.otherParty!.role || 'Builder'}
-                  status={conn.status}
-                  createdAt={conn.createdAt}
-                />
-              ))}
+              .map((conn, index) => {
+                const displayName = conn.otherParty!.displayName || conn.otherParty!.role?.split(',')[0]?.trim() || 'Unknown';
+
+                // Temporary debug: show simple text instead of card
+                return (
+                  <div key={conn.handshakeId} className="p-4 bg-muted rounded-lg mb-2">
+                    <div className="text-sm font-bold text-foreground">#{index + 1}: {displayName}</div>
+                    <div className="text-xs text-muted-foreground">{conn.otherParty!.role}</div>
+                    <div className="text-xs text-primary mt-1">Status: {conn.status}</div>
+                    <button
+                      onClick={() => router.push(`/handshake-result/${conn.handshakeId}`)}
+                      className="mt-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded"
+                    >
+                      View Handshake
+                    </button>
+                  </div>
+                );
+              })}
           </motion.div>
         )}
       </div>
