@@ -56,17 +56,29 @@ export default function MyProfilePage() {
     fetchProfile(profileId);
     fetchConnections(profileId);
 
-    // Auto-refresh connections when page becomes visible
-    const handleVisibilityChange = () => {
-      if (!document.hidden && profileId) {
+    const refreshConnections = () => {
+      if (profileId) {
         fetchConnections(profileId);
       }
     };
 
+    // Safari is inconsistent about firing visibilitychange when navigating back.
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refreshConnections();
+    };
+    const handlePageShow = () => refreshConnections();
+    const handleFocus = () => refreshConnections();
+    const interval = window.setInterval(refreshConnections, 5000);
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
+      window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
@@ -85,9 +97,16 @@ export default function MyProfilePage() {
 
   const fetchConnections = async (profileId: string) => {
     try {
-      // Add cache-busting timestamp
-      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`);
-      if (!response.ok) return;
+      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch connections: ${response.status}`);
+      }
       const data = await response.json();
       setConnections(data.connections || []);
     } catch (err) {

@@ -14,7 +14,12 @@ export async function GET(request: NextRequest) {
     if (!profileId) {
       return NextResponse.json(
         { error: 'profileId is required' },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          },
+        }
       );
     }
 
@@ -82,23 +87,35 @@ export async function GET(request: NextRequest) {
       console.error('Handshake fetch error:', handshakeError);
       return NextResponse.json(
         { error: 'Failed to fetch connections', details: handshakeError.message },
-        { status: 500 }
+        {
+          status: 500,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          },
+        }
       );
     }
 
     if (!handshakes || handshakes.length === 0) {
       console.log('[GET-CONNECTIONS] No handshakes found for profile');
-      return NextResponse.json({
-        connections: [],
-        debug: {
-          profileId,
-          asInitiatorCount: asInitiator?.length || 0,
-          asRecipientCount: asRecipient?.length || 0,
-          hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-          err1: err1?.message || null,
-          err2: err2?.message || null
+      return NextResponse.json(
+        {
+          connections: [],
+          debug: {
+            profileId,
+            asInitiatorCount: asInitiator?.length || 0,
+            asRecipientCount: asRecipient?.length || 0,
+            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            err1: err1?.message || null,
+            err2: err2?.message || null
+          }
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          },
         }
-      });
+      );
     }
 
     // Get all unique profile IDs we need to fetch (the other party in each handshake)
@@ -144,12 +161,24 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ connections });
+    return NextResponse.json(
+      { connections },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Get pending connections error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch connections', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        },
+      }
     );
   }
 }

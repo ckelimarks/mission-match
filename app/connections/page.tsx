@@ -38,12 +38,41 @@ export default function ConnectionsPage() {
 
     setMyProfileId(profileId);
     fetchConnections(profileId);
+
+    const refreshConnections = () => {
+      if (profileId) {
+        fetchConnections(profileId);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refreshConnections();
+    };
+    const handlePageShow = () => refreshConnections();
+    const handleFocus = () => refreshConnections();
+    const interval = window.setInterval(refreshConnections, 5000);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const fetchConnections = async (profileId: string) => {
     try {
-      // Add cache-busting timestamp
-      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`);
+      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch connections');
       }
