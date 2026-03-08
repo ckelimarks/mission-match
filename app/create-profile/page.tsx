@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home, Copy, Check, Sparkles, User, FileText } from 'lucide-react';
@@ -59,7 +59,7 @@ Return ONLY this JSON structure:
 }
 \`\`\``;
 
-export default function CreateProfile() {
+function CreateProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const connectTo = searchParams.get('connect'); // Get the profileId from URL
@@ -327,5 +327,20 @@ export default function CreateProfile() {
         </motion.div>
       </main>
     </div>
+  );
+}
+
+export default function CreateProfile() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CreateProfileContent />
+    </Suspense>
   );
 }
