@@ -150,7 +150,8 @@ export default function HandshakeResultPage() {
 
   const isInitiator = handshake.initiator_id === myProfileId;
   const hasConsented = isInitiator ? handshake.initiator_consented : handshake.recipient_consented;
-  const mutualConsent = handshake.status === 'approved';
+  // Check consent flags directly since RLS blocks status updates
+  const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
   const stage = mutualConsent ? 2 : 1;
 
   const myProfile = isInitiator ? initiatorProfile : recipientProfile;
