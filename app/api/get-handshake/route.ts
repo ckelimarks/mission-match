@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,34 +19,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Create fresh client with aggressive cache bypass
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false },
-      global: {
+    // Use direct REST API to bypass Supabase JS client caching
+    const handshakeResponse = await fetch(
+      `${supabaseUrl}/rest/v1/handshakes?id=eq.${handshakeId}&select=*`,
+      {
+        cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0',
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
           'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+        },
       }
-    });
+    );
 
-    const { data: handshake, error } = await supabase
-      .from('handshakes')
-      .select('*')
-      .eq('id', handshakeId)
-      .maybeSingle(); // Use maybeSingle to avoid cache
+    const handshakes = await handshakeResponse.json();
+    const handshake = handshakes?.[0] || null;
 
-    console.log('[GET-HANDSHAKE] Using Supabase URL:', supabaseUrl);
-    console.log('[GET-HANDSHAKE] Service key prefix:', supabaseServiceKey?.substring(0, 30) + '...');
-    console.log('[GET-HANDSHAKE] Handshake data:', {
+    console.log('[GET-HANDSHAKE] REST API result:', {
       id: handshake?.id,
       status: handshake?.status,
       initiatorConsented: handshake?.initiator_consented,
       recipientConsented: handshake?.recipient_consented,
     });
 
-    if (error || !handshake) {
+    if (!handshake) {
       return NextResponse.json(
         { error: 'Handshake not found' },
         { status: 404 }
@@ -67,31 +65,41 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
-    } else {
-      console.warn('[GET-HANDSHAKE] No requesterId provided - privacy check bypassed (legacy)');
     }
 
-    // Fetch associated analysis - prioritize completed ones
-    // First try to get completed analysis
-    let { data: analysis } = await supabase
-      .from('analyses')
-      .select('*')
-      .eq('handshake_id', handshakeId)
-      .eq('analysis_status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Fetch associated analysis via REST API
+    const analysisResponse = await fetch(
+      `${supabaseUrl}/rest/v1/analyses?handshake_id=eq.${handshakeId}&analysis_status=eq.completed&order=created_at.desc&limit=1`,
+      {
+        cache: 'no-store',
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+        },
+      }
+    );
+
+    let analyses = await analysisResponse.json();
+    let analysis = analyses?.[0] || null;
 
     // If no completed analysis, fall back to any analysis
     if (!analysis) {
-      const { data: fallbackAnalysis } = await supabase
-        .from('analyses')
-        .select('*')
-        .eq('handshake_id', handshakeId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      analysis = fallbackAnalysis;
+      const fallbackResponse = await fetch(
+        `${supabaseUrl}/rest/v1/analyses?handshake_id=eq.${handshakeId}&order=created_at.desc&limit=1`,
+        {
+          cache: 'no-store',
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+          },
+        }
+      );
+      const fallbackAnalyses = await fallbackResponse.json();
+      analysis = fallbackAnalyses?.[0] || null;
     }
 
     console.log('[GET-HANDSHAKE] Analysis found:', {
