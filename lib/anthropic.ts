@@ -85,6 +85,8 @@ Extract:
    - 2: Limited data, basic profile only
    - 1: Very shallow, minimal information
 
+CRITICAL: You MUST return valid JSON even if the conversation is sparse. Use low confidence scores, "Unknown" for missing fields, and profile_strength: 1 for minimal data. NEVER respond conversationally or ask questions — always output the JSON structure.
+
 Return ONLY valid JSON in this exact structure:
 
 \`\`\`json
