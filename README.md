@@ -197,6 +197,36 @@ This is a **full working system**, not a slide deck:
 
 ---
 
+## Future Expansion: Richer Data, Richer Profiles
+
+We focused on the **consent architecture** for this hackathon. But the richness of the profile depends on what data the system can ingest.
+
+**Currently:** Single data source (AI conversation history via copy-paste)
+
+**Future data integrations:**
+
+| Source | What It Reveals |
+|--------|-----------------|
+| **Spotify** | Catch a vibe — music taste as personality signal |
+| **Calendar** | Availability patterns, meeting load, time zones |
+| **Health metrics** | Energy levels, activity patterns (with consent) |
+| **GitHub** | What you actually build, contribution patterns |
+| **Instagram** | Visual identity, interests, social context |
+| **Financial** | Risk tolerance, investment philosophy (for relevant matches) |
+
+**The insight:** If your AI assistant has access to your full context — health, social, financial, professional — it can generate an extraordinarily rich collaboration profile. The consent architecture we built handles that future.
+
+### Prompt Lab
+
+We built a **prompt engineering lab** for rapid iteration on the extraction prompt. This lets us:
+- Test different prompt structures against sample conversations
+- Compare extraction quality across Claude model versions
+- Tune for specific profile dimensions (working style, proof points, etc.)
+
+The extraction prompt is the gold — it determines profile quality. The lab makes that refinement systematic.
+
+---
+
 ## The Vision
 
 **Today**: A working QR-based handshake tool for networking events.
