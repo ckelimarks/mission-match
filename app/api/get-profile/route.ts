@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { parseProfileJsonFields, toPublicProfile, toFullProfile } from '@/lib/profile-visibility';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // Use anon key for profile reads — profiles are publicly readable via RLS.
+    // Only use service key for the handshake consent check below.
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false },
     });
 
@@ -41,10 +44,18 @@ export async function GET(request: NextRequest) {
 
     const profile = parseProfileJsonFields(data as Record<string, any>);
 
-    // Determine visibility level
-    // If handshakeId + requesterId provided, check for mutual consent
-    if (handshakeId && requesterId) {
-      const { data: handshake } = await supabase
+    // Case 1: Fetching your own profile — return full data
+    if (requesterId && requesterId === profileId) {
+      return NextResponse.json(toFullProfile(profile));
+    }
+
+    // Case 2: Handshake context with mutual consent — return full data
+    if (handshakeId && requesterId && supabaseServiceKey) {
+      const serviceClient = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { persistSession: false },
+      });
+
+      const { data: handshake } = await serviceClient
         .from('handshakes')
         .select('initiator_id, recipient_id, initiator_consented, recipient_consented')
         .eq('id', handshakeId)

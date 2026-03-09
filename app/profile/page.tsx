@@ -84,7 +84,7 @@ export default function MyProfilePage() {
 
   const fetchProfile = async (profileId: string) => {
     try {
-      const response = await fetch(`/api/get-profile?id=${profileId}`);
+      const response = await fetch(`/api/get-profile?id=${profileId}&requesterId=${profileId}`);
       if (!response.ok) throw new Error('Failed to fetch profile');
       const data = await response.json();
       setProfile(data);

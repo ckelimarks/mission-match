@@ -178,6 +178,7 @@ export type ProfileInput = {
 
 export type PublicProfile = {
   id: string;
+  created_at?: string;
   hook: string;
   proof_points: ProofPoint[];
   working_style: {
@@ -192,6 +193,13 @@ export type PublicProfile = {
     // struggle_with, what_i_bring hidden until Stage 2
   } | null;
   profile_confidence: number;
+
+  // Legacy display fields — preserved for backward compatibility
+  display_name?: string | null;
+  role?: string | null;
+  mission?: string | null;
+  looking_for?: string | null;
+  profile_strength?: number | null;
 };
 
 // ============================================================================
