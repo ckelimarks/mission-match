@@ -58,20 +58,18 @@ export async function GET(request: NextRequest) {
     console.log('[GET-CONNECTIONS] JS Client handshakes (max 10):', allHandshakes?.length || 0, allHandshakes);
 
     // Get all handshakes where this profile is initiator OR recipient
-    // WORKAROUND: Fetch all and filter client-side since .eq() is failing
-    const { data: allHandshakesForFilter, error: fetchErr } = await supabase
-      .from('handshakes')
-      .select(`
-        id,
-        initiator_id,
-        recipient_id,
-        status,
-        initiator_consented,
-        recipient_consented,
-        created_at,
-        updated_at
-      `)
-      .order('created_at', { ascending: false });
+    // WORKAROUND: Use direct REST API - JS client has a bug returning only 4 rows
+    const handshakesResponse = await fetch(
+      `${supabaseUrl}/rest/v1/handshakes?select=id,initiator_id,recipient_id,status,initiator_consented,recipient_consented,created_at,updated_at&order=created_at.desc`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        }
+      }
+    );
+    const allHandshakesForFilter = await handshakesResponse.json();
+    const fetchErr = handshakesResponse.ok ? null : { message: 'REST fetch failed' };
 
     console.log('[GET-CONNECTIONS] Fetched all handshakes for filtering:', allHandshakesForFilter?.length || 0);
 
