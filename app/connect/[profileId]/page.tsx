@@ -68,6 +68,11 @@ export default function ConnectPage() {
       }
 
       // Create handshake
+      console.log('[INITIATE] Creating handshake:', {
+        initiatorId: myProfileId,
+        recipientId: targetProfileId
+      });
+
       const handshakeResponse = await fetch('/api/create-handshake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,15 +82,30 @@ export default function ConnectPage() {
         }),
       });
 
+      console.log('[INITIATE] Response status:', handshakeResponse.status, handshakeResponse.ok);
+
       if (!handshakeResponse.ok) {
         const errorData = await handshakeResponse.json();
-        throw new Error(errorData.error || 'Failed to create handshake');
+        console.error('[INITIATE] API Error:', {
+          status: handshakeResponse.status,
+          error: errorData.error,
+          details: errorData.details,
+          hint: errorData.hint,
+          code: errorData.code
+        });
+        throw new Error(errorData.error || errorData.details || 'Failed to create handshake');
       }
 
       const handshakeData = await handshakeResponse.json();
+      console.log('[INITIATE] Success! Handshake ID:', handshakeData.handshakeId);
       router.push(`/handshake-result/${handshakeData.handshakeId}`);
     } catch (err) {
-      console.error('Initiate error:', err);
+      console.error('[INITIATE] Caught error:', {
+        message: err instanceof Error ? err.message : 'Unknown',
+        name: err instanceof Error ? err.name : typeof err,
+        stack: err instanceof Error ? err.stack : undefined,
+        raw: String(err)
+      });
       setError(err instanceof Error ? err.message : 'Failed to initiate handshake');
       setInitiating(false);
     }
