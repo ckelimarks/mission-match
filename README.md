@@ -57,7 +57,7 @@ flowchart TB
 
 ## Philosophy: The Human API
 
-Mission Match is the first implementation of a **Human API** pattern—applying software architecture principles to human connection.
+Mission Match is a proof-of-concept implementation of a **Human API** pattern—applying software architecture principles to human connection.
 
 ```
 GET  /api/human/{id}/public   →  Anonymized collaboration profile
