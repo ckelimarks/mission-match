@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Lock, Unlock, CheckCircle, Home } from 'lucide-react';
+import { ArrowLeft, Lock, Unlock, CheckCircle, Home, Wifi, WifiOff } from 'lucide-react';
 import type { Handshake, Analysis } from '@/types';
 import { Button } from '@/components/ui/button';
 import CompatibilityRing from '@/components/CompatibilityRing';
@@ -28,6 +28,8 @@ interface ProfileData {
   energy_aspects?: any;
 }
 
+type ConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'polling';
+
 export default function HandshakeResultPage() {
   const params = useParams();
   const router = useRouter();
@@ -41,46 +43,13 @@ export default function HandshakeResultPage() {
   const [error, setError] = useState<string | null>(null);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
   const [consenting, setConsenting] = useState(false);
+  const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');
 
-  useEffect(() => {
-    const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
-    setMyProfileId(profileId);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Allow viewing handshake even without profile (read-only mode)
-    // User can create profile if they want to consent
-    fetchHandshake();
-  }, []);
-
-  // Auto-poll while analysis is pending
-  useEffect(() => {
-    if (analysis?.analysis_status === 'pending') {
-      const interval = setInterval(() => {
-        fetchHandshake();
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [analysis?.analysis_status]);
-
-  // Auto-poll when waiting for mutual consent
-  useEffect(() => {
-    if (handshake && myProfileId) {
-      const isInitiator = handshake.initiator_id === myProfileId;
-      const hasConsented = isInitiator ? handshake.initiator_consented : handshake.recipient_consented;
-      const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
-
-      // Poll every 3 seconds if you've consented but waiting for them
-      if (hasConsented && !mutualConsent) {
-        const interval = setInterval(() => {
-          fetchHandshake();
-        }, 3000);
-        return () => clearInterval(interval);
-      }
-    }
-  }, [handshake?.initiator_consented, handshake?.recipient_consented, myProfileId]);
-
-  const fetchHandshake = async () => {
+  const fetchHandshake = useCallback(async () => {
     try {
-      // Add timestamp to prevent caching + requesterId for privacy check
       const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
       const response = await fetch(`/api/get-handshake?id=${handshakeId}&requesterId=${profileId || ''}&t=${Date.now()}`);
       if (!response.ok) {
@@ -91,7 +60,12 @@ export default function HandshakeResultPage() {
       setHandshake(data.handshake);
       setAnalysis(data.analysis);
 
-      if (data.handshake) {
+      // Use embedded profiles from get-handshake (visibility-scoped)
+      if (data.initiatorProfile) setInitiatorProfile(data.initiatorProfile);
+      if (data.recipientProfile) setRecipientProfile(data.recipientProfile);
+
+      // Fallback: fetch profiles separately if not embedded (backward compat)
+      if (data.handshake && !data.initiatorProfile) {
         await fetchProfiles(data.handshake.initiator_id, data.handshake.recipient_id);
       }
 
@@ -100,13 +74,14 @@ export default function HandshakeResultPage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setLoading(false);
     }
-  };
+  }, [handshakeId, myProfileId]);
 
   const fetchProfiles = async (initiatorId: string, recipientId: string) => {
     try {
+      const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
       const [initRes, recRes] = await Promise.all([
-        fetch(`/api/get-profile?id=${initiatorId}`),
-        fetch(`/api/get-profile?id=${recipientId}`),
+        fetch(`/api/get-profile?id=${initiatorId}&handshakeId=${handshakeId}&requesterId=${profileId || ''}`),
+        fetch(`/api/get-profile?id=${recipientId}&handshakeId=${handshakeId}&requesterId=${profileId || ''}`),
       ]);
 
       if (initRes.ok) {
@@ -123,6 +98,80 @@ export default function HandshakeResultPage() {
     }
   };
 
+  // Start fallback polling (10s interval)
+  const startPolling = useCallback(() => {
+    if (pollIntervalRef.current) return;
+    setConnectionState('polling');
+    pollIntervalRef.current = setInterval(() => fetchHandshake(), 10000);
+  }, [fetchHandshake]);
+
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  // SSE connection
+  useEffect(() => {
+    const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    setMyProfileId(profileId);
+
+    // Initial fetch
+    fetchHandshake();
+
+    // Set up SSE
+    const connectSSE = () => {
+      setConnectionState('connecting');
+      const url = `/api/handshake-events?handshakeId=${handshakeId}&requesterId=${profileId || ''}`;
+      const es = new EventSource(url);
+      eventSourceRef.current = es;
+
+      es.addEventListener('connected', () => {
+        setConnectionState('connected');
+        stopPolling();
+      });
+
+      es.addEventListener('analysis_complete', () => {
+        fetchHandshake();
+      });
+
+      es.addEventListener('consent_update', () => {
+        fetchHandshake();
+      });
+
+      es.addEventListener('handshake_update', () => {
+        fetchHandshake();
+      });
+
+      es.onerror = () => {
+        setConnectionState('reconnecting');
+        es.close();
+        eventSourceRef.current = null;
+
+        // Fall back to polling after SSE failure
+        startPolling();
+
+        // Try to reconnect SSE after 30 seconds
+        setTimeout(() => {
+          if (!eventSourceRef.current) {
+            connectSSE();
+          }
+        }, 30000);
+      };
+    };
+
+    connectSSE();
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      stopPolling();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleConsent = async () => {
     if (!myProfileId) return;
 
@@ -137,10 +186,11 @@ export default function HandshakeResultPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to grant consent');
 
-      console.log('✅ Consent granted, refreshing page...');
+      console.log('✅ Consent granted, refreshing...');
 
-      // Force hard reload to ensure fresh data
-      window.location.reload();
+      // Re-fetch instead of hard reload — SSE will also push the update
+      await fetchHandshake();
+      setConsenting(false);
     } catch (err) {
       console.error('Consent error:', err);
       setError(err instanceof Error ? err.message : 'Failed to grant consent');
@@ -183,7 +233,7 @@ export default function HandshakeResultPage() {
         <div className="card-surface p-6">
           <div className="text-yellow-500 font-bold uppercase text-sm mb-2">Identity Required</div>
           <p className="text-foreground mb-4">
-            You're viewing this handshake but we can't tell who you are. Please identify yourself:
+            You&apos;re viewing this handshake but we can&apos;t tell who you are. Please identify yourself:
           </p>
           <div className="space-y-2">
             {initiatorProfile && (
@@ -196,7 +246,7 @@ export default function HandshakeResultPage() {
                 className="w-full"
                 variant="outline"
               >
-                I'm {initiatorName}
+                I&apos;m {initiatorName}
               </Button>
             )}
             {recipientProfile && (
@@ -209,7 +259,7 @@ export default function HandshakeResultPage() {
                 className="w-full"
                 variant="outline"
               >
-                I'm {recipientName}
+                I&apos;m {recipientName}
               </Button>
             )}
             <Button
@@ -314,6 +364,16 @@ export default function HandshakeResultPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <span className="text-sm font-medium text-muted-foreground">Handshake Result</span>
+        {/* Connection state indicator */}
+        <span className="flex items-center gap-1" title={`Connection: ${connectionState}`}>
+          {connectionState === 'connected' ? (
+            <Wifi className="w-3 h-3 text-green-500" />
+          ) : connectionState === 'polling' ? (
+            <WifiOff className="w-3 h-3 text-yellow-500" />
+          ) : (
+            <Wifi className="w-3 h-3 text-muted-foreground animate-pulse" />
+          )}
+        </span>
         <span
           className={`ml-auto text-[10px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full ${
             stage === 2 ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
@@ -455,7 +515,7 @@ export default function HandshakeResultPage() {
               <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto" />
               <p className="text-sm text-muted-foreground">Waiting for mutual consent...</p>
               <p className="text-xs text-primary font-mono animate-pulse">
-                You've consented. Waiting for {otherName.split(' ')[0]}...
+                You&apos;ve consented. Waiting for {otherName.split(' ')[0]}...
               </p>
             </motion.div>
           )}
@@ -484,43 +544,44 @@ export default function HandshakeResultPage() {
                 />
               ))}
 
-              {/* Contact Info - Placeholder for future feature */}
-              <div className="card-surface p-4 space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
-                  Contact Info
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-16">Email:</span>
-                    <a href="mailto:builder@example.com" className="text-primary hover:underline">
-                      builder@example.com
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-16">Phone:</span>
-                    <a href="tel:+15550000000" className="text-foreground hover:text-primary">
-                      +1 (555) 000-0000
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-16">Twitter:</span>
-                    <a href="https://twitter.com/builder" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      @builder
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-16">LinkedIn:</span>
-                    <a href="https://linkedin.com/in/builder" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      /in/builder
-                    </a>
+              {/* Contact Info — show real data from profile if available */}
+              {otherProfile?.communication_aspects?.contact && (
+                <div className="card-surface p-4 space-y-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                    Contact Info
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {otherProfile.communication_aspects.contact.email && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">Email:</span>
+                        <a href={`mailto:${otherProfile.communication_aspects.contact.email}`} className="text-primary hover:underline">
+                          {otherProfile.communication_aspects.contact.email}
+                        </a>
+                      </div>
+                    )}
+                    {otherProfile.communication_aspects.contact.phone && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">Phone:</span>
+                        <a href={`tel:${otherProfile.communication_aspects.contact.phone}`} className="text-foreground hover:text-primary">
+                          {otherProfile.communication_aspects.contact.phone}
+                        </a>
+                      </div>
+                    )}
+                    {otherProfile.communication_aspects.contact.twitter && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">Twitter:</span>
+                        <span className="text-primary">{otherProfile.communication_aspects.contact.twitter}</span>
+                      </div>
+                    )}
+                    {otherProfile.communication_aspects.contact.linkedin && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">LinkedIn:</span>
+                        <span className="text-primary">{otherProfile.communication_aspects.contact.linkedin}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground italic">
-                    Note: Contact info will be user-provided in a future update
-                  </p>
-                </div>
-              </div>
+              )}
 
               {/* Friction Warnings */}
               {analysis?.friction_warnings && analysis.friction_warnings.length > 0 && (
