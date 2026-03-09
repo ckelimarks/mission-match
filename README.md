@@ -15,9 +15,7 @@ Networking events are broken:
 - **Privacy theater**: You share your contact before knowing if there's mutual interest
 - **Context collapse**: Your AI already knows your projects, goals, and working style—but strangers don't
 
-## The Solution: A Two-Stage Human API
-
-Mission Match implements a **privacy-first consent protocol** for human connection:
+## The Solution: A Two-Stage Consent Protocol
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -67,6 +65,61 @@ Mission Match implements a **privacy-first consent protocol** for human connecti
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+---
+
+## Philosophy: The Human API
+
+Mission Match is the first implementation of a **Human API** pattern—applying software architecture principles to human connection.
+
+```
+GET  /api/human/{id}/public   →  Anonymized collaboration profile
+GET  /api/human/{id}/full     →  Complete profile (requires consent token)
+POST /api/handshake           →  Initiate two-stage consent
+POST /api/consent             →  Grant access to full profile
+```
+
+This mirrors how software systems build trust:
+
+| Layer | Software | Human API |
+|-------|----------|-----------|
+| **0** | TCP handshake | QR scan initiates connection |
+| **1** | Context negotiation | Stage 1 overlap analysis |
+| **2** | Authentication | Mutual consent gate |
+| **3** | Full access | Stage 2 profile exchange |
+
+> *"Interfaces shape outcomes. Most of us are running protocols we never consciously chose."*
+
+By making the consent protocol explicit, we give users **sovereignty over their data** at every step.
+
+---
+
+## Innovation: Facilitates, Doesn't Filter
+
+Most networking tools **filter** people—ranking, scoring, recommending who to meet.
+
+Mission Match **facilitates** connection:
+
+| Traditional Matching | Mission Match |
+|---------------------|---------------|
+| "82% compatibility score" | "Here's what to talk about" |
+| Algorithm decides who you see | You decide after seeing overlap |
+| Platform optimizes for engagement | User optimizes for real connection |
+| Black box scoring | Transparent analysis |
+
+We show:
+- ✅ **Mission alignment** — shared goals and values
+- ✅ **Conversation starters** — specific questions to ask
+- ✅ **Collaboration ideas** — concrete things to build together
+
+We never show:
+- ❌ Compatibility scores
+- ❌ Rankings or recommendations
+- ❌ Judgments about fit
+
+**The AI is a facilitator, not a gatekeeper.**
+
+---
+
 ## Track 3: Personal Data → Personal Value
 
 This project directly addresses Track 3's challenge:
@@ -79,7 +132,7 @@ This project directly addresses Track 3's challenge:
 |----------|--------|
 | **Where does the data come from?** | User's own ChatGPT/Claude conversation history (copy-paste) |
 | **Who owns the data?** | The user. Profile stored with their device ID, deletable anytime |
-| **How is consent handled?** | Two-stage: public profile visible to anyone, full profile only after mutual consent |
+| **How is consent handled?** | Two-stage: public profile visible pre-consent, full profile only after mutual consent |
 | **What insight do they get?** | AI extracts collaboration patterns, working style, and proof points they couldn't articulate themselves |
 
 ### What We Extract From Your AI History
@@ -113,57 +166,49 @@ We surface **collaboration patterns**—what you build, how you work, who you wo
 
 ---
 
-## The Human API
+## Demo Flow (60 seconds)
 
-Mission Match is the first implementation of a **Human API** pattern:
-
-```
-GET  /api/human/{id}/public   →  Anonymized collaboration profile
-GET  /api/human/{id}/full     →  Complete profile (requires consent token)
-POST /api/handshake           →  Initiate two-stage consent
-POST /api/consent             →  Grant access to full profile
-```
-
-This mirrors how software systems handle trust:
-- **Layer 0**: Is the channel open? (QR scan = handshake initiated)
-- **Layer 1**: Context negotiation (Stage 1 overlap analysis)
-- **Layer 2**: Trust verification (mutual consent gate)
-- **Layer 3**: Full access granted (Stage 2 profile exchange)
-
-> *"Interfaces shape outcomes. Most of us are running protocols we never consciously chose."*
-
-By making the consent protocol explicit, we give users sovereignty over their data at every step.
+1. **Create Profile** (15s) — Paste AI conversation → Claude extracts profile → Get QR code
+2. **Scan & Connect** (15s) — Person B scans QR → Handshake created → Stage 1 analysis runs
+3. **See Overlap** (15s) — Both see mission alignment, conversation starters, collaboration ideas
+4. **Mutual Consent** (15s) — Both approve → Full profiles exchanged → Connection complete
 
 ---
 
-## Innovation: Facilitates, Doesn't Filter
+## What Makes This Work
 
-Most networking tools **filter** people—ranking, scoring, recommending who to meet.
+### Completeness
 
-Mission Match **facilitates** connection:
+This is a **full working system**, not a slide deck:
 
-| Traditional Matching | Mission Match |
-|---------------------|---------------|
-| "82% compatibility score" | "Here's what to talk about" |
-| Algorithm decides who you see | You decide after seeing overlap |
-| Platform optimizes for engagement | User optimizes for real connection |
-| Black box scoring | Transparent analysis |
+- ✅ Real Claude API integration (profile extraction + overlap analysis)
+- ✅ Real database with consent state machine
+- ✅ Real two-phone QR flow tested on iOS + Android
+- ✅ Real-time updates when consent is granted
+- ✅ Privacy scoping: Stage 1 hides sensitive fields until Stage 2
 
-We show:
-- ✅ **Mission alignment** — shared goals and values
-- ✅ **Conversation starters** — specific questions to ask
-- ✅ **Collaboration ideas** — concrete things to build together
+### Engineering Depth
 
-We never show:
-- ❌ Compatibility scores
-- ❌ Rankings or recommendations
-- ❌ Judgments about fit
-
-**The AI is a facilitator, not a gatekeeper.**
+- **Profile visibility scoping**: Server-side enforcement of what data is visible at each stage
+- **Consent state machine**: Tracks initiator/recipient consent independently
+- **Cache-busting**: Vercel edge caching defeated with explicit `no-store` headers
+- **Profile extraction**: Structured prompts with JSON repair for malformed ChatGPT output
 
 ---
 
-## Architecture
+## The Vision
+
+**Today**: A working QR-based handshake tool for networking events.
+
+**Tomorrow**: An open protocol for agent-to-agent consent—where your AI negotiates connections on your behalf, with full transparency and user sovereignty.
+
+**The Human API isn't just a metaphor.** It's infrastructure for a future where AI mediates human connection without extracting human agency.
+
+---
+
+## Technical Details
+
+### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -199,7 +244,7 @@ We never show:
           └─────────────────┘         └─────────────────┘
 ```
 
-## Tech Stack
+### Tech Stack
 
 - **Frontend**: Next.js 14 (App Router, TypeScript)
 - **Database**: Supabase (PostgreSQL)
@@ -207,71 +252,17 @@ We never show:
 - **Hosting**: Vercel
 - **QR Codes**: react-qr-code
 
----
-
-## Demo Flow (60 seconds)
-
-1. **Create Profile** (15s)
-   - Paste your ChatGPT/Claude conversation history
-   - Claude extracts your collaboration profile
-   - Get your shareable QR code
-
-2. **Scan & Connect** (15s)
-   - Person B scans your QR code
-   - Handshake created automatically
-   - Stage 1 analysis runs in background
-
-3. **See Overlap** (15s)
-   - Both see: mission alignment, conversation starters, collaboration ideas
-   - No scores, no ranking—just what to talk about
-
-4. **Mutual Consent** (15s)
-   - Both approve → full profiles exchanged
-   - Contact info, project details, working style revealed
-   - Connection complete
-
----
-
-## What Makes This Work
-
-### Completeness (for judges)
-
-This is a **full working system**, not a slide deck:
-
-- ✅ Real Claude API integration (profile extraction + overlap analysis)
-- ✅ Real database with consent state machine
-- ✅ Real two-phone QR flow tested on iOS + Android
-- ✅ Real-time updates when consent is granted
-- ✅ Privacy scoping: Stage 1 hides sensitive fields until Stage 2
-
-### Engineering Depth
-
-- **Profile visibility scoping**: Server-side enforcement of what data is visible at each stage
-- **Consent state machine**: Tracks initiator/recipient consent independently, generates mutual consent token atomically
-- **Cache-busting**: Vercel edge caching defeated with explicit `no-store` headers on all database reads
-- **Profile extraction prompts**: Structured extraction with JSON repair for malformed ChatGPT output
-
----
-
-## Local Development
+### Local Development
 
 ```bash
-# Clone the repo
 git clone https://github.com/ckelimarks/mission-match.git
 cd mission-match/web
-
-# Install dependencies
 npm install
-
-# Set environment variables
-cp .env.local.example .env.local
-# Add your Supabase + Anthropic credentials
-
-# Run locally
+cp .env.local.example .env.local  # Add credentials
 npm run dev
 ```
 
-## Environment Variables
+### Environment Variables
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=        # Supabase project URL
@@ -280,16 +271,6 @@ SUPABASE_SERVICE_ROLE_KEY=       # Supabase service role key
 ANTHROPIC_API_KEY=               # Anthropic API key
 NEXT_PUBLIC_APP_URL=             # https://mission-match.vercel.app
 ```
-
----
-
-## The Vision
-
-**Today**: A working QR-based handshake tool for networking events.
-
-**Tomorrow**: An open protocol for agent-to-agent consent—where your AI negotiates connections on your behalf, with full transparency and user sovereignty.
-
-**The Human API isn't just a metaphor.** It's infrastructure for a future where AI mediates human connection without extracting human agency.
 
 ---
 
