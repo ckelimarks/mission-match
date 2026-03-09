@@ -318,6 +318,30 @@ export type PrioritizationComparison = {
 };
 
 // ============================================================================
+// SSE Event Types (for handshake-events endpoint)
+// ============================================================================
+
+export type SSEEventType = 'connected' | 'analysis_complete' | 'consent_update' | 'handshake_update';
+
+export type SSEConnectedData = {
+  handshakeId: string;
+};
+
+export type SSEAnalysisCompleteData = {
+  status: 'completed' | 'failed';
+  analysisId: string | null;
+};
+
+export type SSEConsentUpdateData = {
+  initiator_consented: boolean;
+  recipient_consented: boolean;
+};
+
+export type SSEHandshakeUpdateData = {
+  status: HandshakeStatus;
+};
+
+// ============================================================================
 // Database Type (for Supabase client typing)
 // ============================================================================
 
