@@ -304,7 +304,8 @@ NEXT_PUBLIC_APP_URL=             # https://mission-match.vercel.app
 
 ## Team
 
-Built for the **Data Portability Hackathon** (March 9, 2026) by K-Lee and Jaya.
+Built for the **Data Portability Hackathon** (March 9, 2026) by Christopher K-Lee Marks
+Shout-out to Jaya Marks and Travis Bonnet for feedback!
 
 ## Links
 
