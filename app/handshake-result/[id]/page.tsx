@@ -43,7 +43,9 @@ export default function HandshakeResultPage() {
   const [consenting, setConsenting] = useState(false);
 
   useEffect(() => {
+    console.log('[HANDSHAKE-INIT] Page loaded, handshakeId:', handshakeId);
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    console.log('[HANDSHAKE-INIT] My profileId:', profileId ? profileId.slice(0, 8) + '...' : 'NONE');
     setMyProfileId(profileId);
 
     // Allow viewing handshake even without profile (read-only mode)
@@ -54,7 +56,9 @@ export default function HandshakeResultPage() {
   // Auto-poll while analysis is pending
   useEffect(() => {
     if (analysis?.analysis_status === 'pending') {
+      console.log('[POLL-ANALYSIS] Analysis pending, starting 3s poll');
       const interval = setInterval(() => {
+        console.log('[POLL-ANALYSIS] Polling...');
         fetchHandshake();
       }, 3000);
       return () => clearInterval(interval);
@@ -68,9 +72,13 @@ export default function HandshakeResultPage() {
       const hasConsented = isInitiator ? handshake.initiator_consented : handshake.recipient_consented;
       const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
 
+      console.log('[CONSENT-STATUS]', { isInitiator, hasConsented, mutualConsent });
+
       // Poll every 3 seconds if you've consented but waiting for them
       if (hasConsented && !mutualConsent) {
+        console.log('[POLL-CONSENT] Waiting for other party, starting 3s poll');
         const interval = setInterval(() => {
+          console.log('[POLL-CONSENT] Polling...');
           fetchHandshake();
         }, 3000);
         return () => clearInterval(interval);
@@ -79,15 +87,24 @@ export default function HandshakeResultPage() {
   }, [handshake?.initiator_consented, handshake?.recipient_consented, myProfileId]);
 
   const fetchHandshake = async () => {
+    console.log('[FETCH-HANDSHAKE] Fetching...');
     try {
       // Add timestamp to prevent caching + requesterId for privacy check
       const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
       const response = await fetch(`/api/get-handshake?id=${handshakeId}&requesterId=${profileId || ''}&t=${Date.now()}`);
+      console.log('[FETCH-HANDSHAKE] Response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch handshake');
       }
       const data = await response.json();
+      console.log('[FETCH-HANDSHAKE] Got data:', {
+        hasHandshake: !!data.handshake,
+        status: data.handshake?.status,
+        analysisStatus: data.analysis?.analysis_status,
+        initConsent: data.handshake?.initiator_consented,
+        recpConsent: data.handshake?.recipient_consented,
+      });
       setHandshake(data.handshake);
       setAnalysis(data.analysis);
 
@@ -97,6 +114,7 @@ export default function HandshakeResultPage() {
 
       setLoading(false);
     } catch (err) {
+      console.error('[FETCH-HANDSHAKE] Error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
       setLoading(false);
     }

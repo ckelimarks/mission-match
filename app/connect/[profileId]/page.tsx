@@ -67,6 +67,19 @@ export default function ConnectPage() {
         return;
       }
 
+      // Verify profile actually exists in database
+      console.log('[INITIATE] Verifying profile exists:', myProfileId);
+      const profileCheck = await fetch(`/api/get-profile?id=${myProfileId}`);
+      if (!profileCheck.ok) {
+        console.error('[INITIATE] Profile not found in DB, clearing localStorage and redirecting');
+        localStorage.removeItem('mm_profile_id');
+        localStorage.removeItem('mission_match_profile_id');
+        localStorage.removeItem('mission_match_device_id');
+        router.push(`/create-profile?connect=${targetProfileId}`);
+        return;
+      }
+      console.log('[INITIATE] Profile exists, proceeding with handshake');
+
       // Create handshake
       console.log('[INITIATE] Creating handshake:', {
         initiatorId: myProfileId,

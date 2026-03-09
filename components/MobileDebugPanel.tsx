@@ -49,6 +49,9 @@ export default function MobileDebugPanel() {
       addLog('info', ...args);
     };
 
+    // Self-test: Verify console interception is working
+    console.log('[DEBUG-PANEL] Console interception active at', new Date().toLocaleTimeString());
+
     // Read localStorage
     const readLocalStorage = () => {
       const data: Record<string, string> = {};

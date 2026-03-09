@@ -29,14 +29,18 @@ export default function ConnectionsPage() {
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('[CONNECTIONS-INIT] Page loaded');
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    console.log('[CONNECTIONS-INIT] ProfileId:', profileId ? profileId.slice(0, 8) + '...' : 'NONE');
 
     if (!profileId) {
+      console.log('[CONNECTIONS-INIT] No profileId, redirecting to /');
       router.push('/');
       return;
     }
 
     setMyProfileId(profileId);
+    console.log('[CONNECTIONS-INIT] Starting initial fetch...');
     fetchConnections(profileId);
 
     const refreshConnections = () => {
@@ -51,6 +55,7 @@ export default function ConnectionsPage() {
     const handlePageShow = () => refreshConnections();
     const handleFocus = () => refreshConnections();
     const interval = window.setInterval(refreshConnections, 5000);
+    console.log('[CONNECTIONS-INIT] Polling interval set (every 5s)');
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pageshow', handlePageShow);
@@ -65,6 +70,7 @@ export default function ConnectionsPage() {
   }, []);
 
   const fetchConnections = async (profileId: string) => {
+    console.log('[CONN-POLL] Fetching connections...');
     try {
       const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
         cache: 'no-store',
@@ -73,13 +79,15 @@ export default function ConnectionsPage() {
           Pragma: 'no-cache',
         },
       });
+      console.log('[CONN-POLL] Response status:', response.status);
       if (!response.ok) {
         throw new Error('Failed to fetch connections');
       }
       const data = await response.json();
+      console.log('[CONN-POLL] Got', data.connections?.length || 0, 'connections');
       setConnections(data.connections || []);
     } catch (err) {
-      console.error('Error fetching connections:', err);
+      console.error('[CONN-POLL] Error:', err);
     } finally {
       setLoading(false);
     }

@@ -42,17 +42,21 @@ export default function MyProfilePage() {
   const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
+    console.log('[INIT] Profile page useEffect started');
     // Set base URL for QR code (works in dev and prod)
     setBaseUrl(window.location.origin);
 
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    console.log('[INIT] Got profileId from localStorage:', profileId ? profileId.slice(0, 8) + '...' : 'NONE');
 
     if (!profileId) {
+      console.log('[INIT] No profileId, redirecting to /');
       router.push('/');
       return;
     }
 
     setMyProfileId(profileId);
+    console.log('[INIT] Starting initial fetch...');
     fetchProfile(profileId);
     fetchConnections(profileId);
 
@@ -69,12 +73,14 @@ export default function MyProfilePage() {
     const handlePageShow = () => refreshConnections();
     const handleFocus = () => refreshConnections();
     const interval = window.setInterval(refreshConnections, 5000);
+    console.log('[INIT] Polling interval set (every 5s)');
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pageshow', handlePageShow);
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      console.log('[CLEANUP] Clearing polling interval');
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pageshow', handlePageShow);
@@ -83,19 +89,23 @@ export default function MyProfilePage() {
   }, []);
 
   const fetchProfile = async (profileId: string) => {
+    console.log('[PROFILE] Fetching profile:', profileId);
     try {
       const response = await fetch(`/api/get-profile?id=${profileId}`);
+      console.log('[PROFILE] Response status:', response.status);
       if (!response.ok) throw new Error('Failed to fetch profile');
       const data = await response.json();
+      console.log('[PROFILE] Got profile data:', data?.display_name || 'no name');
       setProfile(data);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      console.error('[PROFILE] Error fetching profile:', err);
       setLoading(false);
     }
   };
 
   const fetchConnections = async (profileId: string) => {
+    console.log('[POLL] Fetching connections for:', profileId.slice(0, 8) + '...');
     try {
       const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
         cache: 'no-store',
@@ -104,13 +114,18 @@ export default function MyProfilePage() {
           Pragma: 'no-cache',
         },
       });
+      console.log('[POLL] Response status:', response.status);
       if (!response.ok) {
         throw new Error(`Failed to fetch connections: ${response.status}`);
       }
       const data = await response.json();
+      console.log('[POLL] Got', data.connections?.length || 0, 'connections');
+      if (data.debug) {
+        console.log('[POLL] Debug info:', JSON.stringify(data.debug));
+      }
       setConnections(data.connections || []);
     } catch (err) {
-      console.error('Error fetching connections:', err);
+      console.error('[POLL] Error fetching connections:', err);
     }
   };
 
