@@ -3,7 +3,7 @@
 **Turn your AI conversations into a collaboration profile. Connect at events through a two-stage consent protocol.**
 
 > *"We don't come with user manuals. The people who love us are always reverse-engineering."*
-> — [Mapping the Human API](https://christophermarks.com/human-api)
+> — [Mapping the Human API](https://www.linkedin.com/pulse/mapping-human-api-christopher-k-lee-marks-tc6sc/)
 
 ---
 
@@ -300,5 +300,5 @@ Built for the **Data Portability Hackathon** (March 9, 2026) by K-Lee and Jaya.
 ## Links
 
 - **Live Demo**: [mission-match.vercel.app](https://mission-match.vercel.app)
-- **Human API Essay**: [Mapping the Human API](https://christophermarks.com/human-api)
+- **Human API Essay**: [Mapping the Human API](https://www.linkedin.com/pulse/mapping-human-api-christopher-k-lee-marks-tc6sc/)
 - **Track**: 3 — Personal Data, Personal Value
