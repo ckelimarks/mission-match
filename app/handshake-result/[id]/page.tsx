@@ -379,7 +379,7 @@ export default function HandshakeResultPage() {
             )}
 
             {/* Conversation Starters */}
-            {analysis.conversation_starters && analysis.conversation_starters.length > 0 && (
+            {analysis?.conversation_starters && analysis.conversation_starters.length > 0 && (
               <div className="card-surface p-4 space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
                   Conversation Starters
@@ -485,7 +485,7 @@ export default function HandshakeResultPage() {
               ))}
 
               {/* Friction Warnings */}
-              {analysis.friction_warnings && analysis.friction_warnings.length > 0 && (
+              {analysis?.friction_warnings && analysis.friction_warnings.length > 0 && (
                 <div className="card-surface p-4 space-y-3">
                   <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-destructive">
                     Potential Friction Points
