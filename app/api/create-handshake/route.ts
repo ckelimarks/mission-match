@@ -65,6 +65,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Verify both profiles exist before creating handshake
+    const { data: initiatorProfile, error: initiatorError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', initiatorId)
+      .single();
+
+    const { data: recipientProfile, error: recipientError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', recipientId)
+      .single();
+
+    console.log('[CREATE-HANDSHAKE] Profile verification:', {
+      initiator: initiatorProfile ? 'EXISTS' : 'NOT FOUND',
+      recipient: recipientProfile ? 'EXISTS' : 'NOT FOUND',
+      initiatorError: initiatorError?.message,
+      recipientError: recipientError?.message
+    });
+
+    if (!initiatorProfile) {
+      return NextResponse.json(
+        {
+          error: 'Initiator profile not found',
+          details: `Profile ${initiatorId} does not exist in the database`,
+          hint: 'The initiator needs to create a profile first'
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!recipientProfile) {
+      return NextResponse.json(
+        {
+          error: 'Recipient profile not found',
+          details: `Profile ${recipientId} does not exist in the database`,
+          hint: 'The recipient needs to create a profile first'
+        },
+        { status: 400 }
+      );
+    }
+
     // Create new handshake
     const { data: handshake, error: handshakeError } = await supabase
       .from('handshakes')
