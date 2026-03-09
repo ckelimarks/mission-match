@@ -194,6 +194,39 @@ const { data: analysis } = await supabase
   .single();
 ```
 
+### 11. Vercel Caches Supabase JS Client Responses
+Vercel aggressively caches `fetch()` responses at the edge, including those made by Supabase JS client. This causes stale data to be returned even after database updates.
+
+**Symptoms:**
+- API returns old data after DB updates
+- Consent status stuck at `false` even after granting
+- Connections list shows deleted handshakes
+
+**Solution:** Use direct REST API with explicit cache-busting instead of Supabase JS client:
+```typescript
+const response = await fetch(
+  `${supabaseUrl}/rest/v1/handshakes?id=eq.${id}&select=*`,
+  {
+    cache: 'no-store',
+    headers: {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+    },
+  }
+);
+```
+
+**Also add route-level config:**
+```typescript
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+```
+
+**Helper available:** `lib/supabase-rest.ts` provides `supabaseRest()` with built-in cache-busting.
+
 ## Key Files
 
 | File | Purpose |
@@ -211,10 +244,11 @@ const { data: analysis } = await supabase
 | `app/api/get-prioritization/route.ts` | Fetch both users' answers + alignment |
 | `lib/anthropic.ts` | Anthropic client (lazy init) |
 | `lib/supabase.ts` | Supabase client (lazy init) |
+| `lib/supabase-rest.ts` | REST API helper with cache-busting (use this for reads) |
 | `types/index.ts` | TypeScript types for profiles, handshakes, analyses |
 
 ## Plan Reference
 See `/Users/christopherk.marks/.claude/plans/woolly-dreaming-eagle.md` for implementation phases.
 
 ---
-*Last updated: March 3, 2026 by hackathon agent*
+*Last updated: March 9, 2026 — Added Gotcha #11 (Vercel caching fix)*

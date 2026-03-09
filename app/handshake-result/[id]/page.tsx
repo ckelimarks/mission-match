@@ -453,11 +453,11 @@ export default function HandshakeResultPage() {
               </div>
               <Button
                 onClick={handleConsent}
-                disabled={consenting}
-                className="w-full h-12 text-base font-semibold gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={consenting || analysis?.analysis_status !== 'completed'}
+                className="w-full h-12 text-base font-semibold gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 <Unlock className="w-4 h-4" />
-                {consenting ? 'Granting...' : 'Grant Consent'}
+                {consenting ? 'Granting...' : analysis?.analysis_status !== 'completed' ? 'Waiting for analysis...' : 'Grant Consent'}
               </Button>
             </motion.div>
           )}
