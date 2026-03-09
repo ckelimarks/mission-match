@@ -108,8 +108,12 @@ export default function HandshakeResultPage() {
       setHandshake(data.handshake);
       setAnalysis(data.analysis);
 
-      if (data.handshake) {
-        await fetchProfiles(data.handshake.initiator_id, data.handshake.recipient_id);
+      // Use profiles from get-handshake (already visibility-scoped)
+      if (data.initiatorProfile) {
+        setInitiatorProfile(data.initiatorProfile);
+      }
+      if (data.recipientProfile) {
+        setRecipientProfile(data.recipientProfile);
       }
 
       setLoading(false);
