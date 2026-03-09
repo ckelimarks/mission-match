@@ -94,6 +94,15 @@ export default function MyProfilePage() {
       // Pass requesterId to get full profile (own profile)
       const response = await fetch(`/api/get-profile?id=${profileId}&requesterId=${profileId}`);
       console.log('[PROFILE] Response status:', response.status);
+      if (response.status === 404) {
+        // Profile no longer exists in DB - clear stale localStorage and redirect
+        console.log('[PROFILE] Profile not found in DB, clearing localStorage');
+        localStorage.removeItem('mm_profile_id');
+        localStorage.removeItem('mission_match_profile_id');
+        toast.error('Profile not found. Please create a new one.');
+        router.push('/');
+        return;
+      }
       if (!response.ok) throw new Error('Failed to fetch profile');
       const data = await response.json();
       console.log('[PROFILE] Got profile data:', data?.display_name || 'no name');
@@ -177,7 +186,18 @@ export default function MyProfilePage() {
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center">
           <h2 className="text-xl font-bold text-foreground mb-4">No Profile Found</h2>
-          <Button onClick={() => router.push('/')}>Go Home</Button>
+          <Button onClick={() => router.push('/')} className="mb-3">Go Home</Button>
+          <button
+            onClick={() => {
+              localStorage.removeItem('mm_profile_id');
+              localStorage.removeItem('mission_match_profile_id');
+              toast.success('Local storage cleared');
+              router.push('/');
+            }}
+            className="block w-full text-xs text-muted-foreground hover:text-red-500"
+          >
+            Clear local storage & start fresh
+          </button>
         </div>
       </div>
     );
@@ -330,6 +350,17 @@ export default function MyProfilePage() {
                 className="w-full py-2 px-3 bg-primary text-primary-foreground rounded text-xs"
               >
                 Refresh Connections
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('mm_profile_id');
+                  localStorage.removeItem('mission_match_profile_id');
+                  toast.success('Local storage cleared');
+                  router.push('/');
+                }}
+                className="w-full py-2 px-3 bg-red-600 text-white rounded text-xs mt-2"
+              >
+                Clear Local Storage
               </button>
             </div>
           )}
