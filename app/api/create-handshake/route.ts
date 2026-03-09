@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
   try {
     const { initiatorId, recipientId } = await request.json();
 
-    console.log('[CREATE-HANDSHAKE] Request:', { initiatorId, recipientId });
+    console.log('[CREATE-HANDSHAKE] Request:', {
+      initiatorId,
+      recipientId,
+      initiatorExists: !!initiatorId,
+      recipientExists: !!recipientId
+    });
 
     if (!initiatorId || !recipientId) {
       console.log('[CREATE-HANDSHAKE] Missing IDs');
@@ -73,9 +78,22 @@ export async function POST(request: NextRequest) {
 
     if (handshakeError) {
       console.error('Handshake creation error:', handshakeError);
+
+      // Check if it's a foreign key constraint error
+      const isForeignKeyError = handshakeError.message?.includes('foreign key') || handshakeError.code === '23503';
+
       return NextResponse.json(
-        { error: 'Failed to create handshake', details: handshakeError.message },
-        { status: 500 }
+        {
+          error: isForeignKeyError
+            ? 'Profile not found. Please create your profile first.'
+            : 'Failed to create handshake',
+          details: handshakeError.message,
+          code: handshakeError.code,
+          hint: isForeignKeyError
+            ? 'One or both profiles do not exist. Make sure both users have created profiles before initiating a handshake.'
+            : undefined
+        },
+        { status: isForeignKeyError ? 400 : 500 }
       );
     }
 
