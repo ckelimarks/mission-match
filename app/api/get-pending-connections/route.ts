@@ -43,9 +43,12 @@ export async function GET(request: NextRequest) {
 
     // DEBUG: Check what handshakes exist at all - using direct REST to bypass JS client
     const restResponse = await fetch(`${supabaseUrl}/rest/v1/handshakes?select=id,initiator_id,recipient_id,status&limit=10`, {
+      cache: 'no-store',
       headers: {
         'apikey': supabaseServiceKey,
         'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
       }
     });
     const restHandshakes = await restResponse.json();
@@ -62,9 +65,12 @@ export async function GET(request: NextRequest) {
     const handshakesResponse = await fetch(
       `${supabaseUrl}/rest/v1/handshakes?select=id,initiator_id,recipient_id,status,initiator_consented,recipient_consented,created_at,updated_at&order=created_at.desc`,
       {
+        cache: 'no-store',
         headers: {
           'apikey': supabaseServiceKey,
           'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
         }
       }
     );
