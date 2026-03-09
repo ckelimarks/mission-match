@@ -7,6 +7,18 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Handle CORS for local HTML testing
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { prompt, conversation } = await request.json();
@@ -14,7 +26,12 @@ export async function POST(request: NextRequest) {
     if (!prompt || !conversation) {
       return NextResponse.json(
         { error: 'prompt and conversation are required' },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
       );
     }
 
@@ -42,18 +59,32 @@ export async function POST(request: NextRequest) {
       const extractedProfile = JSON.parse(jsonText);
       console.log('[TEST-EXTRACT] Successfully extracted profile');
 
-      return NextResponse.json({
-        success: true,
-        profile: extractedProfile,
-        raw_response: text,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          profile: extractedProfile,
+          raw_response: text,
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     } catch (parseErr) {
       console.error('[TEST-EXTRACT] Failed to parse JSON:', parseErr);
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to parse JSON from Claude response',
-        raw_response: text,
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to parse JSON from Claude response',
+          raw_response: text,
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
   } catch (error) {
     console.error('[TEST-EXTRACT] Error:', error);
@@ -63,7 +94,12 @@ export async function POST(request: NextRequest) {
         error: 'Failed to extract profile',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
     );
   }
 }

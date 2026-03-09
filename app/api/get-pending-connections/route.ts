@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
 
     console.log('[GET-CONNECTIONS] ===== START =====');
     console.log('[GET-CONNECTIONS] ProfileId:', profileId);
+    console.log('[GET-CONNECTIONS] Supabase URL:', supabaseUrl);
     console.log('[GET-CONNECTIONS] Service key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('[GET-CONNECTIONS] Service key prefix:', supabaseServiceKey?.substring(0, 20) + '...');
 
     // DEBUG: Check what handshakes exist at all
     const { data: allHandshakes, error: debugErr } = await supabase

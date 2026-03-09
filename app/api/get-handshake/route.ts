@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
       .eq('id', handshakeId)
       .maybeSingle(); // Use maybeSingle to avoid cache
 
+    console.log('[GET-HANDSHAKE] Using Supabase URL:', supabaseUrl);
+    console.log('[GET-HANDSHAKE] Service key prefix:', supabaseServiceKey?.substring(0, 30) + '...');
     console.log('[GET-HANDSHAKE] Handshake data:', {
       id: handshake?.id,
       status: handshake?.status,
