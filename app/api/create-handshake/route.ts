@@ -11,8 +11,9 @@ export async function POST(request: NextRequest) {
     console.log('[CREATE-HANDSHAKE] Request:', {
       initiatorId,
       recipientId,
-      initiatorExists: !!initiatorId,
-      recipientExists: !!recipientId
+      supabaseUrl: supabaseUrl,
+      usingServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      keyLength: supabaseServiceKey?.length || 0
     });
 
     if (!initiatorId || !recipientId) {
@@ -79,10 +80,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     console.log('[CREATE-HANDSHAKE] Profile verification:', {
-      initiator: initiatorProfile ? 'EXISTS' : 'NOT FOUND',
-      recipient: recipientProfile ? 'EXISTS' : 'NOT FOUND',
-      initiatorError: initiatorError?.message,
-      recipientError: recipientError?.message
+      initiatorId,
+      recipientId,
+      initiatorProfile: initiatorProfile,
+      recipientProfile: recipientProfile,
+      initiatorError: initiatorError ? { message: initiatorError.message, code: initiatorError.code, details: initiatorError.details } : null,
+      recipientError: recipientError ? { message: recipientError.message, code: recipientError.code, details: recipientError.details } : null,
+      supabaseUrl: supabaseUrl,
+      usingServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
     });
 
     if (!initiatorProfile) {
