@@ -41,12 +41,21 @@ export async function GET(request: NextRequest) {
     console.log('[GET-CONNECTIONS] Service key prefix:', supabaseServiceKey?.substring(0, 50) + '...');
     console.log('[GET-CONNECTIONS] Key contains service_role:', supabaseServiceKey?.includes('service_role') || supabaseServiceKey?.includes('c2VydmljZV9yb2xl'));
 
-    // DEBUG: Check what handshakes exist at all
+    // DEBUG: Check what handshakes exist at all - using direct REST to bypass JS client
+    const restResponse = await fetch(`${supabaseUrl}/rest/v1/handshakes?select=id,initiator_id,recipient_id,status&limit=10`, {
+      headers: {
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+      }
+    });
+    const restHandshakes = await restResponse.json();
+    console.log('[GET-CONNECTIONS] REST API handshakes (max 10):', restHandshakes?.length || 0, restHandshakes);
+
     const { data: allHandshakes, error: debugErr } = await supabase
       .from('handshakes')
       .select('id, initiator_id, recipient_id, status')
       .limit(10);
-    console.log('[GET-CONNECTIONS] ALL handshakes in DB (max 10):', allHandshakes?.length || 0, allHandshakes);
+    console.log('[GET-CONNECTIONS] JS Client handshakes (max 10):', allHandshakes?.length || 0, allHandshakes);
 
     // Get all handshakes where this profile is initiator OR recipient
     // WORKAROUND: Fetch all and filter client-side since .eq() is failing
