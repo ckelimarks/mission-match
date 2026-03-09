@@ -91,7 +91,8 @@ export default function MyProfilePage() {
   const fetchProfile = async (profileId: string) => {
     console.log('[PROFILE] Fetching profile:', profileId);
     try {
-      const response = await fetch(`/api/get-profile?id=${profileId}`);
+      // Pass requesterId to get full profile (own profile)
+      const response = await fetch(`/api/get-profile?id=${profileId}&requesterId=${profileId}`);
       console.log('[PROFILE] Response status:', response.status);
       if (!response.ok) throw new Error('Failed to fetch profile');
       const data = await response.json();

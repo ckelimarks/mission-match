@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseProfileJsonFields, toPublicProfile, toFullProfile } from '@/lib/profile-visibility';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -108,9 +109,49 @@ export async function GET(request: NextRequest) {
       hasOverlap: !!analysis?.overlap,
     });
 
+    // Fetch and scope profiles based on consent state
+    const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
+
+    const [initiatorRes, recipientRes] = await Promise.all([
+      fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${handshake.initiator_id}&select=*`, {
+        cache: 'no-store',
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+        },
+      }),
+      fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${handshake.recipient_id}&select=*`, {
+        cache: 'no-store',
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+        },
+      }),
+    ]);
+
+    const [initiatorData, recipientData] = await Promise.all([
+      initiatorRes.json(),
+      recipientRes.json(),
+    ]);
+
+    const applyVisibility = (profile: Record<string, any> | null) => {
+      if (!profile) return null;
+      const parsed = parseProfileJsonFields(profile);
+      return mutualConsent ? toFullProfile(parsed) : toPublicProfile(parsed);
+    };
+
+    const initiatorProfile = applyVisibility(initiatorData?.[0] || null);
+    const recipientProfile = applyVisibility(recipientData?.[0] || null);
+
     return NextResponse.json({
       handshake,
       analysis: analysis || null,
+      initiatorProfile,
+      recipientProfile,
     });
   } catch (error) {
     console.error('Get handshake error:', error);
