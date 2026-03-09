@@ -484,6 +484,44 @@ export default function HandshakeResultPage() {
                 />
               ))}
 
+              {/* Contact Info - Placeholder for future feature */}
+              <div className="card-surface p-4 space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                  Contact Info
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-16">Email:</span>
+                    <a href="mailto:builder@example.com" className="text-primary hover:underline">
+                      builder@example.com
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-16">Phone:</span>
+                    <a href="tel:+15550000000" className="text-foreground hover:text-primary">
+                      +1 (555) 000-0000
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-16">Twitter:</span>
+                    <a href="https://twitter.com/builder" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      @builder
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-16">LinkedIn:</span>
+                    <a href="https://linkedin.com/in/builder" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      /in/builder
+                    </a>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-xs text-muted-foreground italic">
+                    Note: Contact info will be user-provided in a future update
+                  </p>
+                </div>
+              </div>
+
               {/* Friction Warnings */}
               {analysis?.friction_warnings && analysis.friction_warnings.length > 0 && (
                 <div className="card-surface p-4 space-y-3">
