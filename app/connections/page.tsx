@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users } from 'lucide-react';
-import ConnectionCard from '@/components/ConnectionCard';
+import { ArrowLeft, Users, Wifi, WifiOff } from 'lucide-react';
+import { useConnectionEvents } from '@/hooks/useConnectionEvents';
 
 interface Connection {
   handshakeId: string;
@@ -28,43 +28,9 @@ export default function ConnectionsPage() {
   const [loading, setLoading] = useState(true);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
-
-    if (!profileId) {
-      router.push('/');
-      return;
-    }
-
-    setMyProfileId(profileId);
-    fetchConnections(profileId);
-
-    const refreshConnections = () => {
-      if (profileId) {
-        fetchConnections(profileId);
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) refreshConnections();
-    };
-    const handlePageShow = () => refreshConnections();
-    const handleFocus = () => refreshConnections();
-    const interval = window.setInterval(refreshConnections, 5000);
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  const fetchConnections = async (profileId: string) => {
+  const fetchConnections = useCallback(async () => {
+    const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    if (!profileId) return;
     try {
       const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
         cache: 'no-store',
@@ -73,9 +39,7 @@ export default function ConnectionsPage() {
           Pragma: 'no-cache',
         },
       });
-      if (!response.ok) {
-        throw new Error('Failed to fetch connections');
-      }
+      if (!response.ok) throw new Error('Failed to fetch connections');
       const data = await response.json();
       setConnections(data.connections || []);
     } catch (err) {
@@ -83,7 +47,40 @@ export default function ConnectionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [myProfileId]);
+
+  // SSE replaces the 5-second setInterval + visibility/focus listeners
+  const connectionState = useConnectionEvents(myProfileId, fetchConnections);
+
+  useEffect(() => {
+    const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    if (!profileId) {
+      router.push('/');
+      return;
+    }
+
+    setMyProfileId(profileId);
+
+    // Initial fetch with explicit ID (before state is set)
+    (async () => {
+      try {
+        const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch connections');
+        const data = await response.json();
+        setConnections(data.connections || []);
+      } catch (err) {
+        console.error('Error fetching connections:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -111,6 +108,13 @@ export default function ConnectionsPage() {
           <span className="text-lg font-bold tracking-tight text-foreground">
             Connections
           </span>
+          {connectionState === 'connected' ? (
+            <Wifi className="w-3 h-3 text-green-500" />
+          ) : connectionState === 'polling' ? (
+            <WifiOff className="w-3 h-3 text-yellow-500" />
+          ) : (
+            <Wifi className="w-3 h-3 text-muted-foreground animate-pulse" />
+          )}
         </div>
       </header>
 
@@ -175,7 +179,7 @@ export default function ConnectionsPage() {
                 };
                 return getPriority(a) - getPriority(b);
               })
-              .map((conn, index) => {
+              .map((conn) => {
                 const displayName = conn.otherParty!.displayName || conn.otherParty!.role?.split(',')[0]?.trim() || 'Unknown';
 
                 // Determine consent status

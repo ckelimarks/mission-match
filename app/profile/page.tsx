@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Copy, Download, Users, ArrowRight, Eye } from 'lucide-react';
+import { Copy, Download, Users, ArrowRight, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConnectionCard from '@/components/ConnectionCard';
 import { toast } from 'sonner';
+import { useConnectionEvents } from '@/hooks/useConnectionEvents';
 
 interface Profile {
   id: string;
@@ -41,12 +42,32 @@ export default function MyProfilePage() {
   const [baseUrl, setBaseUrl] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
 
+  const fetchConnections = useCallback(async () => {
+    const profileId = myProfileId || localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
+    if (!profileId) return;
+    try {
+      const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch connections: ${response.status}`);
+      const data = await response.json();
+      setConnections(data.connections || []);
+    } catch (err) {
+      console.error('Error fetching connections:', err);
+    }
+  }, [myProfileId]);
+
+  // SSE replaces the 5-second setInterval + visibility/focus listeners
+  const connectionState = useConnectionEvents(myProfileId, fetchConnections);
+
   useEffect(() => {
-    // Set base URL for QR code (works in dev and prod)
     setBaseUrl(window.location.origin);
 
     const profileId = localStorage.getItem('mm_profile_id') || localStorage.getItem('mission_match_profile_id');
-
     if (!profileId) {
       router.push('/');
       return;
@@ -54,33 +75,8 @@ export default function MyProfilePage() {
 
     setMyProfileId(profileId);
     fetchProfile(profileId);
-    fetchConnections(profileId);
-
-    const refreshConnections = () => {
-      if (profileId) {
-        fetchConnections(profileId);
-      }
-    };
-
-    // Safari is inconsistent about firing visibilitychange when navigating back.
-    const handleVisibilityChange = () => {
-      if (!document.hidden) refreshConnections();
-    };
-    const handlePageShow = () => refreshConnections();
-    const handleFocus = () => refreshConnections();
-    const interval = window.setInterval(refreshConnections, 5000);
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
+    fetchConnectionsById(profileId);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProfile = async (profileId: string) => {
     try {
@@ -95,7 +91,8 @@ export default function MyProfilePage() {
     }
   };
 
-  const fetchConnections = async (profileId: string) => {
+  // Initial fetch before myProfileId is set in state (called with explicit id)
+  const fetchConnectionsById = async (profileId: string) => {
     try {
       const response = await fetch(`/api/get-pending-connections?profileId=${profileId}&t=${Date.now()}`, {
         cache: 'no-store',
@@ -104,9 +101,7 @@ export default function MyProfilePage() {
           Pragma: 'no-cache',
         },
       });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch connections: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Failed to fetch connections: ${response.status}`);
       const data = await response.json();
       setConnections(data.connections || []);
     } catch (err) {
@@ -181,6 +176,14 @@ export default function MyProfilePage() {
           <span className="text-lg font-bold tracking-tight text-foreground">
             Mission<span className="text-primary">Match</span>
           </span>
+          {/* Connection state indicator */}
+          {connectionState === 'connected' ? (
+            <Wifi className="w-3 h-3 text-green-500" />
+          ) : connectionState === 'polling' ? (
+            <WifiOff className="w-3 h-3 text-yellow-500" />
+          ) : (
+            <Wifi className="w-3 h-3 text-muted-foreground animate-pulse" />
+          )}
         </div>
         <button
           onClick={() => router.push('/connections')}
@@ -253,8 +256,6 @@ export default function MyProfilePage() {
               Download QR
             </Button>
           </div>
-          {/* Removed: Preview button routed to /connect which is for initiating handshakes, not preview */}
-          {/* TODO: Add proper read-only preview route */}
         </motion.div>
 
         {/* Profile Info */}
@@ -310,7 +311,7 @@ export default function MyProfilePage() {
                 </pre>
               </div>
               <button
-                onClick={() => myProfileId && fetchConnections(myProfileId)}
+                onClick={fetchConnections}
                 className="w-full py-2 px-3 bg-primary text-primary-foreground rounded text-xs"
               >
                 Refresh Connections
