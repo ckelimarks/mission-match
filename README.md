@@ -17,53 +17,41 @@ Networking events are broken:
 
 ## The Solution: A Two-Stage Consent Protocol
 
+```mermaid
+flowchart TB
+    subgraph STAGE1["STAGE 1: Pre-Consent"]
+        direction LR
+        subgraph A["Person A"]
+            A1[ChatGPT History] --> A2[Public Profile]
+        end
+        subgraph B["Person B"]
+            B1[Claude History] --> B2[Public Profile]
+        end
+        A2 --> QR[QR Scan]
+        QR --> B2
+        A2 --> CLAUDE[Claude Analyzes Alignment]
+        B2 --> CLAUDE
+        CLAUDE --> OUT["Mission alignment<br>Conversation starters<br>Collaboration ideas"]
+    end
+
+    OUT --> WHY["Find your people<br>Agent-to-agent connections<br>Accessible for neurodivergent users"]
+    WHY --> GATE
+
+    GATE{{MUTUAL CONSENT GATE<br>Both must approve}}
+
+    GATE --> STAGE2
+
+    subgraph STAGE2["STAGE 2: Post-Consent"]
+        direction LR
+        FA[Full Profile A] <--> SHARED["Name & contact<br>Project details<br>Working style<br>Collaboration fit"]
+        SHARED <--> FB[Full Profile B]
+    end
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        TWO-STAGE CONSENT FLOW                           │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   ┌──────────────┐          STAGE 1           ┌──────────────┐         │
-│   │   Person A   │    (Pre-Consent: Overlap)  │   Person B   │         │
-│   │              │                            │              │         │
-│   │  ┌────────┐  │      Scan QR Code          │  ┌────────┐  │         │
-│   │  │ChatGPT │──┼──→ Profile Extracted ──────┼──│ Claude │  │         │
-│   │  │History │  │                            │  │ History│  │         │
-│   │  └────────┘  │                            │  └────────┘  │         │
-│   │      ↓       │                            │      ↓       │         │
-│   │  ┌────────┐  │    ┌────────────────┐     │  ┌────────┐  │         │
-│   │  │ Public │──┼───→│ Claude Analyzes│←────┼──│ Public │  │         │
-│   │  │Profile │  │    │    Overlap     │     │  │Profile │  │         │
-│   │  └────────┘  │    └───────┬────────┘     │  └────────┘  │         │
-│   │              │            ↓              │              │         │
-│   │              │   • Mission alignment     │              │         │
-│   │              │   • Conversation starters │              │         │
-│   │              │   • Collaboration ideas   │              │         │
-│   │              │                           │              │         │
-│   │              │    NO SCORES. NO RANKING. │              │         │
-│   │              │    Just fuel for better   │              │         │
-│   │              │    conversations.         │              │         │
-│   └──────────────┘                           └──────────────┘         │
-│                                                                         │
-│   ═══════════════════════════════════════════════════════════════════   │
-│                                                                         │
-│                          MUTUAL CONSENT GATE                            │
-│                    Both must approve to proceed                         │
-│                                                                         │
-│   ═══════════════════════════════════════════════════════════════════   │
-│                                                                         │
-│   ┌──────────────┐          STAGE 2           ┌──────────────┐         │
-│   │   Person A   │   (Post-Consent: Full)     │   Person B   │         │
-│   │              │                            │              │         │
-│   │  ┌────────┐  │    Full profiles shared:   │  ┌────────┐  │         │
-│   │  │  Full  │──┼──→ • Name & contact     ←──┼──│  Full  │  │         │
-│   │  │Profile │  │    • Project details       │  │Profile │  │         │
-│   │  └────────┘  │    • Working style         │  └────────┘  │         │
-│   │              │    • Collaboration fit     │              │         │
-│   │              │                            │              │         │
-│   └──────────────┘                            └──────────────┘         │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+
+**Why this matters:**
+- **Find your people** — surface alignment before the awkward small talk
+- **Built for the agent world** — your AI brokers connections on your behalf
+- **Accessible** — lowers barriers for neurodivergent folks who find initiating conversations challenging
 
 ---
 
@@ -111,11 +99,6 @@ We show:
 - ✅ **Conversation starters** — specific questions to ask
 - ✅ **Collaboration ideas** — concrete things to build together
 
-We never show:
-- ❌ Compatibility scores
-- ❌ Rankings or recommendations
-- ❌ Judgments about fit
-
 **The AI is a facilitator, not a gatekeeper.**
 
 ---
@@ -144,16 +127,19 @@ OUTPUT:
 ├── Mission & Hook
 │   "Building AI tools that strengthen human connection"
 │
-├── Proof Points (with evidence)
+├── Proof Points
+│   Concrete evidence of what you've built — projects, metrics, outcomes
 │   • LoveNotes: 2000+ messages, 80% engagement rate
 │   • Podcast Farm: $360K revenue
 │
 ├── Working Style
+│   How you actually operate — communication patterns, pace, preferences
 │   • Ships fast, iterates in public
 │   • Prefers async communication
 │   • High tolerance for rough edges
 │
 └── Collaboration Fit
+    What you're looking for and what you bring to the table
     • Looking for: Technical co-founders
     • Availability: 10-20 hrs/week
     • Stage: Ready to build
@@ -210,38 +196,35 @@ This is a **full working system**, not a slide deck:
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENT (Next.js)                        │
-├─────────────────────────────────────────────────────────────────┤
-│  /                    Create profile from AI conversation       │
-│  /profile             View your QR code + connections           │
-│  /connect/:id         Scan someone's QR → initiate handshake    │
-│  /handshake-result/:id  View analysis + grant consent           │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        API ROUTES                               │
-├─────────────────────────────────────────────────────────────────┤
-│  POST /api/extract-profile   Claude extracts profile from text  │
-│  POST /api/create-handshake  Creates handshake + triggers AI    │
-│  POST /api/grant-consent     Records consent, unlocks Stage 2   │
-│  GET  /api/get-handshake     Returns scoped profile data        │
-│  GET  /api/get-profile       Public or full based on consent    │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                    ┌─────────────┴─────────────┐
-                    ▼                           ▼
-          ┌─────────────────┐         ┌─────────────────┐
-          │   Claude API    │         │    Supabase     │
-          │   (Sonnet 4.5)  │         │   (PostgreSQL)  │
-          ├─────────────────┤         ├─────────────────┤
-          │ • Profile       │         │ • profiles      │
-          │   extraction    │         │ • handshakes    │
-          │ • Overlap       │         │ • analyses      │
-          │   analysis      │         │                 │
-          └─────────────────┘         └─────────────────┘
+```mermaid
+flowchart TB
+    subgraph CLIENT["🖥️ CLIENT (Next.js)"]
+        R1["/ — Create profile"]
+        R2["/profile — QR code + connections"]
+        R3["/connect/:id — Initiate handshake"]
+        R4["/handshake-result/:id — View & consent"]
+    end
+
+    subgraph API["⚡ API ROUTES"]
+        A1["POST /api/extract-profile"]
+        A2["POST /api/create-handshake"]
+        A3["POST /api/grant-consent"]
+        A4["GET /api/get-handshake"]
+        A5["GET /api/get-profile"]
+    end
+
+    subgraph SERVICES["🔧 SERVICES"]
+        CLAUDE["🤖 Claude API<br/>(Sonnet 4.5)<br/>• Profile extraction<br/>• Overlap analysis"]
+        SUPA["🗄️ Supabase<br/>(PostgreSQL)<br/>• profiles<br/>• handshakes<br/>• analyses"]
+    end
+
+    CLIENT --> API
+    API --> CLAUDE
+    API --> SUPA
+
+    style CLIENT fill:#1a1a2e,stroke:#4f46e5
+    style API fill:#1a1a2e,stroke:#f59e0b
+    style SERVICES fill:#1a1a2e,stroke:#22c55e
 ```
 
 ### Tech Stack
