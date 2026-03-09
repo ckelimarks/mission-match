@@ -286,20 +286,20 @@ export default function HandshakeResultPage() {
   const otherWorkingStyle = getWorkingStyle(otherProfile);
   const hookAlignment = getHookAlignment();
 
-  // Prepare radar chart data if available
-  const hasRadarData = myWorkingStyle?.core_dimensions && otherWorkingStyle?.core_dimensions;
+  // Prepare radar chart data if available - map from actual profile structure
+  const hasRadarData = myProfile?.communication_aspects && otherProfile?.communication_aspects;
   const radarData = hasRadarData ? {
     personA: {
-      'Sync/Async': myWorkingStyle?.core_dimensions?.sync_async?.score || 50,
-      'Ship/Polish': myWorkingStyle?.core_dimensions?.fast_ship_high_polish?.score || 50,
-      'Solo/Team': myWorkingStyle?.core_dimensions?.solo_multiplier?.score || 50,
-      'Build/Strategy': myWorkingStyle?.core_dimensions?.builder_strategist?.score || 50,
+      'Sync/Async': myProfile?.communication_aspects?.sync_vs_async?.score || 50,
+      'Ship/Polish': myProfile?.shipping_aspects?.polish_tolerance?.score || 50,
+      'Solo/Team': myProfile?.role_aspects?.individual_vs_multiplier?.score || 50,
+      'Build/Strategy': myProfile?.role_aspects?.creative_vs_executor?.score || 50,
     },
     personB: {
-      'Sync/Async': otherWorkingStyle?.core_dimensions?.sync_async?.score || 50,
-      'Ship/Polish': otherWorkingStyle?.core_dimensions?.fast_ship_high_polish?.score || 50,
-      'Solo/Team': otherWorkingStyle?.core_dimensions?.solo_multiplier?.score || 50,
-      'Build/Strategy': otherWorkingStyle?.core_dimensions?.builder_strategist?.score || 50,
+      'Sync/Async': otherProfile?.communication_aspects?.sync_vs_async?.score || 50,
+      'Ship/Polish': otherProfile?.shipping_aspects?.polish_tolerance?.score || 50,
+      'Solo/Team': otherProfile?.role_aspects?.individual_vs_multiplier?.score || 50,
+      'Build/Strategy': otherProfile?.role_aspects?.creative_vs_executor?.score || 50,
     }
   } : null;
 
