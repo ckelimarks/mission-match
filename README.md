@@ -114,7 +114,7 @@ This project directly addresses Track 3's challenge:
 | Question | Answer |
 |----------|--------|
 | **Where does the data come from?** | User's own ChatGPT/Claude conversation history (copy-paste) |
-| **Who owns the data?** | The user. Profile stored with their device ID, deletable anytime |
+| **Who owns the data?** | The user. True deletion available — removes profile, handshakes, and all analyses from the database |
 | **How is consent handled?** | Two-stage: public profile visible pre-consent, full profile only after mutual consent |
 | **What insight do they get?** | AI extracts collaboration patterns, working style, and proof points they couldn't articulate themselves |
 
@@ -149,6 +149,21 @@ This is the Track 3 example come to life:
 > *"A tool that analyzes a user's ChatGPT conversation history to surface recurring anxieties, growth themes, and decision patterns"*
 
 We surface **collaboration patterns**—what you build, how you work, who you work well with.
+
+### Data Lineage & Provenance
+
+**Every claim traces back to source.** When Claude extracts your profile, we capture provenance metadata:
+
+| Field | Purpose |
+|-------|---------|
+| `extracted_at` | Timestamp of extraction |
+| `model_version` | Which Claude model processed the data |
+| `source_word_count` | Size of original conversation |
+| `user_reviewed` | Whether user approved the extraction |
+
+This creates a **trust chain for agent-to-agent verification** — when your AI negotiates connections on your behalf, the other agent can verify the provenance of your claims.
+
+**True deletion**: Users can permanently delete their profile and all associated data (handshakes, analyses) with a single action. No soft deletes, no data retention — it's gone from the database.
 
 ---
 

@@ -358,9 +358,41 @@ export default function MyProfilePage() {
                   toast.success('Local storage cleared');
                   router.push('/');
                 }}
-                className="w-full py-2 px-3 bg-red-600 text-white rounded text-xs mt-2"
+                className="w-full py-2 px-3 bg-orange-600 text-white rounded text-xs mt-2"
               >
                 Clear Local Storage
+              </button>
+              <button
+                onClick={async () => {
+                  if (!myProfileId) return;
+                  const confirmation = window.prompt(
+                    'This will permanently delete your profile and all associated data. This cannot be undone.\n\nType "delete" to confirm:'
+                  );
+                  if (confirmation?.toLowerCase() !== 'delete') {
+                    if (confirmation !== null) {
+                      toast.error('You must type "delete" to confirm');
+                    }
+                    return;
+                  }
+
+                  try {
+                    const res = await fetch(`/api/delete-profile?profileId=${myProfileId}`, {
+                      method: 'DELETE',
+                    });
+                    if (!res.ok) throw new Error('Failed to delete');
+
+                    localStorage.removeItem('mm_profile_id');
+                    localStorage.removeItem('mission_match_profile_id');
+                    toast.success('Profile permanently deleted');
+                    router.push('/');
+                  } catch (err) {
+                    console.error('Delete failed:', err);
+                    toast.error('Failed to delete profile');
+                  }
+                }}
+                className="w-full py-2 px-3 bg-red-700 text-white rounded text-xs mt-2 font-semibold"
+              >
+                Delete My Data Permanently
               </button>
             </div>
           )}
