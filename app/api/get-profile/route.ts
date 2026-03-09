@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { parseProfileJsonFields, toPublicProfile, toFullProfile } from '@/lib/profile-visibility';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +11,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const profileId = searchParams.get('profileId') || searchParams.get('id');
+    const handshakeId = searchParams.get('handshakeId');
+    const requesterId = searchParams.get('requesterId');
 
     if (!profileId) {
       return NextResponse.json(
@@ -15,55 +21,49 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Profiles are publicly readable per RLS policy
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+    });
+
+    // Fetch profile
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', profileId)
       .single();
-    const profile = data as Record<string, any> | null;
 
-    if (error || !profile) {
+    if (error || !data) {
       return NextResponse.json(
         { error: 'Profile not found' },
         { status: 404 }
       );
     }
 
-    // Parse JSON fields that are stored as strings
-    const parsedProfile: Record<string, any> = {
-      ...profile,
-      proof_points: typeof profile.proof_points === 'string'
-        ? JSON.parse(profile.proof_points)
-        : profile.proof_points,
-      role_aspects: typeof profile.role_aspects === 'string'
-        ? JSON.parse(profile.role_aspects)
-        : profile.role_aspects,
-      shipping_aspects: typeof profile.shipping_aspects === 'string'
-        ? JSON.parse(profile.shipping_aspects)
-        : profile.shipping_aspects,
-      communication_aspects: typeof profile.communication_aspects === 'string'
-        ? JSON.parse(profile.communication_aspects)
-        : profile.communication_aspects,
-      decision_aspects: typeof profile.decision_aspects === 'string'
-        ? JSON.parse(profile.decision_aspects)
-        : profile.decision_aspects,
-      energy_aspects: typeof profile.energy_aspects === 'string'
-        ? JSON.parse(profile.energy_aspects)
-        : profile.energy_aspects,
-      collaboration_aspects: typeof profile.collaboration_aspects === 'string'
-        ? JSON.parse(profile.collaboration_aspects)
-        : profile.collaboration_aspects,
-      working_style: typeof profile.working_style === 'string'
-        ? JSON.parse(profile.working_style)
-        : profile.working_style,
-    };
+    const profile = parseProfileJsonFields(data as Record<string, any>);
 
-    // Return profile data directly (not wrapped in { profile })
-    return NextResponse.json(parsedProfile);
+    // Determine visibility level
+    // If handshakeId + requesterId provided, check for mutual consent
+    if (handshakeId && requesterId) {
+      const { data: handshake } = await supabase
+        .from('handshakes')
+        .select('initiator_id, recipient_id, initiator_consented, recipient_consented')
+        .eq('id', handshakeId)
+        .maybeSingle();
+
+      if (handshake) {
+        const isParticipant = handshake.initiator_id === requesterId || handshake.recipient_id === requesterId;
+        const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
+
+        if (isParticipant && mutualConsent) {
+          return NextResponse.json(toFullProfile(profile));
+        }
+      }
+    }
+
+    // Default: public profile (Stage 1 view)
+    return NextResponse.json(toPublicProfile(profile));
   } catch (error) {
     console.error('Get profile error:', error);
-
     return NextResponse.json(
       {
         error: 'Failed to get profile',

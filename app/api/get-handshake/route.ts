@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { parseProfileJsonFields, toPublicProfile, toFullProfile } from '@/lib/profile-visibility';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -70,7 +71,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch associated analysis - prioritize completed ones
-    // First try to get completed analysis
     let { data: analysis } = await supabase
       .from('analyses')
       .select('*')
@@ -98,9 +98,24 @@ export async function GET(request: NextRequest) {
       hasOverlap: !!analysis?.overlap,
     });
 
+    // Fetch and scope profiles based on consent state
+    const mutualConsent = handshake.initiator_consented && handshake.recipient_consented;
+    const applyVisibility = (profile: Record<string, any> | null) => {
+      if (!profile) return null;
+      const parsed = parseProfileJsonFields(profile);
+      return mutualConsent ? toFullProfile(parsed) : toPublicProfile(parsed);
+    };
+
+    const [{ data: initiatorRaw }, { data: recipientRaw }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', handshake.initiator_id).maybeSingle(),
+      supabase.from('profiles').select('*').eq('id', handshake.recipient_id).maybeSingle(),
+    ]);
+
     return NextResponse.json({
       handshake,
       analysis: analysis || null,
+      initiatorProfile: applyVisibility(initiatorRaw as Record<string, any> | null),
+      recipientProfile: applyVisibility(recipientRaw as Record<string, any> | null),
     });
   } catch (error) {
     console.error('Get handshake error:', error);
