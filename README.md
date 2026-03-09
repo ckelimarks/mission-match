@@ -2,7 +2,7 @@
 
 **Turn your AI conversations into a collaboration profile. Connect at events through a two-stage consent protocol.**
 
-> *"We don't come with user manuals. The people who love us are always reverse-engineering."*
+> *"We don't come with user manuals."*
 > — [Mapping the Human API](https://www.linkedin.com/pulse/mapping-human-api-christopher-k-lee-marks-tc6sc/)
 
 ---
